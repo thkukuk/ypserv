@@ -1,30 +1,27 @@
-/*
-** mknetid.c - generate netid.byname map 
-**
-** Copyright 1997, 1999 Thorsten Kukuk
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** Author: Thorsten Kukuk <kukuk@suse.de>
-*/
+/* Copyright (c) 1996, 1999, 2001 Thorsten Kukuk
+   Author: Thorsten Kukuk <kukuk@suse.de>
+
+   The YP Server is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
+
+   The YP Server is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public
+   License along with the YP Server; see the file COPYING. If
+   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
+   Cambridge, MA 02139, USA. */
+
+/* mknetid - generate netid.byname map.  */
+
+#define _GNU_SOURCE
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
-
-#include "system.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -32,23 +29,13 @@
 #include <unistd.h>
 #include <rpc/types.h>
 #include <rpcsvc/ypclnt.h>
-#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
 #include <getopt.h>
-#else
-#include <compat/getopt.h>
-#endif
 
-#include "version.h"
 #include "mknetid.h"
 
 #define MAX_LENGTH 1024
 
 static int quiet_flag = 0;
-
-#ifndef HAVE_GETOPT_LONG
-#include <compat/getopt.c>
-#include <compat/getopt1.c>
-#endif
 
 static char *
 xstrtok (char *cp, int delim)
@@ -76,11 +63,13 @@ xstrtok (char *cp, int delim)
   return cp;
 }
 
-static void 
-Usage (int code)
+static void
+Usage (int exitcode)
 {
-  fprintf (stderr, "Usage: mknetid [-q] [-h hosts] [-p passwd] [-g group] [-d domain] [-n netid]\n");
-  exit (code);
+  fputs ("Usage: mknetid [-q] [-h hosts] [-p passwd] [-g group] [-d domain] [-n netid]\n",
+	 stderr);
+  fputs ("Usage: mknetid --version\n", stderr);
+  exit (exitcode);
 }
 
 int
@@ -139,10 +128,10 @@ main (int argc, char *argv[])
 	  Usage (0);
 	  break;
 	case 'v':
-	  fprintf (stderr, "mknetid - NYS YP Server version %s\n", version);
+	  fprintf (stderr, "mknetid (%s) %s\n", PACKAGE, VERSION);
 	  exit (0);
 	default:
-	  exit (1);
+	  Usage (1);
 	}
     }
   argc -= optind;
@@ -183,24 +172,24 @@ main (int argc, char *argv[])
 		       uid, domain);
 	}
     }
-  
+
   fclose (file);
-  
+
   if ((file = fopen (grpname, "r")) == NULL)
     {
       fprintf (stderr, "ERROR: Can't open %s\n", grpname);
       exit (1);
     }
-  
+
   while (fgets (line, MAX_LENGTH, file) != NULL)
     {
       if (line[0] != '+' && line[0] != '-')
 	{
 	  char *grpname, *ptr, *gid, *user;
-	  
+
 	  if (line[strlen (line) - 1] == '\n')
 	    line[strlen (line) - 1] = '\0';
-	  
+
 	  grpname = xstrtok (line, ':');
 	  ptr = xstrtok (NULL, ':');
 	  gid = xstrtok (NULL, ':');
@@ -211,9 +200,9 @@ main (int argc, char *argv[])
 			 user, grpname);
 	}
     }
-  
+
   fclose (file);
-  
+
   if ((file = fopen (hostname, "r")) == NULL)
     {
       fprintf (stderr, "ERROR: Can't open %s\n", grpname);

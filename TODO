@@ -1,7 +1,7 @@
 
 Things to do (in no particular order):
 
-	o Add cracklib to yppasswd and rpc.yppasswdd.
+	o Add cracklib to rpc.yppasswdd.
 
 	o ypmaplist needs to be fixed for Sun's NDBM
 

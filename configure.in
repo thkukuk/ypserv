@@ -43,6 +43,8 @@ else
   YPBINDIR=${libexecdir}
 fi
 AC_SUBST(YPBINDIR)
+YPMAPDIR="/var/yp"
+AC_SUBST(YPMAPDIR)
 
 dnl Checks for programs.
 EXTRA_CFLAGS="-W -Wall -Wbad-function-cast -Wcast-align -Wcast-qual"
@@ -234,7 +236,8 @@ AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
 	yppush/Makefile makedbm/Makefile makedbm/makedbm.8
 	revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile
-	mknetid/Makefile mknetid/mknetid.8
+	mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile
+	rpc.ypxfrd/rpc.ypxfrd.8 ypxfrd.8
 	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
 	scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate
 	scripts/pwupdate.8 scripts/create_printcap scripts/match_printcap)
