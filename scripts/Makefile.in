@@ -50,8 +50,8 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -62,6 +62,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+ALIASES = @ALIASES@
 AWK = @AWK@
 BASH = @BASH@
 CC = @CC@
@@ -70,7 +71,6 @@ CPP = @CPP@
 EXTRA_CFLAGS = @EXTRA_CFLAGS@
 LIBCRYPT = @LIBCRYPT@
 LIBDBM = @LIBDBM@
-MAIL_ALIASES = @MAIL_ALIASES@
 MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
@@ -85,7 +85,7 @@ YPMAPDIR = @YPMAPDIR@
 AUTOMAKE_OPTIONS = 1.4 gnits
 MAINT_CHARSET = latin1
 #
-INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
+INSTALL_SCRIPT = ${INSTALL} -m 755
 
 CLEANFILES = *~ ${SCRIPTS}
 
@@ -296,7 +296,7 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(varypdir)
-	$(INSTALL_DATA) $(srcdir)/ypMakefile $(DESTDIR)$(varypdir)/Makefile
+	$(INSTALL_DATA) $(top_builddir)/scripts/ypMakefile $(DESTDIR)$(varypdir)/Makefile
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

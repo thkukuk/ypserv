@@ -64,6 +64,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+ALIASES = @ALIASES@
 AWK = @AWK@
 BASH = @BASH@
 CC = @CC@
@@ -72,7 +73,6 @@ CPP = @CPP@
 EXTRA_CFLAGS = @EXTRA_CFLAGS@
 LIBCRYPT = @LIBCRYPT@
 LIBDBM = @LIBDBM@
-MAIL_ALIASES = @MAIL_ALIASES@
 MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
@@ -86,9 +86,12 @@ YPMAPDIR = @YPMAPDIR@
 
 AUTOMAKE_OPTIONS = 1.4 gnits
 
-noinst_LIBRARIES = libyp.a
-noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h ypxfrd.x access.h 		yp_db.h
+rpcsvcdir = ${prefix}/include/rpcsvc
 
+noinst_LIBRARIES = libyp.a
+noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h
+
+rpcsvc_HEADERS = ypxfrd.x
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\"
@@ -121,7 +124,7 @@ man5dir = $(mandir)/man5
 MANS = $(man_MANS)
 
 NROFF = nroff
-HEADERS =  $(noinst_HEADERS)
+HEADERS =  $(noinst_HEADERS) $(rpcsvc_HEADERS)
 
 DIST_COMMON =  Makefile.am Makefile.in
 
@@ -216,6 +219,21 @@ uninstall-man:
 	@$(NORMAL_UNINSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-man5
 
+install-rpcsvcHEADERS: $(rpcsvc_HEADERS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(rpcsvcdir)
+	@list='$(rpcsvc_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d= ; else d="$(srcdir)/"; fi; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(rpcsvcdir)/$$p"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(rpcsvcdir)/$$p; \
+	done
+
+uninstall-rpcsvcHEADERS:
+	@$(NORMAL_UNINSTALL)
+	list='$(rpcsvc_HEADERS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(rpcsvcdir)/$$p; \
+	done
+
 tags: TAGS
 
 ID: $(HEADERS) $(SOURCES) $(LISP)
@@ -308,20 +326,20 @@ installcheck: installcheck-am
 install-exec-am:
 install-exec: install-exec-am
 
-install-data-am: install-man
+install-data-am: install-man install-rpcsvcHEADERS
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-man
+uninstall-am: uninstall-man uninstall-rpcsvcHEADERS
 uninstall: uninstall-am
 all-am: Makefile $(LIBRARIES) $(MANS) $(HEADERS)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(mandir)/man5
+	$(mkinstalldirs)  $(DESTDIR)$(mandir)/man5 $(DESTDIR)$(rpcsvcdir)
 
 
 mostlyclean-generic:
@@ -363,10 +381,11 @@ maintainer-clean: maintainer-clean-am
 clean-noinstLIBRARIES maintainer-clean-noinstLIBRARIES \
 mostlyclean-compile distclean-compile clean-compile \
 maintainer-clean-compile install-man5 uninstall-man5 install-man \
-uninstall-man tags mostlyclean-tags distclean-tags clean-tags \
-maintainer-clean-tags distdir mostlyclean-depend distclean-depend \
-clean-depend maintainer-clean-depend info-am info dvi-am dvi check \
-check-am installcheck-am installcheck install-exec-am install-exec \
+uninstall-man uninstall-rpcsvcHEADERS install-rpcsvcHEADERS tags \
+mostlyclean-tags distclean-tags clean-tags maintainer-clean-tags \
+distdir mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
 install-data-am install-data install-am install uninstall-am uninstall \
 all-redirect all-am all installdirs mostlyclean-generic \
 distclean-generic clean-generic maintainer-clean-generic clean \

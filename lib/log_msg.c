@@ -32,7 +32,7 @@ log_msg (char *fmt,...)
     {
 #ifndef HAVE_VSYSLOG
       vsprintf (msg, fmt, ap);
-      syslog (LOG_NOTICE, msg);
+      syslog (LOG_NOTICE, "%s", msg);
 #else
       vsyslog (LOG_NOTICE, fmt, ap);
 #endif

@@ -987,10 +987,10 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
 	}
       else
 	{
-	  char *buf = alloca (val.dsize + 2);
+	  char *buf = alloca (val.dsize + 1);
 
 	  memcpy (buf, val.dptr, val.dsize);
-	  buf[val.dsize + 1] = '\0';
+	  buf[val.dsize] = '\0';
 	  result->ordernum = atoi (buf);
 	  ypdb_free (val.dptr);
 	}
