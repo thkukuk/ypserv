@@ -596,7 +596,8 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     case -1:
       log_msg ("Cannot fork: %s", strerror (errno));
       result->xfrstat = YPXFR_XFRERR;
-    default:
+      break; 
+   default:
       result->xfrstat = YPXFR_SUCC;
       break;
     }

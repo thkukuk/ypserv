@@ -343,7 +343,7 @@ main (int argc, char **argv)
       };
 
       c = getopt_long (argc, argv, "vdp:buh", long_options, &option_index);
-      if (c == EOF)
+      if (c == -1)
 	break;
       switch (c)
 	{
