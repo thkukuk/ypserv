@@ -11,7 +11,7 @@
 # PARTICULAR PURPOSE.
 
 #
-# Copyright (c) 2000 SuSE GmbH, Nuernberg
+# Copyright (c) 2001 SuSE GmbH, Nuernberg
 #
 # Author: Thorsten Kukuk <kukuk@suse.de>
 #
@@ -91,7 +91,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 localedir = $(datadir)/locale
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
-DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
+DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"@YPMAPDIR@\" 	-DUSE_FQDN=@USE_FQDN@
 
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
@@ -99,25 +99,26 @@ CLEANFILES = *~ ${MANS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS))
 
-man_MANS = mknetid.8
+noinst_HEADERS = yppasswd.h yppasswd.x
 
-libexec_PROGRAMS = mknetid
+man_MANS = yppasswdd.8 rpc.yppasswdd.8
 
-noinst_HEADERS = mknetid.h
+sbin_PROGRAMS = rpc.yppasswdd
 
-mknetid_SOURCES = mknetid.c netid_hash.c
+rpc_yppasswdd_SOURCES = update.c yppasswd_xdr.c yppasswdd.c
+
+rpc_yppasswdd_LDADD = $(LIBDBM) $(LIBCRYPT) $(top_builddir)/lib/libyp.a
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
-CONFIG_CLEAN_FILES =  mknetid.8
-PROGRAMS =  $(libexec_PROGRAMS)
+CONFIG_CLEAN_FILES =  yppasswdd.8 rpc.yppasswdd.8
+PROGRAMS =  $(sbin_PROGRAMS)
 
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-mknetid_OBJECTS =  mknetid.o netid_hash.o
-mknetid_LDADD = $(LDADD)
-mknetid_DEPENDENCIES = 
-mknetid_LDFLAGS = 
+rpc_yppasswdd_OBJECTS =  update.o yppasswd_xdr.o yppasswdd.o
+rpc_yppasswdd_DEPENDENCIES =  $(top_builddir)/lib/libyp.a
+rpc_yppasswdd_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -127,53 +128,55 @@ MANS = $(man_MANS)
 NROFF = nroff
 HEADERS =  $(noinst_HEADERS)
 
-DIST_COMMON =  Makefile.am Makefile.in mknetid.8.in
+DIST_COMMON =  Makefile.am Makefile.in rpc.yppasswdd.8.in yppasswdd.8.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/mknetid.P .deps/netid_hash.P
-SOURCES = $(mknetid_SOURCES)
-OBJECTS = $(mknetid_OBJECTS)
+DEP_FILES =  .deps/update.P .deps/yppasswd_xdr.P .deps/yppasswdd.P
+SOURCES = $(rpc_yppasswdd_SOURCES)
+OBJECTS = $(rpc_yppasswdd_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnits mknetid/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnits rpc.yppasswdd/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-mknetid.8: $(top_builddir)/config.status mknetid.8.in
+yppasswdd.8: $(top_builddir)/config.status yppasswdd.8.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+rpc.yppasswdd.8: $(top_builddir)/config.status rpc.yppasswdd.8.in
 	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-mostlyclean-libexecPROGRAMS:
+mostlyclean-sbinPROGRAMS:
 
-clean-libexecPROGRAMS:
-	-test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
+clean-sbinPROGRAMS:
+	-test -z "$(sbin_PROGRAMS)" || rm -f $(sbin_PROGRAMS)
 
-distclean-libexecPROGRAMS:
+distclean-sbinPROGRAMS:
 
-maintainer-clean-libexecPROGRAMS:
+maintainer-clean-sbinPROGRAMS:
 
-install-libexecPROGRAMS: $(libexec_PROGRAMS)
+install-sbinPROGRAMS: $(sbin_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
-	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
+	$(mkinstalldirs) $(DESTDIR)$(sbindir)
+	@list='$(sbin_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo "  $(INSTALL_PROGRAM) $$p $(DESTDIR)$(libexecdir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
-	     $(INSTALL_PROGRAM) $$p $(DESTDIR)$(libexecdir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	    echo "  $(INSTALL_PROGRAM) $$p $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	     $(INSTALL_PROGRAM) $$p $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 
-uninstall-libexecPROGRAMS:
+uninstall-sbinPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	list='$(libexec_PROGRAMS)'; for p in $$list; do \
-	  rm -f $(DESTDIR)$(libexecdir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	list='$(sbin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(sbindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
 
 .s.o:
@@ -192,9 +195,9 @@ distclean-compile:
 
 maintainer-clean-compile:
 
-mknetid: $(mknetid_OBJECTS) $(mknetid_DEPENDENCIES)
-	@rm -f mknetid
-	$(LINK) $(mknetid_LDFLAGS) $(mknetid_OBJECTS) $(mknetid_LDADD) $(LIBS)
+rpc.yppasswdd: $(rpc_yppasswdd_OBJECTS) $(rpc_yppasswdd_DEPENDENCIES)
+	@rm -f rpc.yppasswdd
+	$(LINK) $(rpc_yppasswdd_LDFLAGS) $(rpc_yppasswdd_OBJECTS) $(rpc_yppasswdd_LDADD) $(LIBS)
 
 install-man8:
 	$(mkinstalldirs) $(DESTDIR)$(man8dir)
@@ -266,14 +269,14 @@ maintainer-clean-tags:
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
-subdir = mknetid
+subdir = rpc.yppasswdd
 
 distdir: $(DISTFILES)
 	here=`cd $(top_builddir) && pwd`; \
 	top_distdir=`cd $(top_distdir) && pwd`; \
 	distdir=`cd $(distdir) && pwd`; \
 	cd $(top_srcdir) \
-	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnits mknetid/Makefile
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnits rpc.yppasswdd/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -324,7 +327,7 @@ check-am: all-am
 check: check-am
 installcheck-am:
 installcheck: installcheck-am
-install-exec-am: install-libexecPROGRAMS
+install-exec-am: install-sbinPROGRAMS
 install-exec: install-exec-am
 
 install-data-am: install-man
@@ -333,14 +336,14 @@ install-data: install-data-am
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-libexecPROGRAMS uninstall-man
+uninstall-am: uninstall-sbinPROGRAMS uninstall-man
 uninstall: uninstall-am
 all-am: Makefile $(PROGRAMS) $(MANS) $(HEADERS)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(libexecdir) $(DESTDIR)$(mandir)/man8
+	$(mkinstalldirs)  $(DESTDIR)$(sbindir) $(DESTDIR)$(mandir)/man8
 
 
 mostlyclean-generic:
@@ -353,23 +356,22 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-mostlyclean-am:  mostlyclean-libexecPROGRAMS mostlyclean-compile \
+mostlyclean-am:  mostlyclean-sbinPROGRAMS mostlyclean-compile \
 		mostlyclean-tags mostlyclean-depend mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
-clean-am:  clean-libexecPROGRAMS clean-compile clean-tags clean-depend \
+clean-am:  clean-sbinPROGRAMS clean-compile clean-tags clean-depend \
 		clean-generic mostlyclean-am
 
 clean: clean-am
 
-distclean-am:  distclean-libexecPROGRAMS distclean-compile \
-		distclean-tags distclean-depend distclean-generic \
-		clean-am
+distclean-am:  distclean-sbinPROGRAMS distclean-compile distclean-tags \
+		distclean-depend distclean-generic clean-am
 
 distclean: distclean-am
 
-maintainer-clean-am:  maintainer-clean-libexecPROGRAMS \
+maintainer-clean-am:  maintainer-clean-sbinPROGRAMS \
 		maintainer-clean-compile maintainer-clean-tags \
 		maintainer-clean-depend maintainer-clean-generic \
 		distclean-am
@@ -378,19 +380,18 @@ maintainer-clean-am:  maintainer-clean-libexecPROGRAMS \
 
 maintainer-clean: maintainer-clean-am
 
-.PHONY: mostlyclean-libexecPROGRAMS distclean-libexecPROGRAMS \
-clean-libexecPROGRAMS maintainer-clean-libexecPROGRAMS \
-uninstall-libexecPROGRAMS install-libexecPROGRAMS mostlyclean-compile \
-distclean-compile clean-compile maintainer-clean-compile install-man8 \
-uninstall-man8 install-man uninstall-man tags mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags distdir \
-mostlyclean-depend distclean-depend clean-depend \
-maintainer-clean-depend info-am info dvi-am dvi check check-am \
-installcheck-am installcheck install-exec-am install-exec \
-install-data-am install-data install-am install uninstall-am uninstall \
-all-redirect all-am all installdirs mostlyclean-generic \
-distclean-generic clean-generic maintainer-clean-generic clean \
-mostlyclean distclean maintainer-clean
+.PHONY: mostlyclean-sbinPROGRAMS distclean-sbinPROGRAMS \
+clean-sbinPROGRAMS maintainer-clean-sbinPROGRAMS uninstall-sbinPROGRAMS \
+install-sbinPROGRAMS mostlyclean-compile distclean-compile \
+clean-compile maintainer-clean-compile install-man8 uninstall-man8 \
+install-man uninstall-man tags mostlyclean-tags distclean-tags \
+clean-tags maintainer-clean-tags distdir mostlyclean-depend \
+distclean-depend clean-depend maintainer-clean-depend info-am info \
+dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
+install-exec install-data-am install-data install-am install \
+uninstall-am uninstall all-redirect all-am all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

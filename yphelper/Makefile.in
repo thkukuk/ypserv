@@ -105,8 +105,6 @@ man_MANS = yphelper.8
 libexec_PROGRAMS = yphelper
 
 yphelper_SOURCES = yphelper.c
-
-yphelper_LDADD = -lefence
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -116,6 +114,7 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 yphelper_OBJECTS =  yphelper.o
+yphelper_LDADD = $(LDADD)
 yphelper_DEPENDENCIES = 
 yphelper_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
