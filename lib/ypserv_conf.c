@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -156,18 +156,18 @@ conffile_t *
 load_ypserv_conf (const char *path)
 {
   FILE *in;
-  char c;
+  char c, *cp;
   char buf1[1025], buf2[1025], buf3[1025];
   long line = 0;
   conffile_t *ptr = NULL, *work = NULL;
-  char  *filename = alloca (strlen (path) + sizeof ("/ypserv.conf") + 1);
+  char *filename = alloca (strlen (path) + sizeof ("/ypserv.conf") + 1);
 
-  sprintf (filename, "%s/ypserv.conf", path);
+  cp = stpcpy (filename, path);
+  strcpy (cp, "/ypserv.conf");
   if ((in = fopen (filename, "r")) == NULL)
     {
       if (debug_flag)
 	log_msg ("WARNING: %s not found!", filename);
-      free (filename);
       return NULL;
     }
 

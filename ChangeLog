@@ -1,3 +1,21 @@
+2001-03-25  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Create revnetgroup/yphelper Makefile
+	* Makefile.am (SUBDIRS): Add revnetgroup and yphelper directory.
+	* revnetgroup/Makefile.am: New.
+	* revnetgroup/revnetgroup.c: New.
+	* revnetgroup/revnetgroup.8: New.
+	* revnetgroup/getnetgrent.c: New.
+	* revnetgroup/hash.c: New.
+	* yphelper/yphelper.c: New.
+	* yphelper/yphelper.8: New.
+
+	* ypxfr/ypxfr.c (ypxfr): Check return value from NIS server for
+	  yp_order call.
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Don't free buffer
+	  allocated with alloca, use stpcpy instead of sprintf.
+
 2001-03-11  Thorsten Kukuk  <kukuk@suse.de>
 
 	* ypserv/yp_db.c: Enable caching of gdbm file handles.

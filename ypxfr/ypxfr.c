@@ -1,4 +1,4 @@
-/* Copyright (c) 2000  Thorsten Kukuk
+/* Copyright (c) 2000, 2001  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -194,10 +194,10 @@ ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
   CLIENT *clnt;
   struct ypxfr_mapname req;
   struct xfr resp;
-  struct timeval timeout = {0, 25};
+  struct timeval timeout = {25, 0};
 
   if (debug_flag)
-    log_msg ("Trying ypxfrd ...");
+    fprintf (stderr, "Trying ypxfrd ...");
 
   if (!getrpcport (host, YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
                    IPPROTO_TCP))
@@ -411,6 +411,25 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       log_msg (clnt_sperror (clnt_udp, "masterOrderNum"));
       masterOrderNum = time (NULL); /* We set it to the current time.
                                        So a new map will be always newer. */
+    }
+  else if (resp_order.stat != YP_TRUE)
+    {
+      switch (resp_order.stat)
+	{
+	case YP_NOMAP:
+	  return YPXFR_NOMAP;
+	case YP_NODOM:
+	  return YPXFR_NODOM;
+	case YP_BADDB:
+	  return YPXFR_DBM;
+	case YP_YPERR:
+	  return YPXFR_YPERR;
+	case YP_BADARGS:
+	  return YPXFR_BADARGS;
+	default:
+	  log_msg ("ERROR: not expected value: %s", resp_order.stat);
+	  return YPXFR_XFRERR;
+	}
     }
   else
     {

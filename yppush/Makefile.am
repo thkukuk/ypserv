@@ -12,7 +12,8 @@ localedir = $(datadir)/locale
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
+	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\" \
+	-DUSE_FQDN=@USE_FQDN@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~

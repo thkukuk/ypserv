@@ -78,11 +78,15 @@ AC_SUBST(MAKE)
 dnl Check for aliases path
 AC_PATH_PROG(MAIL_ALIASES, aliases, /etc/mail/aliases, /etc/mail:/etc)
 
-dnl Should we use a gethostbyname after gethostname to use FQDN ? default no
-dnl XXX Should be enabled by default !
+dnl Should we use a gethostbyname after gethostname to use FQDN ? default yes
 AC_ARG_ENABLE(fqdn,
 	[  --disable-fqdn                    Always use FQDN [default=yes]],
-              USE_FQDN=$enableval, USE_FQDN=yes)
+              USE_PARAM_FQDN=$enableval, USE_PARAM_FQDN=yes)
+if test "$USE_PARAM_FQDN" = "no"; then
+  USE_FQDN=0
+else
+  USE_FQDN=1
+fi
 AC_SUBST(USE_FQDN)
 
 dnl Should we allow root to change a password with yppasswd ? default: yes
@@ -219,7 +223,8 @@ AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
 AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
 
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
-	yppush/Makefile makedbm/Makefile Makefile)
+	yppush/Makefile makedbm/Makefile revnetgroup/Makefile Makefile
+	yphelper/Makefile)
 
 echo "
 Configuration:

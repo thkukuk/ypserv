@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000 SuSE GmbH, Nuernberg
+# Copyright (c) 2001 SuSE GmbH, Nuernberg
 #
 # Author: Thorsten Kukuk <kukuk@suse.de>
 #
@@ -11,19 +11,20 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 localedir = $(datadir)/locale
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
+INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
+
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\" \
 	-DUSE_FQDN=@USE_FQDN@
-INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
 
 EXTRA_DIST = ${MANS}
 
-man_MANS = makedbm.8
+man_MANS = yphelper.8
 
-libexec_PROGRAMS = makedbm
+libexec_PROGRAMS = yphelper
 
-makedbm_SOURCES = makedbm.c
+yphelper_SOURCES = yphelper.c
 
-makedbm_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a -lefence
+yphelper_LDADD =  -lefence

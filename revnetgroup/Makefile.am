@@ -12,18 +12,19 @@ localedir = $(datadir)/locale
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\" \
-	-DUSE_FQDN=@USE_FQDN@
+	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
 
 EXTRA_DIST = ${MANS}
 
-man_MANS = makedbm.8
+man_MANS = revnetgroup.8
 
-libexec_PROGRAMS = makedbm
+libexec_PROGRAMS = revnetgroup
 
-makedbm_SOURCES = makedbm.c
+noinst_HEADERS = hash.h
 
-makedbm_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a -lefence
+revnetgroup_SOURCES = revnetgroup.c getnetgrent.c hash.c
+
+revnetgroup_LDADD = -lefence
