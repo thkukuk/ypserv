@@ -232,9 +232,10 @@ AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
 AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
 
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
-	yppush/Makefile makedbm/Makefile revnetgroup/Makefile Makefile
+	yppush/Makefile makedbm/Makefile makedbm/makedbm.8
+	revnetgroup/Makefile revnetgroup/revnetgroup.8.in Makefile
 	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
-	scripts/ypxfr_1perday scripts/ypxfr_2perday makedbm/makedbm.8)
+	scripts/ypxfr_1perday scripts/ypxfr_2perday)
 
 echo "
 Configuration:

@@ -15,9 +15,9 @@ DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
-CLEANFILES = *~
+CLEANFILES = *~ ${MANS}
 
-EXTRA_DIST = ${MANS}
+EXTRA_DIST = $(addsuffix .in,$(MANS))
 
 man_MANS = revnetgroup.8
 

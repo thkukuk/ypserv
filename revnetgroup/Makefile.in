@@ -95,9 +95,9 @@ DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" 	-DCONFD
 
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
-CLEANFILES = *~
+CLEANFILES = *~ ${MANS}
 
-EXTRA_DIST = ${MANS}
+EXTRA_DIST = $(addsuffix .in,$(MANS))
 
 man_MANS = revnetgroup.8
 
@@ -110,7 +110,7 @@ revnetgroup_SOURCES = revnetgroup.c getnetgrent.c hash.c
 revnetgroup_LDADD = -lefence
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
-CONFIG_CLEAN_FILES = 
+CONFIG_CLEAN_FILES =  revnetgroup.8.in
 PROGRAMS =  $(libexec_PROGRAMS)
 
 CPPFLAGS = @CPPFLAGS@
@@ -128,7 +128,7 @@ MANS = $(man_MANS)
 NROFF = nroff
 HEADERS =  $(noinst_HEADERS)
 
-DIST_COMMON =  Makefile.am Makefile.in
+DIST_COMMON =  Makefile.am Makefile.in revnetgroup.8.in.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -149,6 +149,8 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+revnetgroup.8.in: $(top_builddir)/config.status revnetgroup.8.in.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 mostlyclean-libexecPROGRAMS:
 

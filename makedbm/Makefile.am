@@ -18,7 +18,7 @@ INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~ ${MANS}
 
-EXTRA_DIST = makedbm.8.in
+EXTRA_DIST = $(addsuffix .in,$(MANS))
 
 man_MANS = makedbm.8
 
