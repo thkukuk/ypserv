@@ -1,5 +1,10 @@
 2003-06-06  Thorsten Kukuk  <kukuk@suse.de>
 
+	* Add more portability changes from
+	Petter Reinholdtsen <pere@hungry.com>
+
+2003-06-06  Thorsten Kukuk  <kukuk@suse.de>
+
 	* ypxfr/ypxfr_clnt.c (ypproc_master_2): New function.
 
 	* ypxfr/ypxfr.c (ypxfr): Get official name of master host from

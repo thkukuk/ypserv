@@ -260,7 +260,7 @@ int _rpc_dtablesize()
 
 #ifndef HAVE_INET_ATON
 /* Source: http://mail.gnu.org/archive/html/autoconf/2002-08/msg00036.html */
-/*  $Id: compat.c,v 1.1.2.2 2003/06/13 14:08:12 kukuk Exp $
+/*  $Id: compat.c,v 1.1.2.3 2003/06/13 21:04:56 kukuk Exp $
 **
 **  Replacement for a missing inet_aton.
 **
@@ -414,33 +414,6 @@ inet_pton(int af, const char *src, void *dst)
   }
 }
 #endif /* not HAVE_INET_PTON */
-
-#ifndef HAVE_FGETPWENT
-struct passwd *
-fgetpwent(FILE *stream)
-{
-  fprintf(stderr, "warning: Bogus fgetpwent() called\n");
-  return NULL;
-}
-#endif /* not HAVE_FGETPWENT */
-
-#ifndef HAVE_PUTPWENT
-int
-putpwent(const struct passwd *p, FILE *stream)
-{
-  fprintf(stderr, "warning: Bogus putpwent() called\n");
-  return -1;
-}
-#endif /* not HAVE_PUTPWENT */
-
-#ifndef HAVE_FGETGRENT
-struct group *
-fgetgrent(FILE *stream)
-{
-  fprintf(stderr, "warning: Bogus fgetgrent() called\n");
-  return NULL;
-}
-#endif /* not HAVE_FGETGRENT */
 
 #ifndef HAVE_XDR_YPXFRSTAT
 #include <rpc/rpc.h>
