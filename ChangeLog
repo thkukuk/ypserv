@@ -1,3 +1,11 @@
+2001-09-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.1
+
+	* rpc.yppasswdd/yppasswdd.c: Implement --port parameter to
+	  bind to a special port.
+	* rpc.yppasswdd/rpc.yppasswdd.8.in: Document new parameter.
+
 2001-09-02  Martin Vidner <mvidner@suse.cz>
 
 	* Fix various errors in manual pages

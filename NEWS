@@ -9,6 +9,7 @@ Version 2.1
 * Fix paths in manual pages
 * Document removal of tcp_wrapper support
 * Fix bug so that ypxfr transfers the whole map in fallback mode
+* rpc.yppasswdd can now register itself to a given port
 
 Version 2.0
 * Merge bug fixes from Debian

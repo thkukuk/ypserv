@@ -10,11 +10,11 @@
 .SH NAME
 rpc.yppasswdd \- NIS password update daemon
 .SH SYNOPSIS
-.B "rpc.yppasswdd [-D directory] [-e chsh|chfn]"
+.B "rpc.yppasswdd [-D directory] [-e chsh|chfn] [--port number]"
 .br
-.B "rpc.yppasswdd [-s shadow] [-p passwd] [-e chsh|chfn]"
+.B "rpc.yppasswdd [-s shadow] [-p passwd] [-e chsh|chfn] [--port number]"
 .br
-.B "rpc.yppasswdd -x program|-E program [-e chsh|chfn]"
+.B "rpc.yppasswdd -x program|-E program [-e chsh|chfn] [--port number]"
 
 .SH DESCRIPTION
 \fBrpc.yppasswdd\fP is the RPC server that lets users change their passwords
@@ -97,6 +97,10 @@ below for more details on this.
 .TP
 .B "\-m"
 Will be ignored, for compatibility with Solaris only.
+.TP
+.BI "\-\-port number"
+rpc.yppasswdd will try to register itself to this port. This makes
+it  possible to have a router filter packets to the NIS ports.
 .TP
 .B "\-v" "--version"
 Prints the version number and if this package is compiled with the

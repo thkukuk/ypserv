@@ -24,6 +24,7 @@
 #endif
 
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -190,6 +191,7 @@ usage (FILE * fp, int n)
   fputs ("Usage: rpc.yppasswdd [--debug] [-s shadowfile] [-p passwdfile] [-e chsh|chfn]\n", fp);
   fputs ("       rpc.yppasswdd [--debug] [-D directory] [-e chsh|chfn]\n", fp);
   fputs ("       rpc.yppasswdd [--debug] [-x program |-E program] [-e chsh|chfn]\n", fp);
+  fputs ("       rpc.yppasswdd --port number\n", fp);
   fputs ("       rpc.yppasswdd --version\n", fp);
   exit (n);
 }
@@ -256,6 +258,7 @@ int
 main (int argc, char **argv)
 {
   SVCXPRT *transp;
+  int my_port = -1, my_socket;
   int c;
 
   /* Initialize logging. */
@@ -272,6 +275,7 @@ main (int argc, char **argv)
 	{"help", no_argument, NULL, 'h'},
 	{"execute", required_argument, NULL, 'x'},
 	{"debug", no_argument, NULL, '\254'},
+	{"port", required_argument, NULL, '\253'},
 	{NULL, 0, NULL, '\0'}
       };
 
@@ -332,12 +336,17 @@ main (int argc, char **argv)
 	case 'h':
 	  usage (stdout, 0);
 	  break;
+	case '\253':
+          my_port = atoi (optarg);
+          if (debug_flag)
+            log_msg ("Using port %d\n", my_port);
+          break;
 	case '\255':
 #if CHECKROOT
-	  fprintf (stdout, "rpc.yppasswdd - NYS YP server version %s (with CHECKROOT)\n",
+	  fprintf (stdout, "rpc.yppasswdd - YP server version %s (with CHECKROOT)\n",
 		   VERSION);
 #else /* NO CHECKROOT */
-	  fprintf (stdout, "rpc.yppasswdd - NYS YP server version %s\n",
+	  fprintf (stdout, "rpc.yppasswdd - YP server version %s\n",
 		   VERSION);
 #endif /* CHECKROOT */
 	  exit (0);
@@ -443,7 +452,35 @@ main (int argc, char **argv)
   /* Create the RPC server */
   pmap_unset (YPPASSWDPROG, YPPASSWDVERS);
 
-  transp = svcudp_create (RPC_ANYSOCK);
+  if (my_port >= 0)
+    {
+      struct sockaddr_in s_in;
+      int result;
+
+      my_socket = socket (AF_INET, SOCK_DGRAM, 0);
+      if (my_socket < 0)
+        {
+          log_msg ("can not create UDP: %s", strerror (errno));
+          exit (1);
+        }
+
+      memset ((char *) &s_in, 0, sizeof (s_in));
+      s_in.sin_family = AF_INET;
+      s_in.sin_addr.s_addr = htonl (INADDR_ANY);
+      s_in.sin_port = htons (my_port);
+
+      result = bind (my_socket, (struct sockaddr *) &s_in,
+                     sizeof (s_in));
+      if (result < 0)
+        {
+          log_msg ("rpc.yppasswdd: can not bind UDP: %s ", strerror (errno));
+          exit (1);
+        }
+    }
+  else
+    my_socket = RPC_ANYSOCK;
+
+  transp = svcudp_create (my_socket);
   if (transp == NULL)
     {
       log_msg ("cannot create udp service.\n");
