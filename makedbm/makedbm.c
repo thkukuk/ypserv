@@ -1,4 +1,4 @@
-/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002 Thorsten Kukuk
+/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -386,6 +386,9 @@ create_file (char *fileName, char *dbmName, char *masterName,
 	{
 	  while (*cptr && *cptr != '\t')
 	    ++cptr;
+	  /* But a key should not end with a space.  */
+	  while (cptr[-1] == ' ')
+	    --cptr;
 	}
 
       *cptr++ = '\0';

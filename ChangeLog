@@ -1,3 +1,10 @@
+2003-10-22  Thorsten Kukuk  <kukuk@suse.de>
+
+	* makedbm/makedbm.c (create_file): If there are spaces before
+	a tab, remove this spaces, too.
+
+	* ypserv/ypserv.c: Save/restore errno in signal handler.
+
 2003-08-15  Thorsten Kukuk  <kukuk@suse.de>
 
 	* ypserv/ypserv.c (main): Use signal instead of sigaction.
@@ -6,7 +13,8 @@
 
 2003-08-12  Thorsten Kukuk  <kukuk@suse.de>
 
-	* ypserv/ypserv.c: Use own svc_run implentation based on select.
+	* ypserv/ypserv.c: Add own svc_run implentation based on select,
+	but prefer glibc one.
 
 2003-07-30  Thorsten Kukuk  <kukuk@suse.de>
 

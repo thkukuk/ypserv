@@ -193,16 +193,17 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
 
   if (!svc_freeargs (transp, _xdr_argument, (caddr_t) &argument))
     {
-      fprintf (stderr, "unable to free arguments");
+      log_msg ("unable to free arguments");
       exit (1);
     }
 
   if (!ypprog_2_freeresult (transp, _xdr_result, (caddr_t) &result))
-    fprintf (stderr, "unable to free results");
+    log_msg ("unable to free results");
 
   return;
 }
 
+#if 0
 static void
 mysvc_run (void)
 {
@@ -236,6 +237,7 @@ mysvc_run (void)
         }
     }
 }
+#endif
 
 /* Create a pidfile on startup */
 static void
@@ -322,6 +324,8 @@ extern FILE *debug_output;
 static void
 sig_usr1 (int sig UNUSED)
 {
+  int save_errno = errno;
+
   if (debug_flag)
     {
       debug_flag = 0;
@@ -335,6 +339,7 @@ sig_usr1 (int sig UNUSED)
       if (debug_output != NULL)
 	debug_flag = 1;
     }
+  errno = save_errno;
 }
 
 /* Clean up if we quit the program. */
@@ -352,6 +357,7 @@ sig_quit (int sig UNUSED)
 static void
 sig_hup (int sig UNUSED)
 {
+  int save_errno = errno;
   int old_cached_filehandles = cached_filehandles;
 
   load_securenets ();
@@ -360,6 +366,7 @@ sig_hup (int sig UNUSED)
      SIGHUP.  */
   if (cached_filehandles < old_cached_filehandles)
     cached_filehandles = old_cached_filehandles;
+  errno = save_errno;
 }
 
 /* Clean up after child processes signal their termination. */
@@ -609,8 +616,12 @@ main (int argc, char **argv)
       exit (1);
     }
 
+#if 0
   mysvc_run ();
-  log_msg ("mysvc_run returned");
+#else
+  svc_run ();
+#endif
+  log_msg ("svc_run returned");
   unlink (_YPSERV_PIDFILE);
   exit (1);
   /* NOTREACHED */
