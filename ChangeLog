@@ -1,3 +1,18 @@
+2002-10-28  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.6
+
+	* lib/yp_db.c: Make number of max. open file handles configureable.
+	* lib/ypserv_conf.c: max. number of cached_filehandles is 255.
+	* rpc.ypxfrd/ypxfrd.c: set cached_filehandles to 0 after loading
+	config file, rpc.ypxfrd should not cache file handles.
+	* ypserv/ypserv.c (sig_hup): Don't allow to decrease the max. number
+	of cached file handles with SIGHUP.
+	* etc/ypserv.conf.5: Add documentation about new files option.
+
+	* makedbm/makedbm.c (create_file): If we find a <TAB> in a key,
+	assume that <TAB> is the seperator between key and data.
+
 2002-10-26  Thorsten Kukuk  <kukuk@suse.de>
 
 	* rpc.ypxfrd/ypxfrd_server.c (ypxfrd_getmap_1_svc): Close file

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996,1997, 1998, 1999, 2000 Thorsten Kukuk
+/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -368,8 +368,20 @@ create_file (char *fileName, char *dbmName, char *masterName,
 
       cptr = key;
 
-      while (*cptr && *cptr != '\t' && *cptr != ' ')
-	++cptr;
+      /* Hack for spaces in passwd, group and hosts keys. If we
+	 find a <TAB> in the string, Makefile generates it to
+	 seperate the key. This should be the standard, but is not
+	 done for all maps (like bootparamd).  */
+      if (strchr (cptr, '\t') == NULL)
+	{
+	  while (*cptr && *cptr != '\t' && *cptr != ' ')
+	    ++cptr;
+	}
+      else
+	{
+	  while (*cptr && *cptr != '\t')
+	    ++cptr;
+	}
 
       *cptr++ = '\0';
 

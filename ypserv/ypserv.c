@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -40,6 +40,7 @@
 #include "yp.h"
 #include "access.h"
 #include "log_msg.h"
+#include "ypserv_conf.h"
 
 #ifdef HAVE_PATHS_H
 #include <paths.h>
@@ -295,8 +296,14 @@ sig_quit (int sig __attribute__ ((unused)))
 static void
 sig_hup (int sig __attribute__ ((unused)))
 {
+  int old_cached_filehandles = cached_filehandles;
+
   load_securenets ();
   load_config ();
+  /* Don't allow to decrease the number of max. cached files with
+     SIGHUP.  */
+  if (cached_filehandles < old_cached_filehandles)
+    cached_filehandles = old_cached_filehandles;
 }
 
 static void
@@ -343,19 +350,13 @@ main (int argc, char **argv)
       };
 
       c = getopt_long (argc, argv, "vdp:buh", long_options, &option_index);
-      if (c == EOF)
+      if (c == -1)
 	break;
       switch (c)
 	{
 	case 'v':
 	  debug_flag = 1;
-	  log_msg ("ypserv (%s) %s (with %s)\n", PACKAGE, VERSION,
-#ifdef HAVE_LIBWRAP
-		  "tcp wrapper"
-#else
-		  "securenets"
-#endif
-	    );
+	  log_msg ("ypserv (%s) %s\n", PACKAGE, VERSION);
 	  return 0;
 	case 'd':
 	  ++debug_flag;
@@ -379,13 +380,7 @@ main (int argc, char **argv)
   argv += optind;
 
   if (debug_flag)
-    log_msg ("[ypserv (%s) %s (with %s)]\n", PACKAGE, VERSION,
-#ifdef HAVE_LIBWRAP
-	    "tcp wrapper"
-#else
-	    "securenets"
-#endif
-      );
+    log_msg ("[ypserv (%s) %s]\n", PACKAGE, VERSION);
   else
     {
       int i;
@@ -424,17 +419,16 @@ main (int argc, char **argv)
       dup (i);
     }
 
-  if (argc > 0)
+  if (argc > 0 && debug_flag)
     {
       path_ypdb = argv[0];
-      if (debug_flag)
-	log_msg ("Using database directory: %s\n", path_ypdb);
+      log_msg ("Using database directory: %s\n", path_ypdb);
     }
 
   /* Change current directory to database location */
   if (chdir (path_ypdb) < 0)
     {
-      log_msg ("ypserv: chdir: %", strerror (errno));
+      log_msg ("ypserv: chdir: %s", strerror (errno));
       exit (1);
     }
 
