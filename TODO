@@ -9,3 +9,4 @@ Things to do (in no particular order):
 
 	o Rewrite makedbm
 
+	o Fix ypserv.conf example and manual page (mangle!)
