@@ -366,6 +366,26 @@ create_pidfile (void)
   return;
 }
 
+extern FILE *debug_output;
+/* SIGUSR1: enable/disable debug output.  */
+static void
+sig_usr1 (int sig __attribute__ ((unused)))
+{
+  if (debug_flag)
+    {
+      debug_flag = 0;
+      if (debug_output != stderr)
+	fclose (debug_output);
+      debug_output = stderr;
+    }
+  else
+    {
+      debug_output = fopen ("/var/yp/ypserv.log", "a");
+      if (debug_output != NULL)
+	debug_flag = 1;
+    }
+}
+
 /* Clean up if we quit the program. */
 static void
 sig_quit (int sig __attribute__ ((unused)))
@@ -565,6 +585,14 @@ main (int argc, char **argv)
   sa.sa_handler = sig_hup;
   sigemptyset (&sa.sa_mask);
   sigaction (SIGHUP, &sa, NULL);
+
+  /*
+   * If we get a SIGUSR1, enable/disable debuging.
+   */
+  sigaction (SIGUSR1, NULL, &sa);
+  sa.sa_handler = sig_usr1;
+  sigemptyset (&sa.sa_mask);
+  sigaction (SIGUSR1, &sa, NULL);
 
   /*
    * On SIGCHLD wait for the child process, so it can give free all
