@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -412,17 +412,16 @@ main (int argc, char **argv)
       dup (i);
     }
 
-  if (argc > 0)
+  if (argc > 0 && debug_flag)
     {
       path_ypdb = argv[0];
-      if (debug_flag)
-	log_msg ("Using database directory: %s\n", path_ypdb);
+      log_msg ("Using database directory: %s\n", path_ypdb);
     }
 
   /* Change current directory to database location */
   if (chdir (path_ypdb) < 0)
     {
-      log_msg ("ypserv: chdir: %", strerror (errno));
+      log_msg ("ypserv: chdir: %s", strerror (errno));
       exit (1);
     }
 
