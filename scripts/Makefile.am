@@ -10,9 +10,10 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 CLEANFILES = *~ ${SCRIPTS}
 
-EXTRA_DIST = ${MANS} ypxfr_1perhour.in ypxfr_1perday.in ypxfr_2perday.in
+EXTRA_DIST = $(addsuffix .in,$(MANS)) $(addsuffix .in,$(SCRIPTS))
 
-man_MANS = 
+man_MANS = pwupdate.8
 
-libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday
+libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday \
+		create_printcap match_printcap pwupdate
 
