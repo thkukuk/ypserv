@@ -1,4 +1,4 @@
-/* Copyright (c)  2000 Thorsten Kukuk
+/* Copyright (c)  2000, 2001 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -171,7 +171,7 @@ Fopen, *FopenP;
    We now uses 30, because searching 3 times in the list is faster
    then reopening the database.
 */
-#define MAX_FOPEN 0 /* 30 */
+#define MAX_FOPEN 30
 
 #if MAX_FOPEN
 static int fast_open_init = -1;
@@ -181,6 +181,8 @@ static Fopen fast_open_files[MAX_FOPEN];
 int
 ypdb_close_all (void)
 {
+  int i;
+
   if (debug_flag)
     log_msg ("ypdb_close_all() called");
 
@@ -190,8 +192,6 @@ ypdb_close_all (void)
 
   for (i = 0; i < MAX_FOPEN; i++)
     {
-      int i;
-
       if (fast_open_files[i].dbp != NULL)
 	{
 	  if (fast_open_files[i].flag & F_OPEN_FLAG)
@@ -256,6 +256,7 @@ ypdb_close (DB_FILE file)
 DB_FILE
 ypdb_open (const char *domain, const char *map)
 {
+  int i;
 
   if (debug_flag)
     log_msg ("\typdb_open(\"%s\", \"%s\")", domain, map);
@@ -268,35 +269,34 @@ ypdb_open (const char *domain, const char *map)
     }
 
 #if MAX_FOPEN
-  int x;
 
   /* First call, initialize the fast_open_init struct */
   if (fast_open_init == -1)
     {
       fast_open_init = 0;
-      for (x = 0; x < MAX_FOPEN; x++)
+      for (i = 0; i < MAX_FOPEN; i++)
 	{
-	  fast_open_files[x].domain =
-	    fast_open_files[x].map = NULL;
-	  fast_open_files[x].dbp = (DB_FILE) NULL;
-	  fast_open_files[x].flag = 0;
+	  fast_open_files[i].domain =
+	    fast_open_files[i].map = NULL;
+	  fast_open_files[i].dbp = (DB_FILE) NULL;
+	  fast_open_files[i].flag = 0;
 	}
     }
 
   /* Search if we have already open the domain/map file */
-  for (x = 0; x < MAX_FOPEN; x++)
+  for (i = 0; i < MAX_FOPEN; i++)
     {
-      if (fast_open_files[x].dbp != NULL)
+      if (fast_open_files[i].dbp != NULL)
 	{
-	  if ((strcmp (domain, fast_open_files[x].domain) == 0) &&
-	      (strcmp (map, fast_open_files[x].map) == 0))
+	  if ((strcmp (domain, fast_open_files[i].domain) == 0) &&
+	      (strcmp (map, fast_open_files[i].map) == 0))
 	    {
 	      /* The file is open and we know the file handle */
 	      if (debug_flag)
-		log_msg ("Found: %s/%s (%d)", fast_open_files[x].domain,
-			fast_open_files[x].map, x);
+		log_msg ("Found: %s/%s (%d)", fast_open_files[i].domain,
+			fast_open_files[i].map, i);
 
-	      if (fast_open_files[x].flag & F_OPEN_FLAG)
+	      if (fast_open_files[i].flag & F_OPEN_FLAG)
                 {
 		  /* The file is already in use, don't open it twice.
 		     I think this could never happen. */
@@ -306,42 +306,42 @@ ypdb_open (const char *domain, const char *map)
 	      else
 		{
 		  /* Mark the file as open */
-		  fast_open_files[x].flag |= F_OPEN_FLAG;
-		  return fast_open_files[x].dbp;
+		  fast_open_files[i].flag |= F_OPEN_FLAG;
+		  return fast_open_files[i].dbp;
 		}
 	    }
 	}
     }
 
   /* Search for free entry. I we do not found one, close the LRU */
-  for (x = 0; x < MAX_FOPEN; x++)
+  for (i = 0; i < MAX_FOPEN; i++)
     {
 #if 0
       /* Bad Idea. If one of them is NULL, we will get a seg.fault
 	 I think it will only work with Linux libc 5.x */
       log_msg ("Opening: %s/%s (%d) %x",
-	      fast_open_files[x].domain,
-	      fast_open_files[x].map,
-	      x, fast_open_files[x].dbp);
+	      fast_open_files[i].domain,
+	      fast_open_files[i].map,
+	      i, fast_open_files[i].dbp);
 #endif
-      if (fast_open_files[x].dbp == NULL)
+      if (fast_open_files[i].dbp == NULL)
 	{
 	  /* Good, we have a free entry and don't need to close a map */
 	  int j;
 	  Fopen tmp;
-	  fast_open_files[x].domain = strdup (domain);
-	  fast_open_files[x].map = strdup (map);
-	  fast_open_files[x].flag |= F_OPEN_FLAG;
-	  fast_open_files[x].dbp = _db_open (domain, map);
+	  fast_open_files[i].domain = strdup (domain);
+	  fast_open_files[i].map = strdup (map);
+	  fast_open_files[i].flag |= F_OPEN_FLAG;
+	  fast_open_files[i].dbp = _db_open (domain, map);
 
 	  if (debug_flag)
-	    log_msg ("Opening: %s/%s (%d) %x", domain, map, x,
-		    fast_open_files[x].dbp);
+	    log_msg ("Opening: %s/%s (%d) %x", domain, map, i,
+		    fast_open_files[i].dbp);
 
 	  /* LRU: put this entry at the first position, move all the other
 	     one back */
-	  tmp = fast_open_files[x];
-	  for (j = x; j >= 1; --j)
+	  tmp = fast_open_files[i];
+	  for (j = i; j >= 1; --j)
 	    fast_open_files[j] = fast_open_files[j-1];
 
 	  fast_open_files[0] = tmp;
@@ -351,8 +351,8 @@ ypdb_open (const char *domain, const char *map)
 
   /* The badest thing, which could happen: no free cache entrys.
      Search the last entry, which isn't in use. */
-  for (x = (MAX_FOPEN - 1); x > 0; --x)
-    if ((fast_open_files[x].flag & F_OPEN_FLAG) != F_OPEN_FLAG)
+  for (i = (MAX_FOPEN - 1); i > 0; --i)
+    if ((fast_open_files[i].flag & F_OPEN_FLAG) != F_OPEN_FLAG)
       {
         int j;
 	Fopen tmp;
@@ -360,22 +360,22 @@ ypdb_open (const char *domain, const char *map)
 	if (debug_flag)
 	  {
 	    log_msg ("Closing %s/%s (%d)",
-		    fast_open_files[x].domain,
-		    fast_open_files[x].map, x);
-	    log_msg ("Opening: %s/%s (%d)", domain, map, x);
+		    fast_open_files[i].domain,
+		    fast_open_files[i].map, i);
+	    log_msg ("Opening: %s/%s (%d)", domain, map, i);
 	  }
-	free (fast_open_files[x].domain);
-	free (fast_open_files[x].map);
-	_db_close (fast_open_files[x].dbp);
+	free (fast_open_files[i].domain);
+	free (fast_open_files[i].map);
+	_db_close (fast_open_files[i].dbp);
 
-	fast_open_files[x].domain = strdup (domain);
-	fast_open_files[x].map = strdup (map);
-	fast_open_files[x].flag = F_OPEN_FLAG;
-	fast_open_files[x].dbp = _db_open (domain, map);
+	fast_open_files[i].domain = strdup (domain);
+	fast_open_files[i].map = strdup (map);
+	fast_open_files[i].flag = F_OPEN_FLAG;
+	fast_open_files[i].dbp = _db_open (domain, map);
 
 	/* LRU: Move the new entry to the first positon */
-	tmp = fast_open_files[x];
-	for (j = x; j >= 1; --j)
+	tmp = fast_open_files[i];
+	for (j = i; j >= 1; --j)
 	  fast_open_files[j] = fast_open_files[j-1];
 
 	fast_open_files[j] = tmp;
@@ -384,13 +384,13 @@ ypdb_open (const char *domain, const char *map)
 
   log_msg ("ERROR: Couldn't find a free cache entry!");
 
-  for (x = 0; x < MAX_FOPEN; x++)
+  for (i = 0; i < MAX_FOPEN; i++)
     {
       log_msg ("Open files: %s/%s (%d) %x (%x)",
-	       fast_open_files[x].domain,
-	       fast_open_files[x].map,
-	       x, fast_open_files[x].dbp,
-	       fast_open_files[x].flag);
+	       fast_open_files[i].domain,
+	       fast_open_files[i].map,
+	       i, fast_open_files[i].dbp,
+	       fast_open_files[i].flag);
     }
   return NULL;
 #else
