@@ -33,6 +33,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <time.h>
 #include "yp.h"
 #include "yp_db.h"
 #include "access.h"
