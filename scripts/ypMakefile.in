@@ -113,7 +113,7 @@ all:  passwd group hosts rpc services netid protocols netgrp mail \
 #                                                                      #
 ########################################################################
 
-DBLOAD = @MAKEDBMPRG@ -c -m `$(YPBINDIR)/yphelper --hostname`
+DBLOAD = $(YPBINDIR)/makedbm -c -m `$(YPBINDIR)/yphelper --hostname`
 MKNETID = $(YPBINDIR)/mknetid
 YPPUSH = $(YPSBINDIR)/yppush
 MERGER = $(YPBINDIR)/yphelper

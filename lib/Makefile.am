@@ -5,9 +5,12 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnits
 
+rpcsvcdir = ${prefix}/include/rpcsvc
+
 noinst_LIBRARIES = libyp.a
-noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h ypxfrd.x access.h \
-		yp_db.h
+noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h
+
+rpcsvc_HEADERS = ypxfrd.x
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\"

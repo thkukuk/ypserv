@@ -1162,7 +1162,7 @@ fi
 
 PACKAGE="ypserv"
 
-VERSION=2.0
+VERSION=2.0.1
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { { echo "$as_me:1168: error: source directory already configured; run \"make distclean\" there first" >&5
@@ -3146,12 +3146,12 @@ fi
 set dummy aliases; ac_word=$2
 echo "$as_me:3147: checking for $ac_word" >&5
 echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_path_MAIL_ALIASES+set}" = set; then
+if test "${ac_cv_path_ALIASES+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  case $MAIL_ALIASES in
+  case $ALIASES in
   [\\/]* | ?:[\\/]*)
-  ac_cv_path_MAIL_ALIASES="$MAIL_ALIASES" # Let the user override the test with a path.
+  ac_cv_path_ALIASES="$ALIASES" # Let the user override the test with a path.
   ;;
   *)
   ac_save_IFS=$IFS; IFS=$ac_path_separator
@@ -3160,21 +3160,21 @@ for ac_dir in $ac_dummy; do
   IFS=$ac_save_IFS
   test -z "$ac_dir" && ac_dir=.
   if $as_executable_p "$ac_dir/$ac_word"; then
-   ac_cv_path_MAIL_ALIASES="$ac_dir/$ac_word"
+   ac_cv_path_ALIASES="$ac_dir/$ac_word"
    echo "$as_me:3164: found $ac_dir/$ac_word" >&5
    break
 fi
 done
 
-  test -z "$ac_cv_path_MAIL_ALIASES" && ac_cv_path_MAIL_ALIASES="/etc/mail/aliases"
+  test -z "$ac_cv_path_ALIASES" && ac_cv_path_ALIASES="/etc/mail/aliases"
   ;;
 esac
 fi
-MAIL_ALIASES=$ac_cv_path_MAIL_ALIASES
+ALIASES=$ac_cv_path_ALIASES
 
-if test -n "$MAIL_ALIASES"; then
-  echo "$as_me:3176: result: $MAIL_ALIASES" >&5
-echo "${ECHO_T}$MAIL_ALIASES" >&6
+if test -n "$ALIASES"; then
+  echo "$as_me:3176: result: $ALIASES" >&5
+echo "${ECHO_T}$ALIASES" >&6
 else
   echo "$as_me:3179: result: no" >&5
 echo "${ECHO_T}no" >&6
@@ -5607,7 +5607,7 @@ s,@ac_ct_RANLIB@,$ac_ct_RANLIB,;t t
 s,@AWK@,$AWK,;t t
 s,@BASH@,$BASH,;t t
 s,@MAKE@,$MAKE,;t t
-s,@MAIL_ALIASES@,$MAIL_ALIASES,;t t
+s,@ALIASES@,$ALIASES,;t t
 s,@USE_FQDN@,$USE_FQDN,;t t
 s,@CHECKROOT@,$CHECKROOT,;t t
 s,@LIBDBM@,$LIBDBM,;t t
