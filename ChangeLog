@@ -1,10 +1,20 @@
+2002-08-08  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.5
+
+	* configure.in: Check for in_addr_t
+
 2002-08-06  Thorsten Kukuk  <kukuk@suse.de>
 
-	* lib/yp_db.c (ypdb_open): Check if map exist before allocating
-	memory for extra data.
+	* yppush/yppush.8.in: Fix syntax error.
 
-	* lib/access.c (is_valid): If map does not exist, return -2,
-	not success.
+2002-08-06  Thorsten Kukuk  <kukuk@suse.de>
+
+        * lib/yp_db.c (ypdb_open): Check if map exist before allocating
+        memory for extra data.
+
+        * lib/access.c (is_valid): If map does not exist, return -2,
+        not success.
 
 2002-07-23  Thorsten Kukuk  <kukuk@suse.de>
 

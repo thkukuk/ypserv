@@ -70,6 +70,9 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
+/* Define to 1 if you have the <netinet/in.h> header file. */
+#undef HAVE_NETINET_IN_H
+
 /* Define to 1 if you have the <paths.h> header file. */
 #undef HAVE_PATHS_H
 
@@ -219,6 +222,9 @@
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
+
+/* Define to int if you don't have in_addr_t */
+#undef in_addr_t
 
 /* Define as `__inline' if that's what the C compiler calls it, or to nothing
    if it is not supported. */

@@ -1,4 +1,4 @@
-.TH YPPUSH 8 "August 2001" "YP Server" "Reference Manual"
+.TH YPPUSH 8 "August 2002" "YP Server" "Reference Manual"
 .SH NAME
 yppush \- force propagation of changed NIS databases
 .SH SYNOPSIS
@@ -102,7 +102,7 @@ even more verbose.
 .SH BUGS
 The mechanism for transferring NIS maps in NIS v1 is different
 that that in NIS version 2. This version of
-.Nm yppush
+.B yppush
 has support for transferring maps to NIS v2 systems only.
 .LP
 .SH AUTHOR
