@@ -190,7 +190,7 @@ AC_SUBST(USE_SLP)
 AC_CHECK_FUNCS(getrpcport)
 if test "$ac_cv_func_getrpcport" = no; then
 	AC_CHECK_LIB([rpcsvc], [getrpcport],
-	             [ac_cv_func_$1=yes; LIBS="-lrpcsvc $LIBS"])
+	             [ac_cv_func_getrpcport=yes; LIBS="-lrpcsvc $LIBS"])
 fi
 
 AC_CHECK_LIB(nsl,gethostbyname)
@@ -238,7 +238,8 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(setenv putenv)
 AC_CHECK_FUNCS(fgetpwent putpwent fgetgrent getspnam)
 AC_CHECK_FUNCS(inet_aton inet_pton vsyslog lckpwdf)
-AC_CHECK_FUNCS(strdup strndup strerror strstr strsep stpcpy snprintf)
+AC_CHECK_FUNCS(strdup strndup strerror strstr strsep stpcpy)
+AC_CHECK_FUNCS(snprintf asprintf)
 AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
 AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize)
 AC_CHECK_FUNCS(svc_getcaller svc_getrpccaller getline getdelim)

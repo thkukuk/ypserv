@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -258,6 +258,7 @@ create_pidfile (void)
       log_msg ("cannot create pidfile %s", _YPSERV_PIDFILE);
       if (debug_flag)
 	log_msg ("\n");
+      return;
     }
 
   /* Make sure file gets correctly closed when process finished.  */

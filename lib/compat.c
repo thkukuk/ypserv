@@ -86,7 +86,7 @@ char *malloc (), *realloc ();
    read no more than LIMIT chars.
 
    *LINEPTR is a pointer returned from malloc (or NULL), pointing to
-   *N characters of space.  It is realloc'd as necessary.  
+   *N characters of space.  It is realloc'd as necessary.
 
    Return the number of characters read (not including the null
    terminator), or -1 on error or EOF.  On a -1 return, the caller
@@ -218,7 +218,7 @@ svc_getcaller(const SVCXPRT *xprt)
 #  ifdef HAVE_SVC_GETRPCCALLER
   const struct netbuf *addr;
   addr = svc_getrpccaller(xprt);
-  fprintf(stderr, "warning: Bogus svc_getcaller() called\n");
+  log_msg ("warning: Bogus svc_getcaller() called");
   /* XXX find out how the result from svc_getrpccaller relates to
      svc_getcaller */
   return addr;
@@ -234,7 +234,7 @@ svc_getcaller(const SVCXPRT *xprt)
 int _rpc_dtablesize()
 {
         static int size;
-        
+
         if (size == 0) {
                 size = getdtablesize();
         }
@@ -260,7 +260,7 @@ int _rpc_dtablesize()
 
 #ifndef HAVE_INET_ATON
 /* Source: http://mail.gnu.org/archive/html/autoconf/2002-08/msg00036.html */
-/*  $Id: compat.c,v 1.1.2.3 2003/06/13 21:04:56 kukuk Exp $
+/*  $Id: compat.c,v 1.1.2.4 2004/09/06 08:24:49 kukuk Exp $
 **
 **  Replacement for a missing inet_aton.
 **
@@ -475,7 +475,7 @@ xdr_ypmap_parms(XDR *xdrs, ypmap_parms *objp)
 #ifndef HAVE_XDR_YPREQ_XFR
 bool_t
 xdr_ypreq_xfr(XDR *xdrs, ypreq_xfr *objp)
-{ 
+{
   if (!xdr_ypmap_parms(xdrs, &objp->map_parms))
     return (FALSE);
   if (!xdr_u_int(xdrs, &objp->transid))
