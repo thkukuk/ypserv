@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
