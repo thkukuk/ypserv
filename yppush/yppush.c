@@ -73,6 +73,7 @@ static u_int timeout = 90;
 static u_int MapOrderNum;
 static u_int maxchildren = 1;
 static u_int children = 0;
+static int my_port = -1;
 
 
 static char *
@@ -409,6 +410,7 @@ yppush_foreach (const char *host)
   u_int transid;
   char server[YPMAXPEER + 2];
   int sock;
+  struct sockaddr_in s_in;
   struct sigaction sa;
 
   if (verbose_flag > 1)
@@ -438,7 +440,34 @@ yppush_foreach (const char *host)
       return 1;
     }
 
-  sock = RPC_ANYSOCK;
+
+  if (my_port >= 0)
+    {
+      sock = socket (AF_INET, SOCK_DGRAM, 0);
+      if (sock < 0)
+        {
+          log_msg ("can not create UDP: %s", strerror (errno));
+          exit (1);
+        }
+      else
+        {
+          /* bind to socket */
+          memset ((char *) &s_in, 0, sizeof (s_in));
+          s_in.sin_family = AF_INET;
+          s_in.sin_addr.s_addr = htonl (INADDR_ANY);
+          s_in.sin_port = htons (my_port);
+
+          if  (bind (sock, (struct sockaddr *) &s_in, sizeof (s_in)) < 0)
+            {
+          log_msg ("yppush: can not bind UDP: %s ", strerror (errno));
+          exit (1);
+            }
+        }
+    }
+  else
+    sock = RPC_ANYSOCK;
+
+
   CallbackXprt = svcudp_create (sock);
   if (CallbackXprt == NULL)
     {
@@ -525,8 +554,8 @@ sig_child (int sig UNUSED)
 static inline void
 Usage (int exit_code)
 {
-  log_msg ("Usage: yppush [-d domain] [-t timeout] [-p #] [-h host] [-v] mapname ...");
-  log_msg ("       yppush --version");
+  log_msg ("Usage:\n  yppush [-d domain] [-t timeout] [--parallel # | --port #] [-h host] [-v] mapname ...");
+  log_msg ("  yppush --version");
   exit (exit_code);
 }
 
@@ -560,6 +589,7 @@ main (int argc, char **argv)
 	{"help", no_argument, NULL, 'u'},
 	{"usage", no_argument, NULL, 'u'},
 	{"parallel", required_argument, NULL, 'p'},
+	{"port", required_argument, NULL, '\254'},
 	{"timeout", required_argument, NULL, 't'},
 	{NULL, 0, NULL, '\0'}
       };
@@ -581,6 +611,11 @@ main (int argc, char **argv)
 	case 'j':
 	case 'p':
 	  maxchildren = atoi (optarg);
+	  if (my_port >= 0)
+	    {
+	      log_msg ("yppush cannot run in parallel with a fixed port");
+	      return 1;
+	    }
 	  break;
 	case 'h':
 	  /* we can handle multiple hosts */
@@ -600,6 +635,14 @@ main (int argc, char **argv)
 	case '\255':
           log_msg ("yppush (%s) %s", PACKAGE, VERSION);
           return 0;
+	case '\254':
+	  my_port = atoi (optarg);
+	  if (maxchildren > 1)
+	    {
+	      log_msg ("yppush cannot run in parallel with a fixed port");
+	      return 1;
+	    }
+	  break;
 	default:
 	  Usage (1);
 	}

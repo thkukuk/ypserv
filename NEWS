@@ -6,6 +6,8 @@ Please send bug reports, questions and suggestions to <kukuk@suse.de>.
 
 Version 2.11
 * ypserv: Add SLP support
+* ypxfr: Fix seg.fault
+* yppush: Add support for fix port
 
 Version 2.10
 * ypserv: Remove fork limit

@@ -1,3 +1,13 @@
+2004-01-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.11
+
+	* ypxfr/ypxfr.c (main): Abort if no domainname is set.
+	(Reported by Jens Laas <jens.laas@data.slu.se>)
+
+	* yppush/yppush.c: Add support for fixed port
+	(Patch from Tony Kew <tonykew@ccr.buffalo.edu>)
+
 2004-01-09  Thorsten Kukuk  <kukuk@suse.de>
 
 	* yppush/yppush.c (yppushproc_xfrresp_1_svc): Remove wrong

@@ -12,8 +12,11 @@ yppush \- force propagation of changed NIS databases
 .I timeout
 ]
 [
-.B -p
-.I # parallel jobs
+.B --parallel
+.I #
+|
+.B --port
+.I port
 ]
 [
 .B -h
@@ -68,7 +71,7 @@ By default,
 .B yppush
 will wait 90 seconds. For big maps, this is not long enough.
 .TP
-.BI "\-p " "# parallel jobs"
+.BI \-\^\-parallel " #" "\fR,\fP \-p " #
 .B yppush
 normally performs transfers serially, meaning that it will
 send a map transfer request to one slave server and then wait for
@@ -76,6 +79,25 @@ it to respond before sending the next map transfer request to the
 next slave server. In environments with many slaves, it is more
 efficient to initiate several map transfers at once so that the
 transfers can take place in parallel.
+It is not possible to run in parallel and assign a fixed port with
+the
+.B \--port
+flag
+.TP
+.BI "\--port " port
+specify a port for
+.B yppush
+to  listen  on.   By default,
+.B yppush
+will ask
+.B portmap(8)
+to assign it a random port number.
+It is not possible to assign a port with this option and run in parallel with
+the
+.B \--parallel
+or
+.B \-p
+flag
 .TP
 .BI "\-h " host
 The host flag can be used to transfer a map to a user-specified machine or
