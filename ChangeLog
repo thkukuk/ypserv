@@ -1,5 +1,7 @@
 2003-02-04  Thorsten Kukuk  <kukuk@suse.de>
 
+	* release version 2.7
+
 	* ypserv/Makefile.am (DEFS): Add MAX_CHILDREN define.
 
 	* ypserv/ypserv.c (sig_child): Readd old sig handler for checking
