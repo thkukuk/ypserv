@@ -4462,7 +4462,7 @@ _ACEOF
 fi
 done
 
-	if x$ac_cv_func_dbm_open = xyes
+	if test x$ac_cv_func_dbm_open = xyes
 	then
 
 cat >>confdefs.h <<\_ACEOF

@@ -125,7 +125,7 @@ then
 	libdb_parameter=yes
 else
 	AC_CHECK_FUNCS(dbm_open)
-	if x$ac_cv_func_dbm_open = xyes
+	if test x$ac_cv_func_dbm_open = xyes
 	then
 		AC_DEFINE(HAVE_NDBM, 1, [Use ndbm library as database])
 		libdb_parameter=yes
