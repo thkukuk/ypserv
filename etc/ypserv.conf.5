@@ -18,7 +18,7 @@ option: [yes|no]
 .LP
 The line for an access rule has the format:
 .IP
-host:map:security:mangle[:field]
+host:domain:map:security
 .LP
 All rules are tried one by one. If no match is found, access to a
 map is allowed.
@@ -26,17 +26,6 @@ map is allowed.
 Following
 .I options
 exist:
-.TP
-.B dns
-the NIS server will query the nameserver for hostnames, which are
-not found in the hosts.* maps. The default is "no". You could
-overwrite it with the "-dns" commandline option. A "no" will not
-overwrite the "-dns" option.
-.TP
-.B sunos_kludge
-This is not longer supported, since
-.B ypserv
-supports the most YP version 1 functions.
 .TP
 .B xfr_check_port
 With this option enabled, the NIS master server have to run on a
@@ -63,37 +52,24 @@ Examples:
 .br
 131.234.214.0/255.255.254.0
 .TP
+.B domain
+specifies the domain, for which this rule should be applied. An
+asterix as wildcard is allowed.
+.TP
 .B map
 name of the map, or asterisk for all maps.
 .TP
 .B security
-one of none, port, deny, des:
+one of none, port, deny:
 .TP
 .I none
-always allow access. Mangle the passwd field if so configured,
-default is not.
+always allow access.
 .TP
 .I port
-allow access if from port < 1024. Otherwise if mangle is not set,
-do not allow access. If mangle is set to "yes", allow access, but
-mangle the passwd field.
+allow access if from port < 1024. Otherwise do not allow access.
 .TP
 .I deny
 deny access to this map.
-.TP
-.I des
-requires DES authentication. Not supported by most libc's in the moment.
-You could mangle the passwd field if so configured, default is not.
-.TP
-.B mangle
-possible values are "yes" or "no". If "yes", the
-.I field
-entry will be mangled.
-Mangling means that the field is replaced by 'x' if
-the port check reveals the request originated from somebody unprivileged.
-.TP
-.B field
-Which field should be mangled. The default is the 2nd field.
 .LP
 .SH FILES
 /etc/ypserv.conf

@@ -111,10 +111,6 @@ libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
 
 
 CLEANFILES = *~
-
-EXTRA_DIST = ${MANS}
-
-man_MANS = ypserv.conf.5
 subdir = lib
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -143,9 +139,6 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(libyp_a_SOURCES)
-
-NROFF = nroff
-MANS = $(man_MANS)
 HEADERS = $(noinst_HEADERS) $(rpcsvc_HEADERS)
 
 DIST_COMMON = $(noinst_HEADERS) $(rpcsvc_HEADERS) Makefile.am \
@@ -201,45 +194,6 @@ distclean-depend:
 	$(COMPILE) -c `cygpath -w $<`
 CCDEPMODE = @CCDEPMODE@
 uninstall-info-am:
-
-man5dir = $(mandir)/man5
-install-man5: $(man5_MANS) $(man_MANS)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(man5dir)
-	@list='$(man5_MANS) $(dist_man5_MANS) $(nodist_man5_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.5*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
-	  else file=$$i; fi; \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man5dir)/$$inst"; \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(man5dir)/$$inst; \
-	done
-uninstall-man5:
-	@$(NORMAL_UNINSTALL)
-	@list='$(man5_MANS) $(dist_man5_MANS) $(nodist_man5_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.5*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " rm -f $(DESTDIR)$(man5dir)/$$inst"; \
-	  rm -f $(DESTDIR)$(man5dir)/$$inst; \
-	done
 rpcsvcHEADERS_INSTALL = $(INSTALL_HEADER)
 install-rpcsvcHEADERS: $(rpcsvc_HEADERS)
 	@$(NORMAL_INSTALL)
@@ -322,10 +276,10 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES) $(MANS) $(HEADERS)
+all-am: Makefile $(LIBRARIES) $(HEADERS)
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(man5dir) $(DESTDIR)$(rpcsvcdir)
+	$(mkinstalldirs) $(DESTDIR)$(rpcsvcdir)
 
 install: install-am
 install-exec: install-exec-am
@@ -369,13 +323,13 @@ info: info-am
 
 info-am:
 
-install-data-am: install-man install-rpcsvcHEADERS
+install-data-am: install-rpcsvcHEADERS
 
 install-exec-am:
 
 install-info: install-info-am
 
-install-man: install-man5
+install-man:
 
 installcheck-am:
 
@@ -387,21 +341,18 @@ mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
-uninstall-am: uninstall-info-am uninstall-man uninstall-rpcsvcHEADERS
-
-uninstall-man: uninstall-man5
+uninstall-am: uninstall-info-am uninstall-rpcsvcHEADERS
 
 .PHONY: GTAGS all all-am check check-am clean clean-generic \
 	clean-noinstLIBRARIES distclean distclean-compile \
 	distclean-depend distclean-generic distclean-tags distdir dvi \
 	dvi-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-man5 install-rpcsvcHEADERS \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic tags uninstall \
-	uninstall-am uninstall-info-am uninstall-man uninstall-man5 \
-	uninstall-rpcsvcHEADERS
+	install-info-am install-man install-rpcsvcHEADERS install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic tags uninstall uninstall-am \
+	uninstall-info-am uninstall-rpcsvcHEADERS
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

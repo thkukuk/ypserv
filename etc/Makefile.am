@@ -10,5 +10,5 @@ EXTRA_DIST = README locale netgroup netmasks securenets timezone ypserv.conf \
 
 CLEANFILES = *~
 
-man_MANS=netgroup.5
+man_MANS=netgroup.5 ypserv.conf.5
 

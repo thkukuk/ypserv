@@ -1,3 +1,18 @@
+2002-05-27  Thorsten Kukuk  <kukuk@suse.de>
+
+	* scripts/ypMakefile.in (MINUID/MINGID): increase both variables
+	to 500 as defined by LSB and to be compatible with most Linux
+	distributions.
+
+	* lib/ypserv.conf.5: move from here ...
+	* etc/ypserv.conf.5: ... to here. Remove mangle field description.
+	* lib/Makefile.am: Remove ypserv.conf.5
+	* etc/Makefile.am: Add ypserv.conf.5
+
+2002-05-23  Martin Vidner  <mvidner@suse.cz>
+
+	* yphelper/yphelper.c: Add -i option to getopt_long
+
 2002-05-14  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.3

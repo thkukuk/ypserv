@@ -24,13 +24,13 @@ NOPUSH=true
 
 # We do not put password entries with lower UIDs (the root and system
 # entries) in the NIS password database, for security. MINUID is the
-# lowest uid that will be included in the password maps. If you 
+# lowest uid that will be included in the password maps. If you
 # create shadow maps, the UserID for a shadow entry is taken from
 # the passwd file. If no entry is found, this shadow entry is
 # ignored.
 # MINGID is the lowest gid that will be included in the group maps.
-MINUID=100
-MINGID=100
+MINUID=500
+MINGID=500
 
 # Should we merge the passwd file with the shadow file ?
 # MERGE_PASSWD=true|false

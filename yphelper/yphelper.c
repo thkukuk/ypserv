@@ -608,7 +608,7 @@ main (int argc, char *argv[])
 	  {NULL, 0, NULL, '\0'}
 	};
 
-      c = getopt_long (argc, argv, "d:hvm:pg", long_options, &option_index);
+      c = getopt_long (argc, argv, "d:hvm:pgi:", long_options, &option_index);
       if (c == EOF)
         break;
       switch (c)

@@ -21,7 +21,3 @@ libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
 
 CLEANFILES = *~
 
-EXTRA_DIST = ${MANS}
-
-man_MANS = ypserv.conf.5
-

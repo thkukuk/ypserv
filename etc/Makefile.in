@@ -101,7 +101,7 @@ EXTRA_DIST = README locale netgroup netmasks securenets timezone ypserv.conf \
 
 CLEANFILES = *~
 
-man_MANS = netgroup.5
+man_MANS = netgroup.5 ypserv.conf.5
 subdir = etc
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
