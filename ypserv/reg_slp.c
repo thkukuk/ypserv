@@ -1,4 +1,4 @@
-/* Copyright (c) 2003 Thorsten Kukuk
+/* Copyright (c) 2003, 2004 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -81,7 +81,7 @@ register_slp ()
   hname = hp->h_name;
 #endif
 
-  if (asprintf (&url, "service:ypserv.linux-nis://%s/", hname) < 0)
+  if (asprintf (&url, "service:ypserv://%s/", hname) < 0)
     {
       log_msg ("Out of memory\n");
       return -1;

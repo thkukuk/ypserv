@@ -1,4 +1,12 @@
+2004-02-14  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.12.1
+
+	* ypserv/reg_slp.c (register_slp): Change SLP URL to ypserv.
+
 2004-02-13  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.12
 
 	* yppush/yppush.c (yppushproc_xfrresp_1_svc): Fix compiler
 	warnings.
