@@ -4,6 +4,9 @@ Copyright (C) 1998-2004 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@suse.de>.
 
+Version 2.12
+* ypserv: Fix compatibility problems with Solaris 9
+
 Version 2.11
 * ypserv: Add SLP support
 * ypxfr: Fix seg.fault

@@ -1,3 +1,14 @@
+2004-02-13  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.c (yppushproc_xfrresp_1_svc): Fix compiler
+	warnings.
+
+	* ypserv/reg_slp.c: Don't set dummy domain attributes.
+
+2004-02-07  Michael Gernoth  <simigern@stud.uni-erlangen.de>
+
+	* ypserv/server.c: Return NOMAP error if access forbidden.
+
 2004-01-12  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.11

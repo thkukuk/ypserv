@@ -165,7 +165,7 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
-	  result->stat = YP_YPERR;
+	  result->stat = YP_NOMAP;
 	  break;
 	case -2:
 	  if (debug_flag)
@@ -250,7 +250,7 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
-	  result->stat = YP_YPERR;
+	  result->stat = YP_NOMAP;
 	case -2:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid map name)");
@@ -349,7 +349,7 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");
-          result->stat = YP_YPERR;
+          result->stat = YP_NOMAP;
 	  break;
 	case -2:
           if (debug_flag)
@@ -751,7 +751,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
-	  result->ypresp_all_u.val.stat = YP_YPERR;
+	  result->ypresp_all_u.val.stat = YP_NOMAP;
 	  break;
 	case -2:
 	  if (debug_flag)
@@ -881,7 +881,7 @@ ypproc_master_2_svc (ypreq_nokey *argp, ypresp_master *result,
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");
-	  result->stat = YP_YPERR;
+	  result->stat = YP_NOMAP;
 	  break;
 	case -2:
           if (debug_flag)
@@ -991,7 +991,7 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");
-          result->stat = YP_YPERR;
+          result->stat = YP_NOMAP;
 	  break;
 	case -2:
           if (debug_flag)
@@ -1112,7 +1112,7 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");
-          result->stat = YP_YPERR;
+          result->stat = YP_NOMAP;
 	  break;
 	case -2: /* should never happen */
 	case -3:

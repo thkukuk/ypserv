@@ -132,7 +132,8 @@ yppushproc_null_1_svc (void *req UNUSED,
 
 
 bool_t
-yppushproc_xfrresp_1_svc (yppushresp_xfr *req, void *resp, struct svc_req *rqstp)
+yppushproc_xfrresp_1_svc (yppushresp_xfr *req,
+			  void *resp UNUSED, struct svc_req *rqstp)
 {
   struct sockaddr_in *sin;
   char *h;
