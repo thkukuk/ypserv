@@ -10,7 +10,7 @@ tuples, used for permission checking when doing remote mounts,
 remote logins and remote shells.
 
 Each line in the file consists of a netgroup name followed by a
-by a list of members. Where members is either another netgroup name,
+by a list of members, where a member is either another netgroup name,
 or a triple:
 .IP
 .RI ( host ,
@@ -18,14 +18,13 @@ or a triple:
 .IR domain )
 .LP
 where the
-.I host
-,
-.I user
-, and
+.IR host ,
+.IR user ,
+and
 .I domain
 are character strings for the
-correspoinding components. Any of the three fields can be empty,
-in which case it specify a "wildcard", or may consist of the string
+corresponding components. Any of the three fields can be empty,
+in which case it specifies a "wildcard", or may consist of the string
 "-" to specify "no valid value". The
 .I domain
 field must either be the local domain name or empty for the netgroup

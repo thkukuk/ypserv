@@ -29,7 +29,7 @@ files in a directory tree rooted at
 .LP
 The
 .B ypserv
-daemon typically activated at system startup.
+daemon is typically activated at system startup.
 .B ypserv
 runs only on
 .SM NIS
@@ -69,10 +69,10 @@ is an optionally parameter.
 is using this directory instead of @YPMAPDIR@
 .TP
 .B "\-b" "\--dns"
-If we doesn't find the host in the hosts maps, we query the
+If we don't find the host in the hosts maps, we query the
 .SM DNS
 (Domain Name Service) service for more host information. This
-is be done in an extra subprocess.
+is done in an extra subprocess.
 .B ypserv
 ignores the
 .B YP_INTERDOMAIN
@@ -140,12 +140,12 @@ will allow connections from any host.
 In the
 .B @sysconfdir@/ypserv.conf
 you could specify some access rules for special maps and hosts. But
-it is not very secure, it make the life only a little bit harder
-for potential hacker. If a mapname doesn't match a rule, ypserv will
+it is not very secure, it makes the life only a little bit harder
+for a potential hacker. If a mapname doesn't match a rule, ypserv will
 look for the YP_SECURE key in the map. If it exists, ypserv will
 only allow requests on a reserved port.
 
-For security reasons, ypserv will only accepts ypproc_xfr requests for
+For security reasons, ypserv will only accept ypproc_xfr requests for
 updating maps from the same master server as the old one. This means,
 you have to reinstall the slave servers if you change the master server
 for a map.

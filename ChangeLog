@@ -1,6 +1,8 @@
-2001-08-30  Thorsten Kukuk  <kukuk@suse.de>
+2001-09-02  Martin Vidner <mvidner@suse.cz>
 
-	* release version 2.1
+	* Fix various errors in manual pages
+
+2001-08-30  Thorsten Kukuk  <kukuk@suse.de>
 
 	* lib/Makefile.am: Remove ypproc_all_2.c
 	* ypxfr/ypxfr_xdr.c: Add special ypproc_all_2 function

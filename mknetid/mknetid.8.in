@@ -22,6 +22,7 @@ mknetid \- generate data for netid map
 [
 .B \-n netid
 ]
+.LP
 .B @YPBINDIR@/mknetid
 .B \-\-version
 .LP
@@ -37,32 +38,32 @@ when rebuilding the NIS map.
 .SH OPTIONS
 .TP
 .B \-q
-This flag turns on 'quiet' mode,d on't print a warning message when
+This flag turns on 'quiet' mode, don't print a warning message when
 finding an duplicate netid entry.
 .TP
 .BI \-h " hosts"
 The
 .B \-h
 flag can be used to specify the use of another hosts file
-then the default \fI/etc/hosts\fP.
+than the default \fI/etc/hosts\fP.
 .TP
 .BI \-p " passwd"
 The
 .B \-p
 flag can be used to specify the use of another passwd file
-then the default \fI/etc/passwd\fP.
+than the default \fI/etc/passwd\fP.
 .TP
 .BI \-g " group"
 The
 .B \-g
 flag can be used to specify the use of another group file
-then the default \fI/etc/group\fP.
+than the default \fI/etc/group\fP.
 .TP
 .BI \-n " netid"
 The
 .B \-n
 flag can be used to specify the use of another netid file
-then the default \fI/etc/netid\fP.
+than the default \fI/etc/netid\fP.
 .TP
 .BI \-d " domain"
 The

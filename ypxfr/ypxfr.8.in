@@ -65,7 +65,7 @@ will attempt to send a "clear current map" request to the local
 
 If  run interactively,
 .B ypxfr
-writes it's output to stderr.
+writes its output to stderr.
 However, if it is invoked without a controlling terminal, it will
 log the output to syslog.
 
@@ -176,7 +176,7 @@ and waiting for a response to transaction
 .IR taskid .
 .TP
 .BI \-p " yp_path"
-Change the diretory for the maps to
+Change the directory for the maps to
 \fIyp_path/[domainname]/\fP, the default
 is \fI@YPMAPDIR@/[domainname]\fP.
 .TP

@@ -13,6 +13,7 @@ rpc.ypxfrd \- NIS map transfer server
 [
 .B \-\-debug
 ]
+.br
 .B @SBINDIR@/rpc.ypxfrd 
 .B \-\-version
 .LP
@@ -21,13 +22,13 @@ rpc.ypxfrd \- NIS map transfer server
 .B rpc.ypxfrd
 is used for speed up the transfer of very large NIS maps from a NIS
 master to the NIS slave server. If a  NIS slave server receives a
-message, that there is a new map, it will start 
+message that there is a new map, it will start 
 .B ypxfr
 for transfering the new map.
 .B ypxfr 
 will read the contents of a map from the master server using the yp_all() 
 function. This process can take several minutes when there are very large
-maps which have to store by the database library.
+maps which have to be stored by the database library.
 .LP
 The
 .B rpc.ypxfrd
@@ -38,7 +39,8 @@ own from scratch.
 uses an RPC-based file transfer protocol, so that there is no need
 for building a new map.
 
-.B rpc.ypxfrd could be started by inetd. But since it starts very slow,
+.B rpc.ypxfrd
+could be started by inetd. But since it starts very slowly,
 it should be started after
 .B ypserv
 from /etc/init.d/ypxfrd.
@@ -64,7 +66,7 @@ hosts on the Internet.
 Prints the version number
 .SH SECURITY
 .B rpc.ypxfrd
-uses the same functions for checking a host then
+uses the same functions for checking a host as
 .B ypserv.
 At first,
 .B rpc.ypxfrd

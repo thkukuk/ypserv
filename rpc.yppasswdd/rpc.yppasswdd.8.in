@@ -78,7 +78,7 @@ in the NIS database automatic access to your NIS server.
 .TP
 .BI "\-s" " shadowfile"
 This options tells \fBrpc.yppasswdd\fP to use a different source file instead
-of \fB/etc/passwd\f. See below for a brief discussion of shadow support.
+of \fB/etc/passwd\fP. See below for a brief discussion of shadow support.
 .TP
 .BI "\-e [chsh|chfn]"
 By default, \fBrpc.yppasswdd\fP will not allow users to change the shell or
