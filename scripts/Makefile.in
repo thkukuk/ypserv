@@ -78,7 +78,6 @@ MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 RESOLV = @RESOLV@
-TCP_WRAP = @TCP_WRAP@
 USE_FQDN = @USE_FQDN@
 VERSION = @VERSION@
 YPBINDIR = @YPBINDIR@
@@ -93,14 +92,14 @@ CLEANFILES = *~ ${SCRIPTS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS)) $(addsuffix .in,$(SCRIPTS))
 
-man_MANS = pwupdate.8
+man_MANS = pwupdate.8 ypinit.8
 
-libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday 		create_printcap match_printcap pwupdate
+libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday 		create_printcap match_printcap pwupdate ypinit
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES =  ypxfr_1perhour ypxfr_1perday ypxfr_2perday \
-pwupdate pwupdate.8 create_printcap match_printcap
+pwupdate pwupdate.8 create_printcap match_printcap ypinit ypinit.8
 SCRIPTS =  $(libexec_SCRIPTS)
 
 man8dir = $(mandir)/man8
@@ -108,8 +107,8 @@ MANS = $(man_MANS)
 
 NROFF = nroff
 DIST_COMMON =  Makefile.am Makefile.in create_printcap.in \
-match_printcap.in pwupdate.8.in pwupdate.in ypxfr_1perday.in \
-ypxfr_1perhour.in ypxfr_2perday.in
+match_printcap.in pwupdate.8.in pwupdate.in ypinit.8.in ypinit.in \
+ypxfr_1perday.in ypxfr_1perhour.in ypxfr_2perday.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -138,6 +137,10 @@ pwupdate.8: $(top_builddir)/config.status pwupdate.8.in
 create_printcap: $(top_builddir)/config.status create_printcap.in
 	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 match_printcap: $(top_builddir)/config.status match_printcap.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+ypinit: $(top_builddir)/config.status ypinit.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+ypinit.8: $(top_builddir)/config.status ypinit.8.in
 	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 install-libexecSCRIPTS: $(libexec_SCRIPTS)

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 1999, 2000 SuSE GmbH Nuernberg, Germany
+# Copyright (C) 1999, 2000, 2001 SuSE GmbH Nuernberg, Germany
 #
 # Author: Thorsten Kukuk <kukuk@suse.de>
 #
@@ -107,23 +107,6 @@ AC_ARG_ENABLE(checkroot,
 AC_SUBST(CHECKROOT)
 
 dnl Checks for libraries.
-AC_ARG_ENABLE(tcp-wrapper,
-	[  --enable-tcp-wrapper[=BASE-DIR]  Specifies the use of tcp wrapper [default=no]],
-	if test x$enableval != xno
-	then
-	   if test x$enableval = xyes
-	   then
-	      AC_CHECK_LIB(wrap, main, TCP_WRAP="-lwrap", TCP_WRAP="")
-	      AC_DEFINE(HAVE_LIBWRAP)
-           else
-	      TCP_WRAP="-L$enableval/lib -lwrap"
-	      AC_DEFINE(HAVE_LIBWRAP)
-	      CPPFLAGS="$CPPFLAGS -I$enableval/include"
-	   fi
-	fi
-)
-AC_SUBST(TCP_WRAP)
-
 libdb_parameter=no
 AC_ARG_WITH(gdbm-dir,
         [  --with-gdbm-dir=BASE-DIR         Specifies the base gdbm directory],
@@ -237,10 +220,12 @@ AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
 	yppush/Makefile makedbm/Makefile makedbm/makedbm.8
 	revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile
 	mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile
-	rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8
+	rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8 rpc.yppasswdd/Makefile
+	rpc.yppasswdd/yppasswdd.8 rpc.yppasswdd/rpc.yppasswdd.8
 	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
 	scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate
-	scripts/pwupdate.8 scripts/create_printcap scripts/match_printcap)
+	scripts/pwupdate.8 scripts/create_printcap scripts/match_printcap
+	scripts/ypinit scripts/ypinit.8)
 
 echo "
 Configuration:
@@ -250,7 +235,7 @@ Configuration:
   Compiler flags:         ${CFLAGS}
   Preprocessor:		  ${CPP}
   Preprocessor flags:     ${CPPFLAGS}
-  Libraries:		  ${LIBS} ${TCP_WRAP} ${LIBDBM} ${LIBCRYPT}
+  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT}
   Awk:                    ${AWK}
   Shell:		  ${BASH}
   Install path prefix:    ${prefix}"

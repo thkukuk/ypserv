@@ -40,9 +40,6 @@
 /* Define if you have the res_gethostbyname function.  */
 #undef HAVE_RES_GETHOSTBYNAME
 
-/* Define if you wish to use the tcp wrapper (-lwrap).  */
-#undef HAVE_LIBWRAP
-
 /* Define if you have the gdbm library (-lgdbm).  */
 #undef HAVE_LIBGDBM
 

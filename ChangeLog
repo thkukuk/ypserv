@@ -1,5 +1,8 @@
 2001-04-08  Thorsten Kukuk  <kukuk@suse.de>
 
+	* scripts/Makefile.am: Add ypinit script and manual page
+	* scripts/ypinit.in: New.
+	* scripts/ypinit.8.in: New.
 	* scripts/create_printcap.in: New.
 	* scripts/match_printcap.in: New.
 	* scripts/pwupdate.8.in: New.

@@ -12,8 +12,7 @@ CLEANFILES = *~ ${SCRIPTS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS)) $(addsuffix .in,$(SCRIPTS))
 
-man_MANS = pwupdate.8
+man_MANS = pwupdate.8 ypinit.8
 
 libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday \
-		create_printcap match_printcap pwupdate
-
+		create_printcap match_printcap pwupdate ypinit

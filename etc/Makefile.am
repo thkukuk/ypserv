@@ -7,7 +7,10 @@
 
 AUTOMAKE_OPTIONS = 1.4 gnits
 
-EXTRA_DIST = README locale netgroup netmasks securenets timezone ypserv.conf
+EXTRA_DIST = README locale netgroup netmasks securenets timezone ypserv.conf \
+		${MANS}
 
 CLEANFILES = *~
+
+man_MANS=netgroup.5
 
