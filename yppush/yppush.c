@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2003 Thorsten Kukuk
+/* Copyright (c) 1996-2004 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -146,7 +146,6 @@ yppushproc_xfrresp_1_svc (yppushresp_xfr *req, void *resp, struct svc_req *rqstp
 		      sizeof (sin->sin_addr.s_addr), AF_INET);
   h = (hp && hp->h_name) ? hp->h_name : inet_ntoa (sin->sin_addr);
 
-  memcpy ((yppushresp_xfr *) resp, req, sizeof (yppushresp_xfr));
   if (verbose_flag)
     {
       log_msg ("Status received from ypxfr on %s:", h);

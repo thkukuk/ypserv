@@ -4,11 +4,10 @@
 AUTOMAKE_OPTIONS = 1.7 gnits
 MAINT_CHARSET = latin1
 #
-INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
-DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\"
+DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPMAPDIR=\"@YPMAPDIR@\"
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
