@@ -253,6 +253,9 @@ yppush_xfrrespprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
   if (!yppush_xfrrespprog_1_freeresult (transp, _xdr_result, (caddr_t) &result))
     log_msg ("unable to free results");
 #endif
+  if (rqstp->rq_proc != YPPUSHPROC_NULL)
+    exit (0);
+
   return;
 }
 
