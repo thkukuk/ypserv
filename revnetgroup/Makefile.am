@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2000 SuSE GmbH, Nuernberg
-#
-# Author: Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2000, 2001 Thorsten Kukuk <kukuk@suse.de>
 #
 AUTOMAKE_OPTIONS = 1.4 gnits
 MAINT_CHARSET = latin1

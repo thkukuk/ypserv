@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2000 Thorsten Kukuk, Germany
-#
-# Author: Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2000, 2001 Thorsten Kukuk <kukuk@suse.de>
 #
 # Process this file with automake to produce Makefile.in.
 

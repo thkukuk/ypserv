@@ -1,11 +1,9 @@
 #
-# Copyright (C) 1999, 2000, 2001 SuSE GmbH Nuernberg, Germany
-#
-# Author: Thorsten Kukuk <kukuk@suse.de>
+# Copyright (C) 1999, 2000, 2001 Thorsten Kukuk <kukuk@suse.de>
 #
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(ypserv/ypserv.c)
-AM_INIT_AUTOMAKE("ypserv", 1.99.0)
+AM_INIT_AUTOMAKE("ypserv", 2.0)
 AM_CONFIG_HEADER(config.h)
 AC_PREFIX_DEFAULT(/usr)
 
@@ -55,8 +53,6 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
-AM_WITH_DMALLOC
-AM_WITH_EFENCE
 
 dnl Check for big or little endian system
 AC_C_BIGENDIAN
