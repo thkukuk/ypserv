@@ -85,7 +85,7 @@ VERSION = @VERSION@
 YPBINDIR = @YPBINDIR@
 YPMAPDIR = @YPMAPDIR@
 
-AUTOMAKE_OPTIONS = 1.4 gnits
+AUTOMAKE_OPTIONS = 1.4 gnits dist-bzip2
 MAINT_CHARSET = latin1
 #
 SUBDIRS = etc lib ypserv ypxfr yppush makedbm revnetgroup rpc.ypxfrd 	rpc.yppasswdd yphelper mknetid scripts
@@ -270,9 +270,14 @@ dist: distdir
 	-chmod -R a+r $(distdir)
 	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
 	-rm -rf $(distdir)
+dist-bzip2: distdir
+	-chmod -R a+r $(distdir)
+	$(TAR) --use-compress-program=bzip2 -chof $(distdir).tar.bz2 $(distdir)
+	-rm -rf $(distdir)
 dist-all: distdir
 	-chmod -R a+r $(distdir)
 	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
+	$(TAR) --use-compress-program=bzip2 -chof $(distdir).tar.bz2 $(distdir)
 	-rm -rf $(distdir)
 distdir: $(DISTFILES)
 	@if sed 15q $(srcdir)/NEWS | fgrep -e "$(VERSION)" > /dev/null; then :; else \

@@ -98,6 +98,8 @@ CLEANFILES = *~ ${MANS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS))
 
+noinst_HEADERS = ypxfrd.h
+
 man_MANS = ypxfrd.8 rpc.ypxfrd.8
 
 sbin_PROGRAMS = rpc.ypxfrd
@@ -123,6 +125,8 @@ man8dir = $(mandir)/man8
 MANS = $(man_MANS)
 
 NROFF = nroff
+HEADERS =  $(noinst_HEADERS)
+
 DIST_COMMON =  Makefile.am Makefile.in rpc.ypxfrd.8.in ypxfrd.8.in
 
 
@@ -333,7 +337,7 @@ install-am: all-am
 install: install-am
 uninstall-am: uninstall-sbinPROGRAMS uninstall-man
 uninstall: uninstall-am
-all-am: Makefile $(PROGRAMS) $(MANS)
+all-am: Makefile $(PROGRAMS) $(MANS) $(HEADERS)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install

@@ -18,6 +18,8 @@ CLEANFILES = *~ ${MANS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS))
 
+noinst_HEADERS = ypxfrd.h
+
 man_MANS = ypxfrd.8 rpc.ypxfrd.8
 
 sbin_PROGRAMS = rpc.ypxfrd
