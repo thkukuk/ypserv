@@ -13,7 +13,7 @@ noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h \
 
 rpcsvc_HEADERS = ypxfrd.x
 
-DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\"
+DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\" -DUSE_SLP=@USE_SLP@
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
