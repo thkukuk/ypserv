@@ -181,10 +181,7 @@ register_slp ()
     }
 
   if (slp_flag == 2)
-    {
-      attr = create_domain_attr ();
-      printf ("Set attribute %s\n", attr);
-    }
+    attr = create_domain_attr ();
 
   if (attr == NULL) /* can also be NULL if create_domain_attr fails.  */
     attr = strdup ("");
