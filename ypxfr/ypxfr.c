@@ -617,9 +617,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
                   unlink (dbName_temp);
                   return YPXFR_DBM;
                 }
-	      xdr_free ((xdrproc_t) xdr_ypresp_val,
-			(char *) &resp_val);
             }
+          xdr_free ((xdrproc_t) xdr_ypresp_val, (char *) &resp_val);
         }
 
       /* Get the YP_SECURE field. */
@@ -650,9 +649,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
                   unlink (dbName_temp);
                   return YPXFR_DBM;
                 }
-	      xdr_free ((xdrproc_t) xdr_ypresp_val,
-			(char *) &resp_val);
             }
+          xdr_free ((xdrproc_t) xdr_ypresp_val, (char *) &resp_val);
         }
 
       /* We don't need clnt_udp any longer, give it free */
