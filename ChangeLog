@@ -1,3 +1,10 @@
+2004-08-10  Mark Brown  <broonie@sirena.org.uk>
+
+	* ypxfr/ypxfr_clnt.c (ypproc_master_2): memset() the response
+	structure before calling clnt_call().
+	(ypproc_order_2): Likewise.
+	* ypxfr/ypxfr_xdr.c (ypproc_all_2): Likewise.
+
 2004-07-19  Thorsten Kukuk  <kukuk@suse.de>
 
 	* ypxfr/ypxfr.c (ypxfr): Don't free xdr_ypresp_val,

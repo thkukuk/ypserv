@@ -202,6 +202,7 @@ static struct timeval TIMEOUT = { 25, 0 };
 enum clnt_stat
 ypproc_all_2 (ypreq_nokey *argp, ypresp_all *clnt_res, CLIENT *clnt)
 {
+  memset(clnt_res, 0, sizeof(ypresp_all));
   return (clnt_call(clnt, YPPROC_ALL,
                     (xdrproc_t) xdr_ypreq_nokey, (caddr_t) argp,
                     (xdrproc_t) ypxfr_xdr_ypresp_all, (caddr_t) clnt_res,
