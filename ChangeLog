@@ -9,6 +9,9 @@
 	* scripts/ypxfr_1perhour.in: Likewise.
 	* scripts/ypxfr_2perday.in: Likewise.
 
+	* scripts/ypMakefile.in: Apply fix for multiline mail aliases
+	from Jonathan Gowland <jgowland@genaware.com>.
+
 2003-06-06  Thorsten Kukuk  <kukuk@suse.de>
 
 	* Add more portability changes from
