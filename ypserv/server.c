@@ -116,6 +116,7 @@ ypproc_domain_nonack_2_svc (domainname *argp, bool_t *result,
       /* Bail out and don't return any RPC value */
       return FALSE;
     case -2: /* Should not happen */
+      log_msg ("Map name not valid, this cannot happen???");
       return FALSE;
     case -1:
       if (debug_flag)
@@ -739,6 +740,10 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
   xdr_ypall_cb.u.close = NULL;
   xdr_ypall_cb.data = NULL;
 
+  /* Set this to TRUE so that the client will be forced to read
+     at least one record from us. This could be the error code.  */
+  result->more = TRUE;
+
   valid = is_valid (rqstp, argp->map, argp->domain);
   if (valid < 1)
     {
@@ -812,8 +817,6 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
   /* We are now in the child part. Don't let the child ypserv share
      DB handles with the parent process.  */
   ypdb_close_all();
-
-  result->more = TRUE;
 
   if ((data = calloc (1, sizeof (struct ypall_data))) == NULL)
     {
