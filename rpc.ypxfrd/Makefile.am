@@ -8,7 +8,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
-AM_CFLAGS = @EXTRA_CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"@YPMAPDIR@\" \
 	-DUSE_FQDN=@USE_FQDN@ -DXFRBLOCKSIZE=65535
@@ -17,8 +16,6 @@ INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 CLEANFILES = *~ ${MANS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS))
-
-noinst_HEADERS = ypxfrd.h
 
 man_MANS = ypxfrd.8 rpc.ypxfrd.8
 

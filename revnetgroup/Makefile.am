@@ -8,7 +8,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
-AM_CFLAGS = @EXTRA_CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
@@ -25,3 +24,4 @@ noinst_HEADERS = hash.h
 
 revnetgroup_SOURCES = revnetgroup.c getnetgrent.c hash.c
 
+revnetgroup_LDADD =  $(top_builddir)/lib/libyp.a

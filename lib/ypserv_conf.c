@@ -32,6 +32,7 @@
 
 #include "log_msg.h"
 #include "ypserv_conf.h"
+#include "compat.h"
 
 int dns_flag = 0;
 int xfr_check_port = 0;
@@ -396,14 +397,9 @@ load_ypserv_conf (const char *path)
 	      log_msg ("ypserv.conf: xfr_check_port: %d", xfr_check_port);
 	    break;
 	  }
-#ifdef __GNUC__
-	  /* GCC syntax shows our intent much more clearly */
-	case '1' ... '9':
-#else
 	case '1': case '2': case '3':
 	case '4': case '5': case '6':
 	case '7': case '8': case '9':
-#endif
 	case '*':
 	  {
 	    char *n, *d, *m, *s, *p, *f;

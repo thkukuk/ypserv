@@ -2,7 +2,7 @@
 # Copyright (C) 1999, 2000, 2001, 2002, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ypserv, 2.8.90, kukuk@linux-nis.org)
+AC_INIT(ypserv, 2.8.92, kukuk@linux-nis.org)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AM_CONFIG_HEADER(config.h)
@@ -10,6 +10,9 @@ AC_PREFIX_DEFAULT(/usr)
 
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
+
+dnl XXX This should be an option
+AC_DEFINE(MAX_CHILDREN, 40, [Define how many children ypserv is allowed to create])
 
 dnl Some hacks...
 test "${prefix}" = "NONE" && prefix="/usr"
@@ -40,8 +43,14 @@ else
   YPBINDIR=${libexecdir}
 fi
 AC_SUBST(YPBINDIR)
-YPMAPDIR="/var/yp"
+
+dnl Location of the NIS maps.  default: /var/yp
+AC_ARG_ENABLE(ypmapdir,
+       [  --enable-ypmapdir=path  Location of NIS maps [default=/var/yp]],
+              YPMAPDIR=$enableval, YPMAPDIR=/var/yp)
 AC_SUBST(YPMAPDIR)
+
+
 if test ${sbindir} = '${exec_prefix}/sbin'
 then
   if test "${exec_prefix}" = "NONE"
@@ -56,14 +65,30 @@ fi
 AC_SUBST(SBINDIR)
 
 dnl Checks for programs.
-EXTRA_CFLAGS="-W -Wall -Wbad-function-cast -Wcast-align -Wcast-qual"
-AC_SUBST(EXTRA_CFLAGS)
 AC_PROG_CC
 AC_ISC_POSIX
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
+
+if eval "test x$GCC = xyes"; then
+  for flag in \
+      -pedantic \
+      -W \
+      -Wall \
+      -Wbad-function-cast \
+      -Wcast-align \
+      -Wcast-qual \
+      -Wmissing-declarations \
+      -Wmissing-prototypes \
+      -Wpointer-arith \
+      -Wreturn-type \
+      -Wstrict-prototypes
+  do
+    JAPHAR_GREP_CFLAGS($flag, [ CFLAGS="$CFLAGS $flag" ])
+  done
+fi
 
 AM_WITH_DMALLOC
 AM_WITH_EFENCE
@@ -100,6 +125,8 @@ AC_SUBST(MAKE)
 
 dnl Check for aliases path
 AC_PATH_PROG(ALIASES, aliases, /etc/mail/aliases, /etc/mail:/etc)
+
+
 
 dnl Should we use a gethostbyname after gethostname to use FQDN ? default yes
 AC_ARG_ENABLE(fqdn,
@@ -152,6 +179,9 @@ else
   AC_CHECK_HEADERS(xcrypt.h crypt.h)
 fi
 AC_SUBST(LIBCRYPT)
+dnl XXX We need to check at first if it is not in libc or libnsl,
+dnl else we could get problems with ypserv on Linux.
+dnl AC_CHECK_LIB(rpcsvc, getrpcport)
 AC_CHECK_LIB(nsl,gethostbyname)
 AC_CHECK_LIB(socket,socket)
 AC_CHECK_LIB(resolv, res_gethostbyname, RESOLV="-lresolv", RESOLV="")
@@ -169,7 +199,7 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h paths.h sys/file.h sys/time.h syslog.h unistd.h)
 AC_CHECK_HEADERS(getopt.h shadow.h rpc/clnt_soc.h rpc/svc_soc.h)
-AC_CHECK_HEADERS(netinet/in.h)
+AC_CHECK_HEADERS(netinet/in.h alloca.h poll.h)
 AC_CHECK_TYPE(in_addr_t, ,[AC_DEFINE(in_addr_t,int,[Define to int if you don't have in_addr_t])],[#include <netinet/in.h>])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -192,11 +222,19 @@ AC_EGREP_HEADER(resultproc_t,rpc/pmap_clnt.h,\
 dnl Checks for library functions.
 AC_FUNC_MEMCMP
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(inet_aton vsyslog lckpwdf)
+AC_CHECK_FUNCS(setenv putenv)
+AC_CHECK_FUNCS(fgetpwent putpwent fgetgrent getspnam)
+AC_CHECK_FUNCS(inet_aton inet_pton vsyslog lckpwdf)
 AC_CHECK_FUNCS(strdup strndup strerror strstr strsep stpcpy snprintf)
 AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
-AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
-AC_CHECK_DECL(svc_max_pollfd,AC_DEFINE(HAVE_SVC_MAX_POLLFD, 1, [Define if the system supports svc_max_pollfd.]),, [#include <rpc/rpc.h>])
+AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getrpcport)
+AC_CHECK_FUNCS(svc_getcaller svc_getrpccaller getline getdelim)
+AC_CHECK_FUNCS(xdr_domainname xdr_ypxfrstat xdr_ypresp_xfr xdr_ypreq_xfr)
+AC_CHECK_FUNCS(xdr_ypmap_parms xdr_ypreq_nokey xdr_ypresp_master xdr_mapname)
+AC_CHECK_FUNCS(xdr_peername xdr_ypstat xdr_ypbind_binding xdr_yppushresp_xfr)
+AC_CHECK_FUNCS(xdr_yppush_status)
+
+
 
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
 	ypxfr/Makefile ypxfr/ypxfr.8 yppush/Makefile yppush/yppush.8
@@ -221,6 +259,7 @@ Configuration:
   Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT}
   Awk:                    ${AWK}
   Shell:		  ${BASH}
+  NIS map dir:            ${YPMAPDIR}
   Install path prefix:    ${prefix}"
 if test ${sysconfdir} != '${prefix}/etc'
 then

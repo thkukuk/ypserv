@@ -8,7 +8,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
-AM_CFLAGS = @EXTRA_CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"@YPMAPDIR@\" \
 	-DUSE_FQDN=@USE_FQDN@

@@ -8,11 +8,8 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
-MAXCHILDREN = 40
-
-AM_CFLAGS = @EXTRA_CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DYPMAPDIR=\"@YPMAPDIR@\" -DMAX_CHILDREN=$(MAXCHILDREN)
+	-DYPMAPDIR=\"@YPMAPDIR@\"
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~

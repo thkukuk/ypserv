@@ -52,6 +52,7 @@ CHECKROOT = @CHECKROOT@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"@YPMAPDIR@\" \
 	-DUSE_FQDN=@USE_FQDN@ -DXFRBLOCKSIZE=65535
@@ -62,7 +63,6 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-EXTRA_CFLAGS = @EXTRA_CFLAGS@
 INSTALL_DATA = @INSTALL_DATA@
 #
 INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
@@ -129,15 +129,11 @@ AUTOMAKE_OPTIONS = 1.7 gnits
 MAINT_CHARSET = latin1
 
 localedir = $(datadir)/locale
-
-AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~ ${MANS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS))
-
-noinst_HEADERS = ypxfrd.h
 
 man_MANS = ypxfrd.8 rpc.ypxfrd.8
 
@@ -173,10 +169,7 @@ DIST_SOURCES = $(rpc_ypxfrd_SOURCES)
 
 NROFF = nroff
 MANS = $(man_MANS)
-HEADERS = $(noinst_HEADERS)
-
-DIST_COMMON = $(noinst_HEADERS) Makefile.am Makefile.in rpc.ypxfrd.8.in \
-	ypxfrd.8.in
+DIST_COMMON = Makefile.am Makefile.in rpc.ypxfrd.8.in ypxfrd.8.in
 SOURCES = $(rpc_ypxfrd_SOURCES)
 
 all: all-am
@@ -405,7 +398,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS) $(MANS) $(HEADERS)
+all-am: Makefile $(PROGRAMS) $(MANS)
 
 installdirs:
 	$(mkinstalldirs) $(DESTDIR)$(sbindir) $(DESTDIR)$(man8dir)

@@ -1,4 +1,4 @@
-/* Copyright (c)  2000, 2001, 2002 Thorsten Kukuk
+/* Copyright (c)  2000, 2001, 2002, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -185,9 +185,19 @@ ypdb_close_all (void)
       if (fast_open_files[i].dbp != NULL)
 	{
 	  if (fast_open_files[i].flag & F_OPEN_FLAG)
-	    fast_open_files[i].flag |= F_MUST_CLOSE;
+	    {
+	      if (debug_flag)
+		log_msg ("ypdb_close_all (%s/%s|%d) MARKED_TO_BE_CLOSE",
+			 fast_open_files[i].domain,
+			 fast_open_files[i].map, i);
+	      fast_open_files[i].flag |= F_MUST_CLOSE;
+	    }
 	  else
 	    {
+	      if (debug_flag)
+		log_msg ("ypdb_close_all (%s/%s|%d)",
+			 fast_open_files[i].domain,
+			 fast_open_files[i].map, i);
 	      free (fast_open_files[i].domain);
 	      free (fast_open_files[i].map);
 	      _db_close (fast_open_files[i].dbp);
@@ -306,7 +316,7 @@ ypdb_open (const char *domain, const char *map)
 	    }
 	}
 
-      /* Search for free entry. I we do not found one, close the LRU */
+      /* Search for free entry. If we do not found one, close the LRU */
       for (i = 0; i < cached_filehandles; i++)
 	{
 #if 0

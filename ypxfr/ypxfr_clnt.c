@@ -1,4 +1,4 @@
-/* Copyright (c) 2000  Thorsten Kukuk
+/* Copyright (c) 2000, 2003  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -36,5 +36,14 @@ ypproc_order_2 (ypreq_nokey *argp, ypresp_order *clnt_res, CLIENT *clnt)
   return (clnt_call(clnt, YPPROC_ORDER,
 		    (xdrproc_t) xdr_ypreq_nokey, (caddr_t) argp,
 		    (xdrproc_t) xdr_ypresp_order, (caddr_t) clnt_res,
+		    TIMEOUT));
+}
+
+enum clnt_stat
+ypproc_master_2 (ypreq_nokey *argp, ypresp_master *clnt_res, CLIENT *clnt)
+{
+  return (clnt_call(clnt, YPPROC_MASTER,
+		    (xdrproc_t) xdr_ypreq_nokey, (caddr_t) argp,
+		    (xdrproc_t) xdr_ypresp_master, (caddr_t) clnt_res,
 		    TIMEOUT));
 }

@@ -52,6 +52,7 @@ CHECKROOT = @CHECKROOT@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\"
 DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
@@ -59,7 +60,6 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-EXTRA_CFLAGS = @EXTRA_CFLAGS@
 INSTALL_DATA = @INSTALL_DATA@
 #
 INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
@@ -126,8 +126,6 @@ AUTOMAKE_OPTIONS = 1.7 gnits
 MAINT_CHARSET = latin1
 
 localedir = $(datadir)/locale
-
-AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~

@@ -8,7 +8,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
-AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
@@ -25,4 +24,4 @@ libexec_PROGRAMS = yphelper
 
 yphelper_SOURCES = yphelper.c
 
-yphelper_LDADD = @LIBDBM@
+yphelper_LDADD = $(top_builddir)/lib/libyp.a @LIBDBM@

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1999, 2001  Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1999, 2001, 2003  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -273,9 +273,9 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
 	    (objp->ypresp_all_u.val.key.keydat_val,
 	     objp->ypresp_all_u.val.key.keydat_len,
 	     &(objp->ypresp_all_u.val.key.keydat_val),
-	     &(objp->ypresp_all_u.val.key.keydat_len),
+	     (int *) &(objp->ypresp_all_u.val.key.keydat_len),
 	     &(objp->ypresp_all_u.val.val.valdat_val),
-	     &(objp->ypresp_all_u.val.val.valdat_len));
+	     (int *) &(objp->ypresp_all_u.val.val.valdat_len));
 	}
     }
   else

@@ -28,6 +28,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <alloca.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
@@ -37,13 +38,14 @@
 #include "access.h"
 #include "ypserv_conf.h"
 #include "log_msg.h"
+#include "compat.h"
 
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
 extern volatile int children; /* ypserv.c  */
-extern int forked; /* ypserv.c  */
+#endif
 
 bool_t
-ypproc_null_2_svc (void *argp __attribute__ ((unused)),
-		   void *result __attribute__ ((unused)),
+ypproc_null_2_svc (void *argp UNUSED, void *result UNUSED,
 		   struct svc_req *rqstp)
 {
   if (debug_flag)
@@ -507,7 +509,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
           if ((size_t)val.dsize != strlen (argp->map_parms.peer) ||
               strncmp (val.dptr, argp->map_parms.peer, val.dsize) != 0)
             {
-	      char buf[val.dsize + 1];
+	      char *buf = alloca (val.dsize + 1);
 
 	      strncpy (buf, val.dptr, val.dsize);
 	      buf[val.dsize] = '\0';
@@ -573,7 +575,9 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     }
 #endif
 
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
   ++children;
+#endif
   switch (fork ())
     {
     case 0:
@@ -588,9 +592,9 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
         dup (i);
 
         sprintf (ypxfr_command, "%s/ypxfr", YPBINDIR);
-        sprintf (t, "%u", argp->transid);
-        sprintf (g, "%u", argp->prog);
-        sprintf (p, "%u", argp->port);
+        snprintf (t, sizeof (t), "%u", argp->transid);
+        snprintf (g, sizeof (g), "%u", argp->prog);
+        snprintf (p, sizeof (p), "%u", argp->port);
         if (debug_flag)
           execl (ypxfr_command, "ypxfr", "--debug", "-d",
                  argp->map_parms.domain, "-h", argp->map_parms.peer,
@@ -605,7 +609,9 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
         exit (0);
       }
     case -1:
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
       --children;
+#endif
       log_msg ("Cannot fork: %s", strerror (errno));
       result->xfrstat = YPXFR_XFRERR;
       break;
@@ -617,8 +623,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
   return TRUE;
 }
 
-bool_t ypproc_clear_2_svc (void *argp __attribute__ ((unused)),
-			   void *result __attribute__ ((unused)),
+bool_t ypproc_clear_2_svc (void *argp UNUSED, void *result UNUSED,
 			   struct svc_req *rqstp)
 {
   if (debug_flag)
@@ -767,6 +772,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
       return TRUE;
     }
 
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
   if (children >= MAX_CHILDREN)
     {
       int wait = 0;
@@ -784,28 +790,27 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
   if (children < MAX_CHILDREN)
     {
       ++children;
+#endif
       switch (fork ())
         {
-        case 0:
-          ++forked;
+        case 0: /* child */
 #ifdef DEBUG
           log_msg ("ypserv has forked for ypproc_all(): pid=%i", getpid ());
-          if (!forked)
-            abort ();
 #endif
-          /* Close all databases ! */
-          ypdb_close_all ();
           break;
-        case -1:
+        case -1:  /* parent, error */
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
           --children;
+#endif
           log_msg ("WARNING(ypproc_all_2_svc): cannot fork: %s",
 		   strerror (errno));
           result->ypresp_all_u.val.stat = YP_YPERR;
-          return TRUE;
-        default:
+	  return TRUE;
+        default: /* parent, default */
           return FALSE;
           break;
         }
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
     }
   else
     {
@@ -813,6 +818,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
       result->ypresp_all_u.val.stat = YP_YPERR;
       return TRUE;
     }
+#endif
 
   /* We are now in the child part. Don't let the child ypserv share
      DB handles with the parent process.  */
@@ -823,7 +829,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
       log_msg ("ERROR: could not allocate enough memory! [%s|%d]",
 	       __FILE__, __LINE__);
       result->ypresp_all_u.val.stat = YP_YPERR;
-      return TRUE;
+      goto out;
     }
 
   data->dbm = ypdb_open (argp->domain, argp->map);
@@ -862,9 +868,9 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	    log_msg ("\t -> First value returned.");
 
 	  if (result->ypresp_all_u.val.stat == YP_TRUE)
-	    return TRUE; /* We return to commit the data.
-			    This also means, we don't give
-			    data free here */
+	    goto out; /* We return to commit the data.
+			 This also means, we don't give
+			 data free here */
 	}
       else
 	result->ypresp_all_u.val.stat = YP_NOMORE;
@@ -877,7 +883,12 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
   if (debug_flag)
     log_msg ("\t -> Exit from ypproc_all without sending data.");
 
-  return TRUE;
+ out:
+  if (!svc_sendreply (rqstp->rq_xprt, (xdrproc_t) xdr_ypresp_all,
+		      (caddr_t) result))
+    svcerr_systemerr (rqstp->rq_xprt);
+  /* Note: no need to free args; we're exiting.  */
+  exit(0);
 }
 
 bool_t
@@ -1203,7 +1214,7 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
 }
 
 int
-ypprog_2_freeresult (SVCXPRT *transp __attribute__ ((unused)),
+ypprog_2_freeresult (SVCXPRT *transp UNUSED,
 		     xdrproc_t xdr_result, caddr_t result)
 {
   xdr_free (xdr_result, result);

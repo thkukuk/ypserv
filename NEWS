@@ -4,7 +4,10 @@ Copyright (C) 1998-2003 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@suse.de>.
 
-Version 2.8.90
+Version 2.8.92
+* Make it more portable
+* Make number of allowed childs a compile time option
+* Use system svc_run()
 * Fix return code for wrong/invalid map- and domainname
 * Make source code more portable
 

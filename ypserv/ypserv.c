@@ -44,6 +44,7 @@
 #include "access.h"
 #include "log_msg.h"
 #include "ypserv_conf.h"
+#include "compat.h"
 
 #ifdef HAVE_PATHS_H
 #include <paths.h>
@@ -57,8 +58,9 @@
 #define YPOLDVERS 1
 #endif
 
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
 volatile int children = 0;
-int forked = 0;
+#endif
 
 static char *path_ypdb = YPMAPDIR;
 
@@ -206,86 +208,6 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
   return;
 }
 
-#if defined(HAVE_SVC_MAX_POLLFD)
-
-static void
-ypserv_svc_run (void)
-{
-  int i;
-
-  for (;;)
-    {
-      struct pollfd *my_pollfd;
-
-      if (svc_max_pollfd == 0 && svc_pollfd == NULL)
-        return;
-
-      my_pollfd = malloc (sizeof (struct pollfd) * svc_max_pollfd);
-      for (i = 0; i < svc_max_pollfd; ++i)
-        {
-          my_pollfd[i].fd = svc_pollfd[i].fd;
-          my_pollfd[i].events = svc_pollfd[i].events;
-          my_pollfd[i].revents = 0;
-        }
-
-      switch (i = poll (my_pollfd, svc_max_pollfd, -1))
-        {
-        case -1:
-          free (my_pollfd);
-          if (errno == EINTR)
-            continue;
-          syslog (LOG_ERR, "svc_run: - poll failed: %m");
-          return;
-        case 0:
-          free (my_pollfd);
-          continue;
-        default:
-          svc_getreq_poll (my_pollfd, i);
-          free (my_pollfd);
-          if (forked)
-            _exit (0);
-        }
-    }
-}
-
-#else
-
-void
-ypserv_svc_run (void)
-{
-#ifdef FD_SETSIZE
-  fd_set readfds;
-#else
-  int readfds;
-#endif /* def FD_SETSIZE */
-
-  for (;;)
-    {
-#ifdef FD_SETSIZE
-      readfds = svc_fdset;
-#else
-      readfds = svc_fds;
-#endif /* def FD_SETSIZE */
-      switch (select(_rpc_dtablesize(), &readfds, NULL, NULL,
-                     (struct timeval *)0))
-        {
-        case -1:
-          if (errno == EINTR)
-            continue;
-          syslog (LOG_ERR, "svc_run: - select failed: %m");
-          return;
-        case 0:
-          continue;
-        default:
-          svc_getreqset (&readfds);
-          if (forked)
-            _exit (0);
-        }
-    }
-}
-
-#endif
-
 /* Create a pidfile on startup */
 static void
 create_pidfile (void)
@@ -369,7 +291,7 @@ create_pidfile (void)
 extern FILE *debug_output;
 /* SIGUSR1: enable/disable debug output.  */
 static void
-sig_usr1 (int sig __attribute__ ((unused)))
+sig_usr1 (int sig UNUSED)
 {
   if (debug_flag)
     {
@@ -388,7 +310,7 @@ sig_usr1 (int sig __attribute__ ((unused)))
 
 /* Clean up if we quit the program. */
 static void
-sig_quit (int sig __attribute__ ((unused)))
+sig_quit (int sig UNUSED)
 {
   pmap_unset (YPPROG, YPVERS);
   pmap_unset (YPPROG, YPOLDVERS);
@@ -399,7 +321,7 @@ sig_quit (int sig __attribute__ ((unused)))
 
 /* Reload securenets and config file */
 static void
-sig_hup (int sig __attribute__ ((unused)))
+sig_hup (int sig UNUSED)
 {
   int old_cached_filehandles = cached_filehandles;
 
@@ -427,13 +349,17 @@ sig_child (int sig)
     {
       if (debug_flag)
         log_msg ("pid=%d", pid);
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
       --children;
+#endif
     }
 
+#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
   if (children < 0)
     log_msg ("children is lower 0 (%i)!", children);
   else if (debug_flag)
     log_msg ("children = %i", children);
+#endif
 }
 
 
@@ -696,7 +622,7 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  ypserv_svc_run ();
+  svc_run ();
   log_msg ("svc_run returned");
   unlink (_YPSERV_PIDFILE);
   exit (1);

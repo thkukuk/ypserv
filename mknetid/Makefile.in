@@ -52,6 +52,7 @@ CHECKROOT = @CHECKROOT@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
 
@@ -61,7 +62,6 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-EXTRA_CFLAGS = @EXTRA_CFLAGS@
 INSTALL_DATA = @INSTALL_DATA@
 #
 INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
@@ -128,8 +128,6 @@ AUTOMAKE_OPTIONS = 1.7 gnits
 MAINT_CHARSET = latin1
 
 localedir = $(datadir)/locale
-
-AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~ ${MANS}
@@ -143,6 +141,8 @@ libexec_PROGRAMS = mknetid
 noinst_HEADERS = mknetid.h
 
 mknetid_SOURCES = mknetid.c netid_hash.c
+
+mknetid_LDADD = $(top_builddir)/lib/libyp.a
 subdir = mknetid
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -152,8 +152,7 @@ PROGRAMS = $(libexec_PROGRAMS)
 
 am_mknetid_OBJECTS = mknetid.$(OBJEXT) netid_hash.$(OBJEXT)
 mknetid_OBJECTS = $(am_mknetid_OBJECTS)
-mknetid_LDADD = $(LDADD)
-mknetid_DEPENDENCIES =
+mknetid_DEPENDENCIES = $(top_builddir)/lib/libyp.a
 mknetid_LDFLAGS =
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)

@@ -31,7 +31,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <ctype.h>
-#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
+#include <alloca.h>
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
 #endif
 #if defined(HAVE_LIBGDBM)
@@ -40,6 +41,7 @@
 #include <ndbm.h>
 #endif
 #include "yp.h"
+#include "compat.h"
 #include <rpcsvc/ypclnt.h>
 #include <arpa/nameser.h>
 #ifdef HAVE_SHADOW_H
@@ -178,7 +180,7 @@ print_hostname (char *param)
 	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
     }
   else
-    hp = gethostbyname2 (hostname, AF_INET);
+    hp = gethostbyname (hostname);
 
   if (hp == NULL)
     fputs (hostname, stdout);
@@ -219,7 +221,7 @@ print_maps (char *server, char *domain)
 	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
     }
   else
-    hp = gethostbyname2 (server, AF_INET);
+    hp = gethostbyname (server);
   if (hp != NULL)
     {
       server = alloca (strlen (hp->h_name) + 1);
@@ -557,17 +559,20 @@ is_master (char *map, char *domain, char *host)
 	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
     }
   else
-    hp = gethostbyname2 (hostname, AF_INET);
+    hp = gethostbyname (hostname);
 
   if (hp != NULL)
-    hostname = strdupa (hp->h_name);
+    hostname = strdup (hp->h_name);
 #endif
 
   if (strcasecmp (hostname,
 		  get_dbm_entry ("YP_MASTER_NAME", map, domainname)) == 0)
-    exit (0);
+    ret = 0;
   else
-    exit (1);
+    ret = 1;
+
+  free(hostname);
+  exit (ret);
 }
 
 static void

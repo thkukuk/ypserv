@@ -48,21 +48,9 @@
 #if defined(HAVE_GETOPT_H)
 #include <getopt.h>
 #endif /* HAVE_GETOPT_H */
+#include "compat.h"
 
 #include "log_msg.h"
-
-#ifndef HAVE_STRDUP
-#include <compat/strdup.c>
-#endif
-
-#ifndef HAVE_GETOPT_LONG
-#include <compat/getopt.c>
-#include <compat/getopt1.c>
-#endif
-
-#ifndef HAVE_STRERROR
-#include <compat/strerror.c>
-#endif
 
 #ifndef YPMAPDIR
 #define YPMAPDIR "/var/yp"
@@ -160,9 +148,9 @@ yppush_err_string (enum yppush_status status)
 }
 
 bool_t
-yppushproc_null_1_svc (void *req __attribute__ ((unused)),
-		       void *resp __attribute__ ((unused)),
-		       struct svc_req *rqstp __attribute__ ((unused)))
+yppushproc_null_1_svc (void *req UNUSED,
+		       void *resp UNUSED,
+		       struct svc_req *rqstp UNUSED)
 {
   resp = NULL;
 
@@ -208,8 +196,6 @@ yppush_xfrrespprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
   union {
     yppushresp_xfr yppushproc_xfrresp_1_arg;
   } argument;
-  union {
-  } result;
   bool_t retval;
   xdrproc_t _xdr_argument, _xdr_result;
   bool_t (*local)(char *, void *, struct svc_req *);
@@ -240,8 +226,8 @@ yppush_xfrrespprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
       svcerr_decode (transp);
       return;
     }
-  retval = (bool_t) (*local)((char *)&argument, (void *)&result, rqstp);
-  if (retval > 0 && !svc_sendreply(transp, _xdr_result, (char *)&result))
+  retval = (bool_t) (*local)((char *)&argument, NULL, rqstp);
+  if (retval > 0 && !svc_sendreply(transp, _xdr_result, NULL))
     {
       svcerr_systemerr (transp);
     }
@@ -388,11 +374,11 @@ getordernum (void)
 #if defined(__NetBSD__)
 static int
 add_slave_server (u_long status, char *key, int keylen,
-		  char *val, int vallen, void *data __attribute__ ((unused)))
+		  char *val, int vallen, void *data UNUSED)
 #else
 static int
 add_slave_server (int status, char *key, int keylen,
-		  char *val, int vallen, char *data __attribute__ ((unused)))
+		  char *val, int vallen, char *data UNUSED)
 #endif
 {
   char host[YPMAXPEER + 2];
@@ -438,7 +424,7 @@ add_slave_server (int status, char *key, int keylen,
 }
 
 static void
-child_sig_int (int sig __attribute__ ((unused)))
+child_sig_int (int sig UNUSED)
 {
   if (CallbackProg != 0)
     svc_unregister (CallbackProg, 1);
@@ -557,7 +543,7 @@ yppush_foreach (const char *host)
 }
 
 static void
-sig_child (int sig __attribute__ ((unused)))
+sig_child (int sig UNUSED)
 {
   int status;
 

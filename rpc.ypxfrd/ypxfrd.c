@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -45,7 +45,9 @@
 #include <rpc/svc_soc.h>
 #endif
 #include <rpc/pmap_clnt.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif /* HAVE_GETOPT_H */
 #include "ypxfrd.h"
 #include "access.h"
 #include "ypserv_conf.h"
@@ -55,6 +57,7 @@
 #endif
 
 #include "log_msg.h"
+#include "compat.h"
 
 extern void ypxfrd_freebsd_prog_1(struct svc_req *, SVCXPRT *);
 
@@ -135,7 +138,7 @@ closedown (int sig)
 
 /* Clean up after child processes signal their termination.  */
 static void
-sig_child (int sig __attribute__ ((unused)))
+sig_child (int sig UNUSED)
 {
    int st;
 
@@ -146,7 +149,7 @@ sig_child (int sig __attribute__ ((unused)))
 
 /* Clean up if we quit the program.  */
 static void
-sig_quit (int sig __attribute__ ((unused)))
+sig_quit (int sig UNUSED)
 {
   pmap_unset (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS);
   exit (0);
@@ -156,7 +159,7 @@ sig_quit (int sig __attribute__ ((unused)))
 ** Reload securenets and config file
 */
 static void
-sig_hup (int sig __attribute__ ((unused)))
+sig_hup (int sig UNUSED)
 {
   load_securenets();
   load_config();
@@ -182,7 +185,7 @@ main (int argc, char **argv)
   struct sockaddr_in socket_address;
   int result;
   struct sigaction sa;
-  int socket_size;
+  socklen_t socket_size;
 
   progname = strrchr (argv[0], '/');
   if (progname == (char *) NULL)
@@ -357,7 +360,7 @@ main (int argc, char **argv)
   _rpcfdtype = 0;
   if (getsockname(0, (struct sockaddr *)&socket_address, &socket_size) == 0)
     {
-      int  int_size = sizeof (int);
+      socklen_t  int_size = sizeof (int);
       if (socket_address.sin_family != AF_INET)
 	return 1;
       if (getsockopt(0, SOL_SOCKET, SO_TYPE, (void*)&_rpcfdtype,

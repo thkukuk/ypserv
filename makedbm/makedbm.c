@@ -27,13 +27,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif /* HAVE_GETOPT_H */
 #include <fcntl.h>
 #include <ctype.h>
 #include <netdb.h>
 #include <rpc/rpc.h>
 
 #include "yp.h"
+#include "compat.h"
 
 #if defined (__NetBSD__) || (defined(__GLIBC__) && (__GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 /* <rpc/rpc.h> is missing the prototype */

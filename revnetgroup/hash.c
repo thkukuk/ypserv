@@ -32,12 +32,9 @@
 #include <string.h>
 #include "hash.h"
 #include <assert.h>
+#include "compat.h"
 
 #define TABLESIZE 997		/*Should be a prime */
-
-#ifndef HAVE_STRDUP
-#include "compat/strdup.c"
-#endif
 
 /*
  * hash_malloc(void)
@@ -143,7 +140,7 @@ hash_insert (hash_t **table, const char *key, const char *val)
  *
  */
 int
-hash_free (hash_t **table __attribute__ ((unused)))
+hash_free (hash_t **table UNUSED)
 {
   /* XXX Not implementet yet! */
 

@@ -63,7 +63,6 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-EXTRA_CFLAGS = @EXTRA_CFLAGS@
 INSTALL_DATA = @INSTALL_DATA@
 #
 INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
@@ -131,7 +130,6 @@ MAINT_CHARSET = latin1
 
 localedir = $(datadir)/locale
 
-AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
@@ -144,7 +142,7 @@ libexec_PROGRAMS = yphelper
 
 yphelper_SOURCES = yphelper.c
 
-yphelper_LDADD = @LIBDBM@
+yphelper_LDADD = $(top_builddir)/lib/libyp.a @LIBDBM@
 subdir = yphelper
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -154,7 +152,7 @@ PROGRAMS = $(libexec_PROGRAMS)
 
 am_yphelper_OBJECTS = yphelper.$(OBJEXT)
 yphelper_OBJECTS = $(am_yphelper_OBJECTS)
-yphelper_DEPENDENCIES =
+yphelper_DEPENDENCIES = $(top_builddir)/lib/libyp.a
 yphelper_LDFLAGS =
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)

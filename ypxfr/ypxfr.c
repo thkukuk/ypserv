@@ -41,6 +41,7 @@
 #include "ypxfr.h"
 #include "ypxfrd.h"
 #include <rpcsvc/ypclnt.h>
+#include "compat.h"
 
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
@@ -192,7 +193,7 @@ xdr_ypxfr_xfr (XDR *xdrs, xfr *objp)
     }
 }
 
-int
+static int
 ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
 {
   CLIENT *clnt;
@@ -280,11 +281,11 @@ error:
 #if defined(__NetBSD__)
 static int
 ypxfr_foreach (u_long status, char *key, int keylen,
-               char *val, int vallen, void *data __attribute__ ((unused)))
+               char *val, int vallen, void *data UNUSED)
 #else
 static int
 ypxfr_foreach (int status, char *key, int keylen,
-               char *val, int vallen, char *data __attribute__ ((unused)))
+               char *val, int vallen, char *data UNUSED)
 #endif
 {
   datum outKey, outData;
@@ -349,6 +350,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   CLIENT *clnt_udp;
   struct sockaddr_in sockaddr, sockaddr_udp;
   struct ypresp_order resp_order;
+  struct ypresp_master resp_master;
   struct ypreq_nokey req_nokey;
   uint32_t masterOrderNum;
   struct hostent *h;
@@ -381,8 +383,6 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       h = gethostbyname (source_host);
       if (!h)
 	return YPXFR_RSRC;
-      master_host = alloca (strlen (source_host) + 1);
-      strcpy (master_host, source_host);
     }
   else
     {
@@ -392,10 +392,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 
       if (yp_master (source_domain, map, &master_name))
         return YPXFR_MADDR;
-      master_host = alloca (strlen (master_name) + 1);
-      strcpy (master_host, master_name);
+      h = gethostbyname (master_name);
       free (master_name);
-      h = gethostbyname (master_host);
       if (!h)
 	return YPXFR_RSRC;
     }
@@ -412,13 +410,49 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
     }
 
   /* We cannot use the libc functions since we don't know which host
+     they use. So query the host we must use to get the official master
+     server name for the map on the master host. */
+  req_nokey.domain = source_domain;
+  req_nokey.map = map;
+  if (ypproc_master_2 (&req_nokey, &resp_master, clnt_udp) != RPC_SUCCESS)
+    {
+      log_msg (clnt_sperror (clnt_udp, "ypproc_master_2"));
+      return YPXFR_YPERR;
+    }
+  else if (resp_master.stat != YP_TRUE)
+    {
+      switch (resp_master.stat)
+	{
+	case YP_NOMAP:
+	  return YPXFR_NOMAP;
+	case YP_NODOM:
+	  return YPXFR_NODOM;
+	case YP_BADDB:
+	  return YPXFR_DBM;
+	case YP_YPERR:
+	  return YPXFR_YPERR;
+	case YP_BADARGS:
+	  return YPXFR_BADARGS;
+	default:
+	  log_msg ("ERROR: not expected value: %s", resp_master.stat);
+	  return YPXFR_XFRERR;
+	}
+    }
+  else
+    {
+      master_host = alloca (strlen (resp_master.peer) + 1);
+      strcpy (master_host, resp_master.peer);
+      xdr_free ((xdrproc_t) xdr_ypresp_master, (caddr_t) &resp_master);
+    }
+
+  /* We cannot use the libc functions since we don't know which host
      they use. So query the host we must use to get the order number
      for the map on the master host. */
   req_nokey.domain = source_domain;
   req_nokey.map = map;
   if (ypproc_order_2 (&req_nokey, &resp_order, clnt_udp) != RPC_SUCCESS)
     {
-      log_msg (clnt_sperror (clnt_udp, "masterOrderNum"));
+      log_msg (clnt_sperror (clnt_udp, "ypproc_order_2"));
       masterOrderNum = time (NULL); /* We set it to the current time.
                                        So a new map will be always newer. */
     }
@@ -444,7 +478,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   else
     {
       masterOrderNum = resp_order.ordernum;
-      xdr_free ((xdrproc_t) xdr_ypresp_order, (char *) &resp_order);
+      xdr_free ((xdrproc_t) xdr_ypresp_order, (caddr_t) &resp_order);
     }
 
   /* If we doesn't force the map, look, if the new map is really newer */

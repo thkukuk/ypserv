@@ -57,6 +57,7 @@ CHECKROOT = @CHECKROOT@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
+
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\"
 DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
@@ -64,7 +65,6 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-EXTRA_CFLAGS = @EXTRA_CFLAGS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -128,15 +128,15 @@ AUTOMAKE_OPTIONS = 1.7 gnits
 rpcsvcdir = ${prefix}/include/rpcsvc
 
 noinst_LIBRARIES = libyp.a
-noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h
+noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h \
+		compat.h
+
 
 rpcsvc_HEADERS = ypxfrd.x
-
-AM_CFLAGS = @EXTRA_CFLAGS@
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
-		ypproc_match_2.c securenets.c access.c yp_db.c
+		ypproc_match_2.c securenets.c access.c yp_db.c compat.c
 
 
 CLEANFILES = *~
@@ -150,15 +150,16 @@ libyp_a_AR = $(AR) cru
 libyp_a_LIBADD =
 am_libyp_a_OBJECTS = log_msg.$(OBJEXT) ypserv_conf.$(OBJEXT) \
 	ypxfrd_xdr.$(OBJEXT) ypproc_match_2.$(OBJEXT) \
-	securenets.$(OBJEXT) access.$(OBJEXT) yp_db.$(OBJEXT)
+	securenets.$(OBJEXT) access.$(OBJEXT) yp_db.$(OBJEXT) \
+	compat.$(OBJEXT)
 libyp_a_OBJECTS = $(am_libyp_a_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/access.Po ./$(DEPDIR)/log_msg.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/securenets.Po ./$(DEPDIR)/yp_db.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ypproc_match_2.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/access.Po ./$(DEPDIR)/compat.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/log_msg.Po ./$(DEPDIR)/securenets.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/yp_db.Po ./$(DEPDIR)/ypproc_match_2.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ypserv_conf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ypxfrd_xdr.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
@@ -198,6 +199,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log_msg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/securenets.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/yp_db.Po@am__quote@
