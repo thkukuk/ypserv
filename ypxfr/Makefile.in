@@ -95,7 +95,7 @@ INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
 
-EXTRA_DIST = ${MANS}
+EXTRA_DIST = $(addsuffix .in,$(MANS))
 
 man_MANS = ypxfr.8
 
@@ -108,7 +108,7 @@ ypxfr_SOURCES = ypxfr.c ypxfr_clnt.c ypxfr_xdr.c
 ypxfr_LDADD = @LIBDBM@ $(top_builddir)/lib/libyp.a
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
-CONFIG_CLEAN_FILES = 
+CONFIG_CLEAN_FILES =  ypxfr.8
 PROGRAMS =  $(libexec_PROGRAMS)
 
 CPPFLAGS = @CPPFLAGS@
@@ -126,7 +126,7 @@ MANS = $(man_MANS)
 NROFF = nroff
 HEADERS =  $(noinst_HEADERS)
 
-DIST_COMMON =  Makefile.am Makefile.in
+DIST_COMMON =  Makefile.am Makefile.in ypxfr.8.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -147,6 +147,8 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+ypxfr.8: $(top_builddir)/config.status ypxfr.8.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 mostlyclean-libexecPROGRAMS:
 

@@ -97,7 +97,7 @@ CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\"
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
-libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c ypproc_all_2.c 		ypproc_match_2.c securenets.c access.c yp_db.c
+libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c 		ypproc_match_2.c securenets.c access.c yp_db.c
 
 
 CLEANFILES = *~
@@ -114,8 +114,8 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 libyp_a_LIBADD = 
-libyp_a_OBJECTS =  log_msg.o ypserv_conf.o ypxfrd_xdr.o ypproc_all_2.o \
-ypproc_match_2.o securenets.o access.o yp_db.o
+libyp_a_OBJECTS =  log_msg.o ypserv_conf.o ypxfrd_xdr.o ypproc_match_2.o \
+securenets.o access.o yp_db.o
 AR = ar
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -134,8 +134,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/access.P .deps/log_msg.P .deps/securenets.P \
-.deps/yp_db.P .deps/ypproc_all_2.P .deps/ypproc_match_2.P \
-.deps/ypserv_conf.P .deps/ypxfrd_xdr.P
+.deps/yp_db.P .deps/ypproc_match_2.P .deps/ypserv_conf.P \
+.deps/ypxfrd_xdr.P
 SOURCES = $(libyp_a_SOURCES)
 OBJECTS = $(libyp_a_OBJECTS)
 

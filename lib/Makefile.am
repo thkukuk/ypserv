@@ -16,7 +16,7 @@ CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\"
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
-libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c ypproc_all_2.c \
+libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
 		ypproc_match_2.c securenets.c access.c yp_db.c
 
 CLEANFILES = *~

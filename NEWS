@@ -8,6 +8,7 @@ Version 2.1
 * Minor bug fixes/typos
 * Fix paths in manual pages
 * Document removal of tcp_wrapper support
+* Fix bug so that ypxfr transfers the whole map in fallback mode
 
 Version 2.0
 * Merge bug fixes from Debian

@@ -3,7 +3,7 @@
 .SH NAME
 ypserv \- NIS server
 .SH SYNOPSIS
-.B /usr/sbin/ypserv
+.B @SBINDIR@/ypserv
 [
 .B \-b
 ]
@@ -25,7 +25,7 @@ provides a simple network lookup service
 consisting of databases and processes.  The databases are
 .B gdbm
 files in a directory tree rooted at
-.BR /var/yp .
+.BR @YPMAPDIR@ .
 .LP
 The
 .B ypserv
@@ -52,7 +52,7 @@ but must be running somewhere
 on the network. On startup or when receiving the signal SIGHUP,
 .B ypserv
 parses the file
-.B /etc/ypserv.conf.
+.B @sysconfdir@/ypserv.conf.
 .LP
 .SH OPTIONS
 .TP
@@ -66,7 +66,7 @@ each request that it revceives.
 .B path
 is an optionally parameter.
 .B ypserv
-is using this directory instead of /var/yp
+is using this directory instead of @YPMAPDIR@
 .TP
 .B "\-b" "\--dns"
 If we doesn't find the host in the hosts maps, we query the
@@ -100,7 +100,7 @@ At startup or when arriving the SIGHUP Signal,
 .B ypserv
 will attempt to load the securenets information from a file
 called
-.B /var/yp/securenets .
+.B @YPMAPDIR@/securenets .
 This file contains entries that consist of a netmask
 and a network pair separated by white spaces.
 Lines starting with ``#'' are considered to be comments.
@@ -132,13 +132,13 @@ If
 receives a request from an address that fails to match a rule,
 the request will be ignored and a warning message will be
 logged. If the
-.B /var/yp/securenets
+.B @YPMAPDIR@/securenets
 file does not exist,
 .B ypserv
 will allow connections from any host.
 .LP
 In the
-.B /etc/ypserv.conf
+.B @sysconfdir@/ypserv.conf
 you could specify some access rules for special maps and hosts. But
 it is not very secure, it make the life only a little bit harder
 for potential hacker. If a mapname doesn't match a rule, ypserv will
@@ -150,8 +150,8 @@ updating maps from the same master server as the old one. This means,
 you have to reinstall the slave servers if you change the master server
 for a map.
 .SH FILES
-/etc/ypserv.conf
-/var/yp/securenets
+@sysconfdir@/ypserv.conf
+@YPMAPDIR@/securenets
 .SH "SEE ALSO"
 .BR domainname (1),
 .BR ypcat (1),
@@ -178,5 +178,7 @@ The name Yellow Pages is a registered trademark in the United Kingdom
 of British Telecommunications plc,
 and may not be used without permission.
 .SH AUTHOR
-This version of .B ypserv
-was written by Thorsten Kukuk <kukuk@suse.de>.
+.B ypserv
+was written by Peter Eriksson <pen@lysator.liu.se>.
+Thorsten Kukuk <kukuk@suse.de> added support for master/slave
+server and is the new Maintainer.

@@ -226,8 +226,8 @@ AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
 AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
 
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
-	ypxfr/Makefile
-	yppush/Makefile makedbm/Makefile makedbm/makedbm.8
+	ypxfr/Makefile ypxfr/ypxfr.8 yppush/Makefile yppush/yppush.8
+	makedbm/Makefile makedbm/makedbm.8
 	revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile
 	mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile
 	rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8 rpc.yppasswdd/Makefile

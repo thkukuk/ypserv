@@ -1,3 +1,16 @@
+2001-08-30  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.1
+
+	* lib/Makefile.am: Remove ypproc_all_2.c
+	* ypxfr/ypxfr_xdr.c: Add special ypproc_all_2 function
+	* ypxfr/ypxfr.8: Renamed from this ...
+	* ypxfr/ypxfr.8.in: ... to this
+	* yppush/yppush.8: Renamed from this ...
+	* yppush/yppush.8.in: ... to this
+	* configure.in: create ypxfr/ypxfr.8 and yppush/yppush.8
+	* revnetgroup/revnetgroup.8.in: New
+
 2001-08-26  Thorsten Kukuk  <kukuk@suse.de>
 
 	* scripts/Makefile.am: Don't strip scripts

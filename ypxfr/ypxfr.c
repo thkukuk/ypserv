@@ -650,7 +650,6 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 
   if (result == 0)
     {
-      unlink (dbName_orig);
       rename (dbName_temp, dbName_orig);
     }
   else

@@ -5150,7 +5150,7 @@ EOF
 fi
 done
 
-ac_config_files="$ac_config_files lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8 ypxfr/Makefile yppush/Makefile makedbm/Makefile makedbm/makedbm.8 revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8 rpc.yppasswdd/Makefile rpc.yppasswdd/yppasswdd.8 rpc.yppasswdd/rpc.yppasswdd.8 yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate scripts/pwupdate.8 scripts/create_printcap scripts/match_printcap scripts/ypinit scripts/ypinit.8 scripts/ypMakefile"
+ac_config_files="$ac_config_files lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8 ypxfr/Makefile ypxfr/ypxfr.8 yppush/Makefile yppush/yppush.8 makedbm/Makefile makedbm/makedbm.8 revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8 rpc.yppasswdd/Makefile rpc.yppasswdd/yppasswdd.8 rpc.yppasswdd/rpc.yppasswdd.8 yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate scripts/pwupdate.8 scripts/create_printcap scripts/match_printcap scripts/ypinit scripts/ypinit.8 scripts/ypMakefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -5472,7 +5472,9 @@ do
   "ypserv/Makefile" ) CONFIG_FILES="$CONFIG_FILES ypserv/Makefile" ;;
   "ypserv/ypserv.8" ) CONFIG_FILES="$CONFIG_FILES ypserv/ypserv.8" ;;
   "ypxfr/Makefile" ) CONFIG_FILES="$CONFIG_FILES ypxfr/Makefile" ;;
+  "ypxfr/ypxfr.8" ) CONFIG_FILES="$CONFIG_FILES ypxfr/ypxfr.8" ;;
   "yppush/Makefile" ) CONFIG_FILES="$CONFIG_FILES yppush/Makefile" ;;
+  "yppush/yppush.8" ) CONFIG_FILES="$CONFIG_FILES yppush/yppush.8" ;;
   "makedbm/Makefile" ) CONFIG_FILES="$CONFIG_FILES makedbm/Makefile" ;;
   "makedbm/makedbm.8" ) CONFIG_FILES="$CONFIG_FILES makedbm/makedbm.8" ;;
   "revnetgroup/Makefile" ) CONFIG_FILES="$CONFIG_FILES revnetgroup/Makefile" ;;
@@ -5500,7 +5502,7 @@ do
   "scripts/ypMakefile" ) CONFIG_FILES="$CONFIG_FILES scripts/ypMakefile" ;;
   "default-1" ) CONFIG_COMMANDS="$CONFIG_COMMANDS default-1" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
-  *) { { echo "$as_me:5503: error: invalid argument: $ac_config_target" >&5
+  *) { { echo "$as_me:5505: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
   esac
@@ -5739,7 +5741,7 @@ done; }
   esac
 
   if test x"$ac_file" != x-; then
-    { echo "$as_me:5742: creating $ac_file" >&5
+    { echo "$as_me:5744: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
     rm -f "$ac_file"
   fi
@@ -5757,7 +5759,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:5760: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:5762: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -5770,7 +5772,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:5773: error: cannot find input file: $f" >&5
+           { { echo "$as_me:5775: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -5831,7 +5833,7 @@ for ac_file in : $CONFIG_HEADERS; do test "x$ac_file" = x: && continue
   * )   ac_file_in=$ac_file.in ;;
   esac
 
-  test x"$ac_file" != x- && { echo "$as_me:5834: creating $ac_file" >&5
+  test x"$ac_file" != x- && { echo "$as_me:5836: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
 
   # First look for the input files in the build tree, otherwise in the
@@ -5842,7 +5844,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:5845: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:5847: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -5855,7 +5857,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:5858: error: cannot find input file: $f" >&5
+           { { echo "$as_me:5860: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -5972,7 +5974,7 @@ cat >>$CONFIG_STATUS <<\EOF
   rm -f $tmp/in
   if test x"$ac_file" != x-; then
     if cmp -s $ac_file $tmp/config.h 2>/dev/null; then
-      { echo "$as_me:5975: $ac_file is unchanged" >&5
+      { echo "$as_me:5977: $ac_file is unchanged" >&5
 echo "$as_me: $ac_file is unchanged" >&6;}
     else
       ac_dir=`$as_expr X"$ac_file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \

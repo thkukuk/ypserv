@@ -1,4 +1,4 @@
-.TH YPPUSH 8 "August 1996" "NYS YP Server" "Linux Reference Manual"
+.TH YPPUSH 8 "August 2001" "YP Server" "Reference Manual"
 .SH NAME
 yppush \- force propagation of changed NIS databases
 .SH SYNOPSIS
