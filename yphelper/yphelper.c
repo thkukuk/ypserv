@@ -30,11 +30,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <ctype.h>
 #if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
 #include <getopt.h>
 #endif
 #include "yp.h"
 #include <rpcsvc/ypclnt.h>
+#include <arpa/nameser.h>
 #ifdef HAVE_SHADOW_H
 #include <shadow.h>
 
@@ -152,7 +154,7 @@ print_hostname (char *param)
 {
   char hostname[MAXHOSTNAMELEN + 1];
 #if USE_FQDN
-  struct hostent *hp;
+  struct hostent *hp = NULL;
 #endif
 
   if (param == NULL)
@@ -165,7 +167,15 @@ print_hostname (char *param)
 #if !USE_FQDN
   fputs (hostname, stdout);
 #else
-  hp = gethostbyname (hostname);
+  if (isdigit (hostname[0]))
+    {
+      char addr[INADDRSZ];
+      if (inet_pton (AF_INET, hostname, &addr))
+	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
+    }
+  else
+    hp = gethostbyname2 (hostname, AF_INET);
+
   if (hp == NULL)
     fputs (hostname, stdout);
   else
@@ -178,23 +188,34 @@ print_hostname (char *param)
 
 /* Show the master for all maps */
 static void
-print_maps (char *server)
+print_maps (char *server, char *domain)
 {
 #if USE_FQDN
-  struct hostent *hp;
+  struct hostent *hp = NULL;
 #endif
   char *master, *domainname;
   struct ypmaplist *ypmap = NULL, *y, *old;
   int ret;
 
-  if ((ret = yp_get_default_domain (&domainname)) != 0)
-    {
-      fprintf (stderr, "can't get local yp domain: %s\n", yperr_string (ret));
-      exit (1);
-    }
+  if (domain != NULL)
+    domainname = domain;
+  else
+    if ((ret = yp_get_default_domain (&domainname)) != 0)
+      {
+	fprintf (stderr, "can't get local yp domain: %s\n",
+		 yperr_string (ret));
+	exit (1);
+      }
 
 #if USE_FQDN
-  hp = gethostbyname (server);
+  if (isdigit (server[0]))
+    {
+      char addr[INADDRSZ];
+      if (inet_pton (AF_INET, server, &addr))
+	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
+    }
+  else
+    hp = gethostbyname2 (server, AF_INET);
   if (hp != NULL)
     {
       server = alloca (strlen (hp->h_name) + 1);
@@ -211,7 +232,21 @@ print_maps (char *server)
 	  ret = _yp_master (server, domainname, y->map, &master);
 	  if (ret == YPERR_SUCCESS)
 	    {
-	      if (strcmp (server, master) == 0)
+	      int is_same = 0;
+#if USE_FQDN
+	      hp = gethostbyname (master);
+	      if (hp != NULL)
+		{
+		  if (strcasecmp (server, hp->h_name) == 0)
+		    is_same = 1;
+		}
+	      else
+#endif
+		{
+		  if (strcasecmp (server, master) == 0)
+		    is_same = 1;
+		}
+	      if (is_same)
 		{
 		  fputs (y->map, stdout);
 		  fputs ("\n", stdout);
@@ -437,41 +472,52 @@ main (int argc, char *argv[])
 {
   int hostname = 0;
   char *master = NULL;
+  char *domainname = NULL;
   int merge_pwd = 0;
   int merge_grp = 0;
-  int c;
-  int option_index = 0;
-  static struct option long_options[] =
-  {
-    {"hostname", no_argument, NULL, 'h'},
-    {"version", no_argument, NULL, 'v'},
-    {"maps", required_argument, NULL, 'm'},
-    {"merge_passwd", no_argument, NULL, 'p'},
-    {"merge_group", no_argument, NULL, 'g'},
-    {NULL, 0, NULL, '\0'}
-  };
 
-  c = getopt_long (argc, argv, "hvm:pg", long_options, &option_index);
-  switch (c)
+  while (1)
     {
-    case 'h':
-      ++hostname;
-      break;
-    case 'm':
-      master = optarg;
-      break;
-    case 'p':
-      merge_pwd = 1;
-      break;
-    case 'g':
-      merge_grp = 1;
-      break;
-    case 'v':
-      printf ("revnetgroup (%s) %s", PACKAGE, VERSION);
-      exit (0);
-    default:
-      Warning ();
-      return 1;
+      int c;
+      int option_index = 0;
+      static struct option long_options[] =
+	{
+	  {"hostname", no_argument, NULL, 'h'},
+	  {"version", no_argument, NULL, 'v'},
+	  {"maps", required_argument, NULL, 'm'},
+	  {"merge_passwd", no_argument, NULL, 'p'},
+	  {"merge_group", no_argument, NULL, 'g'},
+	  {"domainname", required_argument, NULL, 'd'},
+	  {NULL, 0, NULL, '\0'}
+	};
+
+      c = getopt_long (argc, argv, "d:hvm:pg", long_options, &option_index);
+      if (c == EOF)
+        break;
+      switch (c)
+	{
+	case 'd':
+	  domainname = optarg;
+	  break;
+	case 'h':
+	  ++hostname;
+	  break;
+	case 'm':
+	  master = optarg;
+	  break;
+	case 'p':
+	  merge_pwd = 1;
+	  break;
+	case 'g':
+	  merge_grp = 1;
+	  break;
+	case 'v':
+	  printf ("revnetgroup (%s) %s", PACKAGE, VERSION);
+	  exit (0);
+	default:
+	  Warning ();
+	  return 1;
+	}
     }
 
   argc -= optind;
@@ -486,7 +532,7 @@ main (int argc, char *argv[])
     }
 
   if (master != NULL)
-    print_maps (master);
+    print_maps (master, domainname);
 
   if (merge_pwd && argc == 2)
     merge_passwd (argv[0], argv[1]);

@@ -1,5 +1,5 @@
 
-This is version 2.0 of an YP (NIS version 2) Server for Linux, but it
+This is version 2.2 of an YP (NIS version 2) Server for Linux, but it
 also runs under other OS like SunOS 4.1.x, Solaris 2.x, AIX, HP-UX,
 IRIS, Ultrix and OSF1 (alpha).
 
@@ -37,4 +37,4 @@ versions support it.
 For more NIS or NIS+ related stuff, look at
 http://www.suse.de/~kukuk/nis/ or http://www.suse.de/~kukuk/nisplus/
 
-Thorsten Kukuk <kukuk@suse.de>, 7. August 2001
+Thorsten Kukuk <kukuk@suse.de>, 29. October 2001

@@ -1,4 +1,4 @@
-/* Copyright (c) 2000  Thorsten Kukuk
+/* Copyright (c) 2000, 2001  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -636,7 +636,7 @@ typedef struct ypall_data {
 static int
 ypall_close (void *data)
 {
-  if (debug_flag && data == NULL)
+  if (data == NULL)
     {
       log_msg ("ypall_close() called with NULL pointer.");
       return 0;
@@ -723,6 +723,9 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
     }
 
   memset (result, 0, sizeof (ypresp_all));
+  xdr_ypall_cb.u.encode = NULL;
+  xdr_ypall_cb.u.close = NULL;
+  xdr_ypall_cb.data = NULL;
 
   valid = is_valid (rqstp, argp->map, argp->domain);
   if (valid < 1)
@@ -746,10 +749,6 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	}
       return TRUE;
     }
-
-  xdr_ypall_cb.u.encode = NULL;
-  xdr_ypall_cb.u.close = NULL;
-  xdr_ypall_cb.data = NULL;
 
   result->more = TRUE;
 

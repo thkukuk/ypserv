@@ -4,6 +4,11 @@ Copyright (C) 1998, 1999, 2000, 2001 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@suse.de>.
 
+Version 2.2
+* Minor bug fixes
+* Allow IP numbers as master host
+* Lookup master name of NIS map to avoid compare problems
+
 Version 2.1
 * Minor bug fixes/typos
 * Fix paths in manual pages
