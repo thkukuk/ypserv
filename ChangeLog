@@ -1,3 +1,22 @@
+2003-02-05  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Fix debug output.
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Increase children before we
+	fork, to make sure the variable will not become negative in
+	sig_child.
+
+	* lib/access.c (is_valid): If connection is refused, print status
+	for debugging purpose.
+
+	* lib/securenets.c (load_securenets): Fix debug output.
+
+2003-02-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* yphelper/yphelper.c: Fix compiler warning.
+
+	* ypxfr/ypxfr_xdr.c: Fix compiler warning.
+
 2003-02-04  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.7

@@ -1,25 +1,25 @@
-/* Copyright (c) 1996, 1997, 1999 Thorsten Kukuk
-   This file is part of the NYS YP Server.
+/* Copyright (c) 1996, 1997, 1999, 2001  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
-   The NYS YP Server is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+   The YP Server is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
 
-   The NYS YP Server is distributed in the hope that it will be useful,
+   The YP Server is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
    General Public License for more details.
 
    You should have received a copy of the GNU General Public
-   License along with the NYS YP Server; see the file COPYING.  If
+   License along with the YP Server; see the file COPYING. If
    not, write to the Free Software Foundation, Inc., 675 Mass Ave,
    Cambridge, MA 02139, USA. */
 
-#if defined(HAVE_CONFIG_H)
+#ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <string.h>
@@ -30,7 +30,7 @@
 
 struct {
   union {
-    int (*encoder) (char *, int, char **, int *, char **, int *);
+    ypstat (*encoder) (char *, int, char **, int *, char **, int *);
     int (*decoder) (int, char *, int, char *, int, char *);
   }
   foreach;
@@ -269,7 +269,7 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
 	      return TRUE;
 	    }
 	  objp->ypresp_all_u.val.stat =
-	    (enum ypstat) (*(xdr_ypall_callback->foreach.encoder))
+	    (*(xdr_ypall_callback->foreach.encoder))
 	    (objp->ypresp_all_u.val.key.keydat_val,
 	     objp->ypresp_all_u.val.key.keydat_len,
 	     &(objp->ypresp_all_u.val.key.keydat_val),
@@ -280,4 +280,16 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
     }
   else
     return TRUE;
+}
+
+/* Default timeout can be changed using clnt_control() */
+static struct timeval TIMEOUT = { 25, 0 };
+
+enum clnt_stat
+ypproc_all_2 (ypreq_nokey *argp, ypresp_all *clnt_res, CLIENT *clnt)
+{
+  return (clnt_call(clnt, YPPROC_ALL,
+                    (xdrproc_t) xdr_ypreq_nokey, (caddr_t) argp,
+                    (xdrproc_t) ypxfr_xdr_ypresp_all, (caddr_t) clnt_res,
+                    TIMEOUT));
 }

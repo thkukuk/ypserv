@@ -1,4 +1,4 @@
-/* Copyright (C) 1997, 1998, 1999, 2000, 2002 Thorsten Kukuk
+/* Copyright (C) 1997, 1998, 1999, 2000, 2002, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -202,9 +202,10 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
     {
       if (status < 1 && ((sin->sin_addr.s_addr != oldaddr)
 			 || (status != oldstatus)))
-	syslog (LOG_WARNING, "refused connect from %s:%d to procedure %s\n",
+	syslog (LOG_WARNING,
+		"refused connect from %s:%d to procedure %s (%d)\n",
 		inet_ntoa (sin->sin_addr), ntohs (sin->sin_port),
-		ypproc_name (rqstp->rq_proc));
+		ypproc_name (rqstp->rq_proc), status);
     }
   oldaddr = sin->sin_addr.s_addr;
   oldstatus = status;

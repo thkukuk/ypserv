@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2001 Thorsten Kukuk
+/* Copyright (c) 1999, 2001, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -30,11 +30,18 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <ctype.h>
 #if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
 #include <getopt.h>
 #endif
+#if defined(HAVE_LIBGDBM)
+#include <gdbm.h>
+#elif defined(HAVE_NDBM)
+#include <ndbm.h>
+#endif
 #include "yp.h"
 #include <rpcsvc/ypclnt.h>
+#include <arpa/nameser.h>
 #ifdef HAVE_SHADOW_H
 #include <shadow.h>
 
@@ -53,7 +60,7 @@ static struct timeval RPCTIMEOUT = {25, 0};
 static struct timeval UDPTIMEOUT = {5, 0};
 
 static int
-_yp_maplist (const char *server, const char *indomain,
+_yp_maplist (const char *server, char *indomain,
 	     struct ypmaplist **outmaplist)
 {
   CLIENT *clnt;
@@ -70,7 +77,7 @@ _yp_maplist (const char *server, const char *indomain,
   memset (&saddr, 0, sizeof saddr);
   saddr.sin_family = AF_INET;
   saddr.sin_addr.s_addr = inet_addr (server);
-  if (saddr.sin_addr.s_addr == -1)
+  if (saddr.sin_addr.s_addr == (in_addr_t) -1)
     {
       struct hostent *hent = gethostbyname (server);
       if (hent == NULL)
@@ -98,8 +105,7 @@ _yp_maplist (const char *server, const char *indomain,
 }
 
 static int
-_yp_master (const char *server, const char *indomain, const char *inmap,
-	    char **outname)
+_yp_master (const char *server, char *indomain, char *inmap, char **outname)
 {
   CLIENT *clnt;
   int sock;
@@ -112,8 +118,8 @@ _yp_master (const char *server, const char *indomain, const char *inmap,
       inmap == NULL || inmap[0] == '\0')
     return YPERR_BADARGS;
 
-  req.domain = (char *) indomain;
-  req.map = (char *) inmap;
+  req.domain = indomain;
+  req.map = inmap;
 
   memset (&resp, '\0', sizeof (ypresp_master));
   memset (&resp, '\0', sizeof (resp));
@@ -121,7 +127,7 @@ _yp_master (const char *server, const char *indomain, const char *inmap,
   memset (&saddr, 0, sizeof saddr);
   saddr.sin_family = AF_INET;
   saddr.sin_addr.s_addr = inet_addr (server);
-  if (saddr.sin_addr.s_addr == -1)
+  if (saddr.sin_addr.s_addr == (in_addr_t) -1)
     {
       struct hostent *hent = gethostbyname (server);
       if (hent == NULL)
@@ -152,7 +158,7 @@ print_hostname (char *param)
 {
   char hostname[MAXHOSTNAMELEN + 1];
 #if USE_FQDN
-  struct hostent *hp;
+  struct hostent *hp = NULL;
 #endif
 
   if (param == NULL)
@@ -165,7 +171,15 @@ print_hostname (char *param)
 #if !USE_FQDN
   fputs (hostname, stdout);
 #else
-  hp = gethostbyname (hostname);
+  if (isdigit (hostname[0]))
+    {
+      char addr[INADDRSZ];
+      if (inet_pton (AF_INET, hostname, &addr))
+	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
+    }
+  else
+    hp = gethostbyname2 (hostname, AF_INET);
+
   if (hp == NULL)
     fputs (hostname, stdout);
   else
@@ -178,25 +192,39 @@ print_hostname (char *param)
 
 /* Show the master for all maps */
 static void
-print_maps (char *server)
+print_maps (char *server, char *domain)
 {
 #if USE_FQDN
-  struct hostent *hp;
+  struct hostent *hp = NULL;
 #endif
   char *master, *domainname;
   struct ypmaplist *ypmap = NULL, *y, *old;
   int ret;
 
-  if ((ret = yp_get_default_domain (&domainname)) != 0)
-    {
-      fprintf (stderr, "can't get local yp domain: %s\n", yperr_string (ret));
-      exit (1);
-    }
+  if (domain != NULL)
+    domainname = domain;
+  else
+    if ((ret = yp_get_default_domain (&domainname)) != 0)
+      {
+	fprintf (stderr, "can't get local yp domain: %s\n",
+		 yperr_string (ret));
+	exit (1);
+      }
 
 #if USE_FQDN
-  hp = gethostbyname (server);
+  if (isdigit (server[0]))
+    {
+      char addr[INADDRSZ];
+      if (inet_pton (AF_INET, server, &addr))
+	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
+    }
+  else
+    hp = gethostbyname2 (server, AF_INET);
   if (hp != NULL)
-    server = hp->h_name;
+    {
+      server = alloca (strlen (hp->h_name) + 1);
+      strcpy (server, hp->h_name);
+    }
 #endif
 
   ret = _yp_maplist (server, domainname, &ypmap);
@@ -206,10 +234,27 @@ print_maps (char *server)
       for (y = ypmap; y;)
 	{
 	  ret = _yp_master (server, domainname, y->map, &master);
-	  if (ret == YPERR_SUCCESS && strcmp (server, master) == 0)
+	  if (ret == YPERR_SUCCESS)
 	    {
-	      fputs (y->map, stdout);
-	      fputs ("\n", stdout);
+	      int is_same = 0;
+#if USE_FQDN
+	      hp = gethostbyname (master);
+	      if (hp != NULL)
+		{
+		  if (strcasecmp (server, hp->h_name) == 0)
+		    is_same = 1;
+		}
+	      else
+#endif
+		{
+		  if (strcasecmp (server, master) == 0)
+		    is_same = 1;
+		}
+	      if (is_same)
+		{
+		  fputs (y->map, stdout);
+		  fputs ("\n", stdout);
+		}
 	      free (master);
 	    }
 	  old = y;
@@ -352,7 +397,7 @@ merge_group (char *group, char *gshadow)
   if (s_input == NULL)
     {
       fclose (g_input);
-      fprintf (stderr, "yphelber: Cannot open %s\n", gshadow);
+      fprintf (stderr, "yphelper: Cannot open %s\n", gshadow);
       exit (1);
     }
 
@@ -417,6 +462,114 @@ merge_group (char *group, char *gshadow)
   exit (0);
 }
 
+static char *
+get_dbm_entry (char *key, char *map, char *domainname)
+{
+  static char mappath[MAXPATHLEN + 2];
+  char *val;
+  datum dkey, dval;
+#if defined(HAVE_LIBGDBM)
+  GDBM_FILE dbm;
+#elif defined (HAVE_NDBM)
+  DBM *dbm;
+#endif
+
+  if (strlen (YPMAPDIR) + strlen (domainname) + strlen (map) + 3 < MAXPATHLEN)
+    sprintf (mappath, "%s/%s/%s", YPMAPDIR, domainname, map);
+  else
+    {
+      fprintf (stderr, "yphelper: path to long: %s/%s/%s\n", YPMAPDIR, domainname, map);
+      exit (1);
+    }
+
+#if defined(HAVE_LIBGDBM)
+  dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
+#elif defined(HAVE_NDBM)
+  dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
+#endif
+  if (dbm == NULL)
+    {
+      fprintf (stderr, "yphelper: cannot open %s\n", mappath);
+      exit (1);
+    }
+
+  dkey.dptr = key;
+  dkey.dsize = strlen (dkey.dptr);
+#if defined(HAVE_LIBGDBM)
+  dval = gdbm_fetch (dbm, dkey);
+#elif defined(HAVE_NDBM)
+  dval = dbm_fetch (dbm, dkey);
+#endif
+  if (dval.dptr == NULL)
+    val = NULL;
+  else
+    {
+      val = malloc (dval.dsize + 1);
+      strncpy (val, dval.dptr, dval.dsize);
+      val[dval.dsize] = 0;
+    }
+#if defined(HAVE_LIBGDBM)
+  gdbm_close (dbm);
+#elif defined(HAVE_NDBM)
+  dbm_close (dbm);
+#endif
+  return val;
+}
+
+/* Show the master for all maps */
+static void
+is_master (char *map, char *domain, char *host)
+{
+#if USE_FQDN
+  struct hostent *hp = NULL;
+#endif
+  char *hostname, *domainname;
+  int ret;
+
+  if (domain != NULL)
+    domainname = domain;
+  else if ((ret = yp_get_default_domain (&domainname)) != 0)
+    {
+      fprintf (stderr, "can't get local yp domain: %s\n",
+	       yperr_string (ret));
+      exit (1);
+    }
+
+  if (host)
+    hostname = host;
+  else
+    {
+      char h_tmp[MAXHOSTNAMELEN+1];
+
+      if (gethostname (h_tmp, sizeof (h_tmp)) != 0)
+	{
+	  perror ("gethostname");
+	  exit (1);
+	}
+      hostname = strdup (h_tmp);
+    }
+
+#if USE_FQDN
+  if (isdigit (hostname[0]))
+    {
+      char addr[INADDRSZ];
+      if (inet_pton (AF_INET, hostname, &addr))
+	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
+    }
+  else
+    hp = gethostbyname2 (hostname, AF_INET);
+
+  if (hp != NULL)
+    hostname = strdupa (hp->h_name);
+#endif
+
+  if (strcasecmp (hostname,
+		  get_dbm_entry ("YP_MASTER_NAME", map, domainname)) == 0)
+    exit (0);
+  else
+    exit (1);
+}
+
 static void
 Warning (void)
 {
@@ -431,41 +584,60 @@ main (int argc, char *argv[])
 {
   int hostname = 0;
   char *master = NULL;
+  char *domainname = NULL;
+  char *map = NULL;
   int merge_pwd = 0;
   int merge_grp = 0;
-  int c;
-  int option_index = 0;
-  static struct option long_options[] =
-  {
-    {"hostname", no_argument, NULL, 'h'},
-    {"version", no_argument, NULL, 'v'},
-    {"maps", required_argument, NULL, 'm'},
-    {"merge_passwd", no_argument, NULL, 'p'},
-    {"merge_group", no_argument, NULL, 'g'},
-    {NULL, 0, NULL, '\0'}
-  };
 
-  c = getopt_long (argc, argv, "hvm:pg", long_options, &option_index);
-  switch (c)
+  while (1)
     {
-    case 'h':
-      ++hostname;
-      break;
-    case 'm':
-      master = optarg;
-      break;
-    case 'p':
-      merge_pwd = 1;
-      break;
-    case 'g':
-      merge_grp = 1;
-      break;
-    case 'v':
-      printf ("revnetgroup (%s) %s", PACKAGE, VERSION);
-      exit (0);
-    default:
-      Warning ();
-      return 1;
+      int c;
+      int option_index = 0;
+      static struct option long_options[] =
+	{
+	  {"hostname", no_argument, NULL, 'h'},
+	  {"version", no_argument, NULL, 'v'},
+	  {"maps", required_argument, NULL, 'm'},
+	  {"merge_passwd", no_argument, NULL, 'p'},
+	  {"merge-passwd", no_argument, NULL, 'p'},
+	  {"merge_group", no_argument, NULL, 'g'},
+	  {"merge-group", no_argument, NULL, 'g'},
+	  {"domainname", required_argument, NULL, 'd'},
+	  {"is_master", required_argument, NULL, 'i'},
+	  {"is-master", required_argument, NULL, 'i'},
+	  {NULL, 0, NULL, '\0'}
+	};
+
+      c = getopt_long (argc, argv, "d:hvm:pgi:", long_options, &option_index);
+      if (c == EOF)
+        break;
+      switch (c)
+	{
+	case 'd':
+	  domainname = optarg;
+	  break;
+	case 'h':
+	  ++hostname;
+	  break;
+	case 'm':
+	  master = optarg;
+	  break;
+	case 'p':
+	  merge_pwd = 1;
+	  break;
+	case 'g':
+	  merge_grp = 1;
+	  break;
+	case 'v':
+	  printf ("revnetgroup (%s) %s", PACKAGE, VERSION);
+	  exit (0);
+	case 'i':
+	  map = optarg;
+	  break;
+	default:
+	  Warning ();
+	  return 1;
+	}
     }
 
   argc -= optind;
@@ -473,20 +645,23 @@ main (int argc, char *argv[])
 
   if (hostname)
     {
-      if (argc == NULL)
+      if (argc == 0)
 	print_hostname (NULL);
       else
 	print_hostname (argv[0]);
     }
 
   if (master != NULL)
-    print_maps (master);
+    print_maps (master, domainname);
 
   if (merge_pwd && argc == 2)
     merge_passwd (argv[0], argv[1]);
 
   if (merge_grp && argc == 2)
     merge_group (argv[0], argv[1]);
+
+  if (map)
+    is_master (map, domainname, NULL);
 
   Warning ();
   return 1;

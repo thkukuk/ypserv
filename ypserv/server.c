@@ -572,6 +572,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     }
 #endif
 
+  ++children;
   switch (fork ())
     {
     case 0:
@@ -603,6 +604,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
         exit (0);
       }
     case -1:
+      --children;
       log_msg ("Cannot fork: %s", strerror (errno));
       result->xfrstat = YPXFR_XFRERR;
       break;
