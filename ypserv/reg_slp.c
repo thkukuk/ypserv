@@ -219,10 +219,7 @@ register_slp ()
   /* Set up a timer to refresh the service records */
   if (timeout != SLP_LIFETIME_MAXIMUM)
     {
-      struct sigaction act;
-
-      act.sa_handler = do_refresh;
-      if (sigaction (SIGALRM, &act, NULL) != 0)
+      if (signal (SIGALRM, do_refresh) == SIG_ERR)
 	log_msg ("SLP: error establishing signal handler\n");
 
       alarm (timeout - 15);

@@ -422,10 +422,12 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   if (ypproc_master_2 (&req_nokey, &resp_master, clnt_udp) != RPC_SUCCESS)
     {
       log_msg (clnt_sperror (clnt_udp, "ypproc_master_2"));
+      clnt_destroy (clnt_udp);
       return YPXFR_YPERR;
     }
   else if (resp_master.stat != YP_TRUE)
     {
+      clnt_destroy (clnt_udp);
       switch (resp_master.stat)
 	{
 	case YP_NOMAP:
@@ -463,6 +465,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
     }
   else if (resp_order.stat != YP_TRUE)
     {
+      clnt_destroy (clnt_udp);
       switch (resp_order.stat)
 	{
 	case YP_NOMAP:
@@ -547,7 +550,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 
   /* Try to use ypxfrd for getting the new map. If it fails, use the old
      method. */
-  if ((result = ypxfrd_transfer (master_host, map, target_domain, dbName_temp)) != 0)
+  if ((result = ypxfrd_transfer (master_host, map,
+				 target_domain, dbName_temp)) != 0)
     {
       /* No success with ypxfrd, get the map entry by entry */
       char orderNum[255];
@@ -573,6 +577,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
         {
           ypdb_close (dbm);
           unlink (dbName_temp);
+	  clnt_destroy (clnt_udp);
           return YPXFR_DBM;
         }
       snprintf (orderNum, sizeof (orderNum), "%ld", (long)masterOrderNum);
@@ -584,6 +589,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
         {
           ypdb_close (dbm);
           unlink (dbName_temp);
+	  clnt_destroy (clnt_udp);
           return YPXFR_DBM;
         }
 
@@ -617,8 +623,9 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
                   unlink (dbName_temp);
                   return YPXFR_DBM;
                 }
+	      xdr_free ((xdrproc_t) xdr_ypresp_val,
+			(char *) &resp_val);
             }
-          xdr_free ((xdrproc_t) xdr_ypresp_val, (char *) &resp_val);
         }
 
       /* Get the YP_SECURE field. */
@@ -649,8 +656,9 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
                   unlink (dbName_temp);
                   return YPXFR_DBM;
                 }
+	      xdr_free ((xdrproc_t) xdr_ypresp_val,
+			(char *) &resp_val);
             }
-          xdr_free ((xdrproc_t) xdr_ypresp_val, (char *) &resp_val);
         }
 
       /* We don't need clnt_udp any longer, give it free */

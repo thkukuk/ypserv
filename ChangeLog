@@ -1,9 +1,20 @@
+2004-09-03  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/reg_slp.c (register_slp): Use signal() instead
+	of sigaction().
+
 2004-08-10  Mark Brown  <broonie@sirena.org.uk>
 
 	* ypxfr/ypxfr_clnt.c (ypproc_master_2): memset() the response
 	structure before calling clnt_call().
 	(ypproc_order_2): Likewise.
 	* ypxfr/ypxfr_xdr.c (ypproc_all_2): Likewise.
+
+2004-07-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr.c (ypxfr): Don't free xdr_ypresp_val,
+	if no data was send.
+	Reported by Artur Niederstebruch <artur@sgi.com>.
 
 2004-04-14  Thorsten Kukuk  <kukuk@suse.de>
 
