@@ -121,7 +121,8 @@ is_valid_domain (const char *domain)
 /* By default, we use the securenet list, to check if the client
    is secure.
 
-   return 1, if request comes from an authorized host
+   return  1, if request comes from an authorized host
+   return  0, if securenets does not allow access from this host
    return -1, if request comes from an unauthorized host
    return -2, if the map name is not valid
    return -3, if the domain is not valid */
