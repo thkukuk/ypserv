@@ -214,7 +214,6 @@ AC_FUNC_MEMCMP
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(inet_aton vsyslog lckpwdf)
 AC_CHECK_FUNCS(strdup strndup strerror strstr strsep stpcpy snprintf)
-AC_CHECK_FUNCS(_dns_gethostbyname)
 AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
 AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
 
