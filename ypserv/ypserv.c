@@ -57,10 +57,6 @@
 #define YPOLDVERS 1
 #endif
 
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-volatile int children = 0;
-#endif
-
 static char *path_ypdb = YPMAPDIR;
 
 static void
@@ -207,6 +203,40 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
   return;
 }
 
+static void
+mysvc_run (void)
+{
+#ifdef FD_SETSIZE
+  fd_set readfds;
+#else
+  int readfds;
+#endif /* def FD_SETSIZE */
+
+  for (;;)
+    {
+#ifdef FD_SETSIZE
+      readfds = svc_fdset;
+#else
+      readfds = svc_fds;
+#endif /* def FD_SETSIZE */
+      switch (select (_rpc_dtablesize (), &readfds, (fd_set *)NULL,
+		      (fd_set *)NULL, (struct timeval *) 0))
+        {
+        case -1:
+          if (errno == EINTR)
+            {
+              continue;
+            }
+          perror ("svc_run: - select failed");
+          return;
+        case 0:
+          continue;
+        default:
+          svc_getreqset (&readfds);
+        }
+    }
+}
+
 /* Create a pidfile on startup */
 static void
 create_pidfile (void)
@@ -334,33 +364,14 @@ sig_hup (int sig UNUSED)
 
 /* Clean up after child processes signal their termination. */
 static void
-sig_child (int sig)
+sig_child (int sig UNUSED)
 {
-  int st;
-  pid_t pid;
+  int save_errno = errno;
 
-  if (debug_flag)
-    log_msg ("sig_child: got signal %i", sig);
-
-
-  /* Clear all childs */
-  while ((pid = waitpid (-1, &st, WNOHANG)) > 0)
-    {
-      if (debug_flag)
-        log_msg ("pid=%d", pid);
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-      --children;
-#endif
-    }
-
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-  if (children < 0)
-    log_msg ("children is lower 0 (%i)!", children);
-  else if (debug_flag)
-    log_msg ("children = %i", children);
-#endif
+  while (wait3 (NULL, WNOHANG, NULL) > 0)
+    ;
+  errno = save_errno;
 }
-
 
 static void
 Usage (int exitcode)
@@ -377,7 +388,6 @@ main (int argc, char **argv)
   SVCXPRT *transp;
   int my_port = -1, my_socket, result;
   struct sockaddr_in s_in;
-  struct sigaction sa;
 
   openlog ("ypserv", LOG_PID, LOG_DAEMON);
 
@@ -486,47 +496,25 @@ main (int argc, char **argv)
    * Ignore SIGPIPEs. They can hurt us if someone does a ypcat
    * and then hits CTRL-C before it terminates.
    */
-  sigaction (SIGPIPE, NULL, &sa);
-  sa.sa_handler = SIG_IGN;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGPIPE, &sa, NULL);
+  signal (SIGPIPE, SIG_IGN);
   /*
    * If program quits, give ports free.
    */
-  sigaction (SIGTERM, NULL, &sa);
-  sa.sa_handler = sig_quit;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGTERM, &sa, NULL);
-
-  sigaction (SIGINT, NULL, &sa);
-  sa.sa_handler = sig_quit;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGINT, &sa, NULL);
-
+  signal (SIGTERM, sig_quit);
+  signal (SIGINT, sig_quit);
   /*
    * If we get a SIGHUP, reload the securenets and config file.
    */
-  sigaction (SIGHUP, NULL, &sa);
-  sa.sa_handler = sig_hup;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGHUP, &sa, NULL);
-
+  signal (SIGHUP, sig_hup);
   /*
    * If we get a SIGUSR1, enable/disable debuging.
    */
-  sigaction (SIGUSR1, NULL, &sa);
-  sa.sa_handler = sig_usr1;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGUSR1, &sa, NULL);
-
+  signal (SIGUSR1, sig_usr1);
   /*
    * On SIGCHLD wait for the child process, so it can give free all
    * resources.
    */
-  sigaction (SIGCHLD, NULL, &sa);
-  sa.sa_handler = sig_child;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGCHLD, &sa, NULL);
+  signal (SIGCHLD, sig_child);
 
   pmap_unset (YPPROG, YPVERS);
   pmap_unset (YPPROG, YPOLDVERS);
@@ -621,8 +609,8 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  svc_run ();
-  log_msg ("svc_run returned");
+  mysvc_run ();
+  log_msg ("mysvc_run returned");
   unlink (_YPSERV_PIDFILE);
   exit (1);
   /* NOTREACHED */

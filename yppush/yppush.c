@@ -435,8 +435,7 @@ yppush_foreach (const char *host)
   PushClient = clnt_create (server, YPPROG, YPVERS, "udp");
   if (PushClient == NULL)
     {
-      log_msg ("%s", host);
-      clnt_pcreateerror ("");
+      clnt_pcreateerror (server);
       return 1;
     }
 

@@ -1,6 +1,21 @@
+2003-08-15  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c (main): Use signal instead of sigaction.
+
+	* ypserv/server.c (ypproc_all_2_svc): Use _exit instead of exit.
+
+2003-08-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c: Use own svc_run implentation based on select.
+
+2003-07-30  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/server.c: Kill counting of running childs.
+
 2003-06-27  Thorsten Kukuk  <kukuk@suse.de>
 
 	* yppush/yppush.8.in: Fix typo.
+	* yppush/yppush.c: Fix error message.
 
 2003-06-26  Thorsten Kukuk  <kukuk@suse.de>
 

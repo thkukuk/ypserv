@@ -44,10 +44,6 @@
 #include "log_msg.h"
 #include "compat.h"
 
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-extern volatile int children; /* ypserv.c  */
-#endif
-
 bool_t
 ypproc_null_2_svc (void *argp UNUSED, void *result UNUSED,
 		   struct svc_req *rqstp)
@@ -579,9 +575,6 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     }
 #endif
 
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-  ++children;
-#endif
   switch (fork ())
     {
     case 0:
@@ -613,9 +606,6 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
         exit (0);
       }
     case -1:
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-      --children;
-#endif
       log_msg ("Cannot fork: %s", strerror (errno));
       result->xfrstat = YPXFR_XFRERR;
       break;
@@ -776,53 +766,22 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
       return TRUE;
     }
 
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-  if (children >= MAX_CHILDREN)
+  switch (fork ())
     {
-      int wait = 0;
-
-      while (wait < 3)
-        {
-          sleep (1);
-
-          if (children < MAX_CHILDREN)
-            break;
-          ++wait;
-        }
-    }
-
-  if (children < MAX_CHILDREN)
-    {
-      ++children;
-#endif
-      switch (fork ())
-        {
-        case 0: /* child */
+    case 0: /* child */
 #ifdef DEBUG
-          log_msg ("ypserv has forked for ypproc_all(): pid=%i", getpid ());
+      log_msg ("ypserv has forked for ypproc_all(): pid=%i", getpid ());
 #endif
-          break;
-        case -1:  /* parent, error */
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-          --children;
-#endif
-          log_msg ("WARNING(ypproc_all_2_svc): cannot fork: %s",
-		   strerror (errno));
-          result->ypresp_all_u.val.stat = YP_YPERR;
-	  return TRUE;
-        default: /* parent, default */
-          return FALSE;
-          break;
-        }
-#if defined (MAX_CHILDREN) && MAX_CHILDREN > 0
-    }
-  else
-    {
-      log_msg ("WARNING(ypproc_all_2_svc): too many running children!");
+      break;
+    case -1:  /* parent, error */
+      log_msg ("WARNING(ypproc_all_2_svc): cannot fork: %s",
+	       strerror (errno));
       result->ypresp_all_u.val.stat = YP_YPERR;
       return TRUE;
+    default: /* parent, default */
+      return FALSE;
+      break;
     }
-#endif
 
   /* We are now in the child part. Don't let the child ypserv share
      DB handles with the parent process.  */
@@ -892,7 +851,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 		      (caddr_t) result))
     svcerr_systemerr (rqstp->rq_xprt);
   /* Note: no need to free args; we're exiting.  */
-  exit(0);
+  _exit(0);
 }
 
 bool_t
