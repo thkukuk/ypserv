@@ -189,8 +189,6 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 		  status = -1;
 	      ypdb_close (dbp);
 	    }
-	  else
-	    status = -2;
 	}
     }
 
