@@ -44,6 +44,7 @@
 #include "log_msg.h"
 #include "ypserv_conf.h"
 #include "compat.h"
+#include "my_slp.h"
 
 #ifdef HAVE_PATHS_H
 #include <paths.h>
@@ -615,6 +616,8 @@ main (int argc, char **argv)
       log_msg ("ypserv: unable to register (YPPROG, YPOLDVERS, tcp)\n");
       exit (1);
     }
+
+  register_slp ();
 
 #if 0
   mysvc_run ();

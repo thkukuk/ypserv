@@ -22,6 +22,6 @@ noinst_HEADERS =
 
 sbin_PROGRAMS = ypserv
 
-ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c
+ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c slp.c
 
-ypserv_LDADD =  $(top_builddir)/lib/libyp.a @LIBDBM@
+ypserv_LDADD =  $(top_builddir)/lib/libyp.a @LIBDBM@ -lslp
