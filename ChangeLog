@@ -1,4 +1,12 @@
-2002-05-27  Thorsten Kukuk  <kukuk@suse.de>
+2002-07-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.ypxfrd/Makefile.in (rpc_ypxfrd_LDADD): link against libyp.a
+	before linking against libgdbm.
+
+	* ypserv/Makefile.in (rpc_ypxfrd_LDADD): Likewise.
+	(Reported by Todd R. Eigenschink <todd@tekinteractive.com>)
+
+002-05-27  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.4
 
