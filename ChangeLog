@@ -1,3 +1,8 @@
+2002-07-23  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Print also name of the
+	expected master if we refuse to transfer a map.
+
 2002-07-02  Thorsten Kukuk  <kukuk@suse.de>
 
 	* rpc.ypxfrd/Makefile.in (rpc_ypxfrd_LDADD): link against libyp.a

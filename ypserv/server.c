@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -503,12 +503,18 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
           if ((size_t)val.dsize != strlen (argp->map_parms.peer) ||
               strncmp (val.dptr, argp->map_parms.peer, val.dsize) != 0)
             {
+	      char buf[val.dsize + 1];
+
+	      strncpy (buf, val.dptr, val.dsize);
+	      buf[val.dsize] = '\0';
+
               if (debug_flag)
-                log_msg ("\t->Ignored (%s is not the master!)",
-			 argp->map_parms.peer);
+		log_msg ("\t->Ignored (%s is not the master, master is %s)",
+			 argp->map_parms.peer, buf);
               else
-                log_msg ("refuse to transfer %s from %s, not master",
-			 argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
+                log_msg ("refuse to transfer %s from %s, master is %s)",
+			 argp->map_parms.map, inet_ntoa (rqhost->sin_addr),
+			 buf);
 
 	      ypdb_close (dbp);
               result->xfrstat = YPXFR_NODOM;
@@ -596,7 +602,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     case -1:
       log_msg ("Cannot fork: %s", strerror (errno));
       result->xfrstat = YPXFR_XFRERR;
-      break; 
+      break;
    default:
       result->xfrstat = YPXFR_SUCC;
       break;
