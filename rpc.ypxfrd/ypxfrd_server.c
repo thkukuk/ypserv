@@ -1,27 +1,25 @@
-/* Copyright (c) 1996, 1997, 1998, 1999 Thorsten Kukuk
-   This file is part of the NYS YP Server.
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
-   The NYS YP Server is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+   The YP Server is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
 
-   The NYS YP Server is distributed in the hope that it will be useful,
+   The YP Server is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
    General Public License for more details.
 
    You should have received a copy of the GNU General Public
-   License along with the NYS YP Server; see the file COPYING.  If
+   License along with the YP Server; see the file COPYING. If
    not, write to the Free Software Foundation, Inc., 675 Mass Ave,
    Cambridge, MA 02139, USA. */
+
+#define _GNU_SOURCE
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#include "system.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -38,9 +36,9 @@
 #ifdef NEED_SVCSOC_H
 #include <rpc/svc_soc.h>
 #endif
-#include "yp_msg.h"
+#include "log_msg.h"
 #include "ypxfrd.h"
-#include "ypserv.h"
+#include "access.h"
 
 static int file = 0;
 
@@ -66,7 +64,7 @@ xdr_ypxfrd_xfr (register XDR *xdrs, xfr *objp)
 	     error status */
 	  objp->ok = FALSE;
 	  objp->xfr_u.xfrstat = XFR_READ_ERR;
-	  yp_msg ("read error: %s", strerror (errno));
+	  log_msg ("read error: %s", strerror (errno));
 	}
 
       /* call the next function for sending the data or status */
@@ -104,28 +102,28 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
   if (debug_flag)
     {
       rqhost = svc_getcaller (rqstp->rq_xprt);
-      yp_msg ("ypproc_null() [From: %s:%d]\n",
+      log_msg ("ypproc_null() [From: %s:%d]",
 	      inet_ntoa (rqhost->sin_addr),
 	      ntohs (rqhost->sin_port));
-      yp_msg ("\txfrdomain=%s\n", argp->xfrdomain);
-      yp_msg ("\txfrmap=%s\n", argp->xfrmap);
-      yp_msg ("\txfrmap_filename=%s\n", argp->xfrmap_filename);
+      log_msg ("\txfrdomain=%s", argp->xfrdomain);
+      log_msg ("\txfrmap=%s", argp->xfrmap);
+      log_msg ("\txfrmap_filename=%s", argp->xfrmap_filename);
     }
 
   result.ok = FALSE;
   result.xfr_u.xfrstat = XFR_DENIED;
 
-  if ((valid = is_valid_host (rqstp, argp->xfrmap, argp->xfrdomain)) < 1)
+  if ((valid = is_valid (rqstp, argp->xfrmap, argp->xfrdomain)) < 1)
     {
       if (valid == 0)
 	{
 	  if (debug_flag)
-	    yp_msg ("\t-> Ignored (not a valid source host)\n");
+	    log_msg ("\t-> Ignored (not a valid source host)");
 	}
       else
 	{
 	  if (debug_flag)
-	    yp_msg ("\t-> Ignored (not a valid domain)\n");
+	    log_msg ("\t-> Ignored (not a valid domain)");
 	}
       return (&result);
     }
@@ -185,7 +183,7 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
     sprintf (buf, "%s/%s", argp->xfrdomain, argp->xfrmap_filename);
   else
     {
-      yp_msg ("Buffer overflow! [%s|%d]\n", __FILE__, __LINE__);
+      log_msg ("Buffer overflow! [%s|%d]", __FILE__, __LINE__);
       result.xfr_u.xfrstat = XFR_NOFILE;
       return &result;
     }
@@ -194,18 +192,6 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
     {
       result.xfr_u.xfrstat = XFR_ACCESS;
       return &result;
-    }
-
-  if (!debug_flag)
-    {
-      if (children < MAX_CHILDREN && fork ())
-	{
-	  children++;
-	  forked = 0;
-	  return NULL;
-	}
-      else
-	++forked;
     }
 
   if ((file = open ((char *) &buf, O_RDONLY)) == -1)

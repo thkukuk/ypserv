@@ -8,14 +8,15 @@
 AUTOMAKE_OPTIONS = 1.4 gnits
 
 noinst_LIBRARIES = libyp.a
-noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h ypxfrd.x
+noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h ypxfrd.x access.h \
+		yp_db.h
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
-DEFS = @DEFS@ -D_REENTRANT=1
+DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\"
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c ypproc_all_2.c \
-		ypproc_match_2.c
+		ypproc_match_2.c securenets.c access.c yp_db.c
 
 CLEANFILES = *~
 

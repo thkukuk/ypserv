@@ -237,7 +237,7 @@ AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
 	yppush/Makefile makedbm/Makefile makedbm/makedbm.8
 	revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile
 	mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile
-	rpc.ypxfrd/rpc.ypxfrd.8 ypxfrd.8
+	rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8
 	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
 	scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate
 	scripts/pwupdate.8 scripts/create_printcap scripts/match_printcap)

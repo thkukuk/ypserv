@@ -349,13 +349,7 @@ main (int argc, char **argv)
 	{
 	case 'v':
 	  debug_flag = 1;
-	  log_msg ("ypserv (%s) %s (with %s)\n", PACKAGE, VERSION,
-#ifdef HAVE_LIBWRAP
-		  "tcp wrapper"
-#else
-		  "securenets"
-#endif
-	    );
+	  log_msg ("ypserv (%s) %s\n", PACKAGE, VERSION);
 	  return 0;
 	case 'd':
 	  ++debug_flag;
@@ -379,13 +373,7 @@ main (int argc, char **argv)
   argv += optind;
 
   if (debug_flag)
-    log_msg ("[ypserv (%s) %s (with %s)]\n", PACKAGE, VERSION,
-#ifdef HAVE_LIBWRAP
-	    "tcp wrapper"
-#else
-	    "securenets"
-#endif
-      );
+    log_msg ("[ypserv (%s) %s]\n", PACKAGE, VERSION);
   else
     {
       int i;

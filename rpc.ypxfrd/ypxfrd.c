@@ -1,36 +1,28 @@
-/*
-** ypxfrd.c - ypxfrd main routines.
-**
-** Copyright (c) 1996, 1997, 1998, 1999 Thorsten Kukuk
-**
-** This file is part of the NYS YP Server.
-**
-** The NYS YP Server is free software; you can redistribute it and/or
-** modify it under the terms of the GNU General Public License as
-** published by the Free Software Foundation; either version 2 of the
-** License, or (at your option) any later version.
-**
-** The NYS YP Server is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-** General Public License for more details.
-**
-** You should have received a copy of the GNU General Public
-** License along with the NYS YP Server; see the file COPYING.  If
-** not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-** Cambridge, MA 02139, USA.
-**
-** Author: Thorsten Kukuk <kukuk@suse.de>
-*/
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001 Thorsten Kukuk
+   Author: Thorsten Kukuk <kukuk@suse.de>
+
+   The YP Server is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
+
+   The YP Server is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public
+   License along with the YP Server; see the file COPYING. If
+   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
+   Cambridge, MA 02139, USA. */
+
+/* ypxfrd - ypxfrd main routines.  */
+
+#define _GNU_SOURCE
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "system.h"
-#include "version.h"
-
-#include "ypxfrd.h"
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -53,35 +45,18 @@
 #include <rpc/svc_soc.h>
 #endif
 #include <rpc/pmap_clnt.h>
-#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
 #include <getopt.h>
-#else
-#include <compat/getopt.h>
-#endif
+#include "ypxfrd.h"
+#include "access.h"
 
 #ifndef SA_RESTART
 #define SA_RESTART 0
 #endif
 
-#ifndef HAVE_GETOPT_LONG
-#include <compat/getopt.c>
-#include <compat/getopt1.c>
-#endif
-
-#ifndef HAVE_STRERROR
-#include <compat/strerror.c>
-#endif
-
-#include "yp_msg.h"
-#include "ypserv.h"
+#include "log_msg.h"
 
 extern void ypxfrd_freebsd_prog_1(struct svc_req *, SVCXPRT *);
 
-int forked = 0;
-int children = 0;
-int dns_flag = 0;
-int debug_flag = 0;
-int xfr_check_port = 1;
 int _rpcpmstart = 0;
 int _rpcfdtype = 0;
 int _rpcsvcdirty = 0;
@@ -131,43 +106,6 @@ _rpc_dtablesize()
 }
 #endif
 
-static void
-ypxfrd_svc_run (void)
-{
-#ifdef FD_SETSIZE
-  fd_set readfds;
-#else
-  int readfds;
-#endif /* def FD_SETSIZE */
-  int pid;
-
-  /* Establish the identity of the parent ypxfrd process. */
-  pid = getpid();
-
-  for (;;) {
-#ifdef FD_SETSIZE
-    readfds = svc_fdset;
-#else
-    readfds = svc_fds;
-#endif /* def FD_SETSIZE */
-    switch (select(_rpc_dtablesize(), &readfds, NULL, NULL,
-		   (struct timeval *)0))
-      {
-      case -1:
-	if (errno == EINTR)
-	  continue;
-	syslog(LOG_ERR, "svc_run: - select failed: %m");
-	return;
-      case 0:
-	continue;
-      default:
-	svc_getreqset(&readfds);
-	if (forked && pid != getpid())
-	  exit(0);
-      }
-  }
-}
-
 /*
 ** Needed, if we start rpc.ypxfrd from inetd
 */
@@ -195,26 +133,18 @@ closedown (int sig)
   alarm(_RPCSVC_CLOSEDOWN);
 }
 
-/*
-** Clean up after child processes signal their termination.
-*/
+/* Clean up after child processes signal their termination.  */
 static void
 sig_child (int sig __attribute__ ((unused)))
 {
    int st;
 
-#ifdef HAVE_WAIT3
-   while (wait3(&st, WNOHANG, NULL) > 0)
-     children--;
-#else
+   /* Clear all childs.  */
    while (waitpid(-1, &st, WNOHANG) > 0)
-     children--;
-#endif
+     ;
 }
 
-/*
-** Clean up if we quit the program.
-*/
+/* Clean up if we quit the program.  */
 static void
 sig_quit (int sig __attribute__ ((unused)))
 {
@@ -228,22 +158,21 @@ sig_quit (int sig __attribute__ ((unused)))
 static void
 sig_hup (int sig __attribute__ ((unused)))
 {
-#ifndef HAVE_LIBWRAP
   load_securenets();
-#endif
   load_config();
 }
 
 static void
 Usage (int exitcode)
 {
-  fprintf(stderr,"usage: %s [--debug] [-d path] [-p port]\n",progname);
-  fprintf(stderr,"       %s --version\n",progname);
+  fputs ("usage: rpc.ypxfrd [--debug] [-d path] [-p port]\n", stderr);
+  fputs ("       rpc.ypxfrd --version\n", stderr);
 
-  exit(exitcode);
+  exit (exitcode);
 }
 
-int main(int argc, char **argv)
+int
+main (int argc, char **argv)
 {
   SVCXPRT *main_transp;
   int my_port = -1;
@@ -283,7 +212,7 @@ int main(int argc, char **argv)
         {
 	case '\255':
 	  debug_flag = 1;
-	  yp_msg("ypxfrd - NYS YP Server version %s\n", version);
+	  log_msg("rpc.ypxfrd (%s) %s\n", PACKAGE, VERSION);
 	  exit(0);
 	case '\254':
 	  debug_flag++;
@@ -291,12 +220,12 @@ int main(int argc, char **argv)
 	case 'd':
 	  path_ypdb = optarg;
 	  if (debug_flag)
-	    yp_msg("Using database directory: %s\n", path_ypdb);
+	    log_msg("Using database directory: %s\n", path_ypdb);
 	  break;
 	case 'p':
 	  my_port = atoi(optarg);
 	  if (debug_flag)
-	    yp_msg("Using port %d\n", my_port);
+	    log_msg("Using port %d\n", my_port);
 	  break;
 	case 'u':
         case 'h':
@@ -312,7 +241,7 @@ int main(int argc, char **argv)
   argv+=optind;
 
   if (debug_flag)
-    yp_msg("[Welcome to the NYS ypxfrd Daemon, version %s]\n",version);
+    log_msg("[Welcome to the rpc.ypxfrd Daemon, version %s]\n", VERSION);
   else
     if(!_rpcpmstart)
       {
@@ -323,13 +252,13 @@ int main(int argc, char **argv)
 
 	if (i < 0)
 	  {
-	    yp_msg ("Cannot fork: %s\n", strerror (errno));
+	    log_msg ("Cannot fork: %s\n", strerror (errno));
 	    exit (-1);
 	  }
 
 	if (setsid() == -1)
 	  {
-	    yp_msg ("Cannot setsid: %s\n", strerror (errno));
+	    log_msg ("Cannot setsid: %s\n", strerror (errno));
 	    exit (-1);
 	  }
 
@@ -338,7 +267,7 @@ int main(int argc, char **argv)
 
 	if (i < 0)
 	  {
-	    yp_msg ("Cannot fork: %s\n", strerror (errno));
+	    log_msg ("Cannot fork: %s\n", strerror (errno));
 	    exit (-1);
 	  }
 
@@ -355,13 +284,11 @@ int main(int argc, char **argv)
   /* Change current directory to database location */
   if (chdir(path_ypdb) < 0)
     {
-      yp_msg("%s: chdir: %", argv[0], strerror(errno));
+      log_msg("%s: chdir: %", argv[0], strerror(errno));
       exit(1);
     }
 
-#ifndef HAVE_LIBWRAP
   load_securenets();
-#endif
   load_config();
 
   /*
@@ -445,7 +372,7 @@ int main(int argc, char **argv)
 	  my_socket = socket (AF_INET, SOCK_DGRAM, 0);
 	  if (my_socket < 0)
 	    {
-	      yp_msg("can not create UDP: %s",strerror(errno));
+	      log_msg("can not create UDP: %s",strerror(errno));
 	      return 1;
 	    }
 
@@ -458,7 +385,7 @@ int main(int argc, char **argv)
 			 sizeof (socket_address));
 	  if (result < 0)
 	    {
-	      yp_msg("%s: can not bind UDP: %s ", progname,strerror(errno));
+	      log_msg("%s: can not bind UDP: %s ", progname,strerror(errno));
 	      return 1;
 	    }
 	}
@@ -466,13 +393,13 @@ int main(int argc, char **argv)
       main_transp = svcudp_create(my_socket);
       if (main_transp == NULL)
 	{
-	  yp_msg("cannot create udp service.");
+	  log_msg("cannot create udp service.");
 	  return 1;
 	}
       if (!svc_register(main_transp, YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
 			ypxfrd_freebsd_prog_1, IPPROTO_UDP))
 	{
-	  yp_msg("unable to register (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS, udp).");
+	  log_msg("unable to register (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS, udp).");
 	  return 1;
 	}
     }
@@ -484,7 +411,7 @@ int main(int argc, char **argv)
 	  my_socket = socket (AF_INET, SOCK_STREAM, 0);
 	  if (my_socket < 0)
 	    {
-	      yp_msg ("%s: can not create TCP ",progname);
+	      log_msg ("%s: can not create TCP ",progname);
 	      return 1;
 	    }
 
@@ -497,20 +424,20 @@ int main(int argc, char **argv)
 			 sizeof (socket_address));
 	  if (result < 0)
 	    {
-	      yp_msg("%s: can not bind TCP ",progname);
+	      log_msg("%s: can not bind TCP ",progname);
 	      return 1;
 	    }
 	}
       main_transp = svctcp_create(my_socket, 0, 0);
       if (main_transp == NULL)
 	{
-	  yp_msg("%s: cannot create tcp service\n", progname);
+	  log_msg("%s: cannot create tcp service\n", progname);
 	  exit(1);
 	}
       if (!svc_register(main_transp, YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
 			ypxfrd_freebsd_prog_1, IPPROTO_TCP))
 	{
-	  yp_msg("%s: unable to register (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS, tcp)\n",
+	  log_msg("%s: unable to register (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS, tcp)\n",
 		 progname);
 	  exit(1);
 	}
@@ -522,8 +449,8 @@ int main(int argc, char **argv)
       alarm (_RPCSVC_CLOSEDOWN);
     }
 
-  ypxfrd_svc_run();
-  yp_msg("svc_run returned");
+  svc_run();
+  log_msg("svc_run returned");
   exit(1);
   /* NOTREACHED */
 }

@@ -1,3 +1,14 @@
+2001-04-08  Thorsten Kukuk  <kukuk@suse.de>
+
+	* scripts/create_printcap.in: New.
+	* scripts/match_printcap.in: New.
+	* scripts/pwupdate.8.in: New.
+	* scripts/pwupdate.in: New.
+	* mknetid/mknetid.c: New.
+	* mknetid/mknetid.h: New.
+	* mknetid/netid_hash.c: New.
+	* rpc.ypxfrd: New.
+
 2001-03-25  Thorsten Kukuk  <kukuk@suse.de>
 
 	* configure.in: Create revnetgroup/yphelper Makefile

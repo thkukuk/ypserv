@@ -12,7 +12,7 @@ localedir = $(datadir)/locale
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
+	-DYPMAPDIR=\"@YPMAPDIR@\"
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
@@ -21,10 +21,10 @@ EXTRA_DIST = ${MANS}
 
 man_MANS = ypserv.8
 
-noinst_HEADERS = yp_db.h access.h
+noinst_HEADERS =
 
 sbin_PROGRAMS = ypserv
 
-ypserv_SOURCES = ypserv.c server.c securenets.c yp_db.c ypserv_xdr.c access.c
+ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c
 
 ypserv_LDADD =  @LIBDBM@ $(top_builddir)/lib/libyp.a -lefence

@@ -92,7 +92,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 localedir = $(datadir)/locale
 
 CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
-DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
+DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" 	-DYPMAPDIR=\"@YPMAPDIR@\"
 
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
@@ -102,11 +102,11 @@ EXTRA_DIST = ${MANS}
 
 man_MANS = ypserv.8
 
-noinst_HEADERS = yp_db.h access.h
+noinst_HEADERS = 
 
 sbin_PROGRAMS = ypserv
 
-ypserv_SOURCES = ypserv.c server.c securenets.c yp_db.c ypserv_xdr.c access.c
+ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c
 
 ypserv_LDADD = @LIBDBM@ $(top_builddir)/lib/libyp.a -lefence
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -117,8 +117,7 @@ PROGRAMS =  $(sbin_PROGRAMS)
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-ypserv_OBJECTS =  ypserv.o server.o securenets.o yp_db.o ypserv_xdr.o \
-access.o
+ypserv_OBJECTS =  ypserv.o server.o ypserv_xdr.o
 ypserv_DEPENDENCIES =  $(top_builddir)/lib/libyp.a
 ypserv_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -137,8 +136,7 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/access.P .deps/securenets.P .deps/server.P \
-.deps/yp_db.P .deps/ypserv.P .deps/ypserv_xdr.P
+DEP_FILES =  .deps/server.P .deps/ypserv.P .deps/ypserv_xdr.P
 SOURCES = $(ypserv_SOURCES)
 OBJECTS = $(ypserv_OBJECTS)
 
