@@ -6,6 +6,7 @@ Please send bug reports, questions and suggestions to <kukuk@suse.de>.
 
 Version 2.6
 * Fix bug that rpc.ypxfrd doesn't really close maps
+* Allow user configureable number of cached database file handles
 
 Version 2.5
 * Fix memory leak

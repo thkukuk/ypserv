@@ -40,6 +40,7 @@
 #include "yp.h"
 #include "access.h"
 #include "log_msg.h"
+#include "ypserv_conf.h"
 
 #ifdef HAVE_PATHS_H
 #include <paths.h>
@@ -299,8 +300,14 @@ sig_quit (int sig __attribute__ ((unused)))
 static void
 sig_hup (int sig __attribute__ ((unused)))
 {
+  int old_cached_filehandles = cached_filehandles;
+
   load_securenets ();
   load_config ();
+  /* Don't allow to decrease the number of max. cached files with
+     SIGHUP.  */
+  if (cached_filehandles < old_cached_filehandles)
+    cached_filehandles = old_cached_filehandles;
 }
 
 static void

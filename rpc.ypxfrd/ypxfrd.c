@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -48,6 +48,7 @@
 #include <getopt.h>
 #include "ypxfrd.h"
 #include "access.h"
+#include "ypserv_conf.h"
 
 #ifndef SA_RESTART
 #define SA_RESTART 0
@@ -159,6 +160,8 @@ sig_hup (int sig __attribute__ ((unused)))
 {
   load_securenets();
   load_config();
+  /* we don't wish to cache the file handles.  */
+  cached_filehandles = 0;
 }
 
 static void
@@ -289,6 +292,8 @@ main (int argc, char **argv)
 
   load_securenets();
   load_config();
+  /* we don't wish to cache the file handles.  */
+  cached_filehandles = 0;
 
   /*
    * Ignore SIGPIPEs. They can hurt us if someone does a ypcat

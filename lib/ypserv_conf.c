@@ -33,9 +33,17 @@
 #include "ypserv_conf.h"
 
 int dns_flag = 0;
-int cached_filehandles = 30;
 int xfr_check_port = 0;
 char *trusted_master = NULL;
+/* cached_filehandles (how many databases will be cached):
+   big -> slow list searching, we go 3 times through the list.
+   little -> have to close/open very often.
+   We now uses 30, because searching 3 times in the list is faster
+   then reopening the database.
+   You can open max. 255 file handles.
+*/
+int cached_filehandles = 30;
+
 
 static int
 getipnr (char *n, char *network, char *netmask)
@@ -213,6 +221,10 @@ load_ypserv_conf (const char *path)
 	      log_msg ("Parse error in line %d: => Ignore line", line);
 
 	    cached_filehandles = files;
+
+	    if (cached_filehandles > 255)
+              cached_filehandles = 255;
+
 	    if (debug_flag)
 	      log_msg ("ypserv.conf: files: %lu", files);
 	    break;

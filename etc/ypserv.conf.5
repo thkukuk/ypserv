@@ -1,7 +1,7 @@
 .\" -*- nroff -*-
 .\" Copyright (c) 1996, 1997, 1998, 1999, 2000, 2002 Thorsten Kukuk kukuk@suse.de
 .\"
-.TH YPSERV.CONF 5 "April 2002" "YP Server" "Reference Manual"
+.TH YPSERV.CONF 5 "October 2002" "YP Server" "Reference Manual"
 .SH NAME
 ypserv.conf - configuration file for ypserv and rpc.ypxfrd
 .SH DESCRIPTION
@@ -14,7 +14,7 @@ startup, or when receiving a SIGHUP signal.
 There is one entry per line. If the line is a option line,
 the format is:
 .IP
-option: [yes|no]
+option: <argument>
 .LP
 The line for an access rule has the format:
 .IP
@@ -27,19 +27,29 @@ Following
 .I options
 exist:
 .TP
-.B xfr_check_port
-With this option enabled, the NIS master server have to run on a
-port < 1024. The default is "yes" (enabled).
+.BR "files: " 30
+This option specifies, how many database files should be cached by
+.BR ypserv .
+If
+.B 0
+is specified, caching is disabled. Decreasing this number is only
+possible, if
+.B ypserv
+is restarted.
 .TP
-.B trusted_master
-This option expects a different argument than the other above. The argument
-is the FQDN of the master host. If this option is set on a slave server,
-new maps from this host as master will be accepted. The default is, that
+.BR "trusted_master: " server
+If this option is set on a slave server, new maps from the host
+.I server
+will be accepted as master. The default is, that
 no trusted master is set and new maps will not be accepted.
 .br
 Example:
 .br
 trusted_master: ypmaster.example.org
+.TP
+.BR "xfr_check_port: " [<yes>|no]
+With this option enabled, the NIS master server have to run on a
+port < 1024. The default is "yes" (enabled).
 .LP
 The field descriptions for the access rule lines are:
 .TP
