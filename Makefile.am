@@ -6,6 +6,6 @@
 AUTOMAKE_OPTIONS = 1.4 gnits
 MAINT_CHARSET = latin1
 #
-SUBDIRS = etc lib ypserv ypxfr yppush makedbm revnetgroup yphelper
+SUBDIRS = etc lib ypserv ypxfr yppush makedbm revnetgroup yphelper scripts
 
 CLEANFILES = *~

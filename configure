@@ -3171,6 +3171,9 @@ fi
 done
 
 
+YPBINDIR=$(libexecdir)
+
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -3274,7 +3277,8 @@ ac_given_INSTALL="$INSTALL"
 
 trap 'rm -fr `echo "lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
 	yppush/Makefile makedbm/Makefile revnetgroup/Makefile Makefile
-	yphelper/Makefile config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
+	scripts/ypxfr_1perday scripts/ypxfr_2perday config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -3337,6 +3341,7 @@ s%@LIBDBM@%$LIBDBM%g
 s%@LIBCRYPT@%$LIBCRYPT%g
 s%@RESOLV@%$RESOLV%g
 s%@LIBOBJS@%$LIBOBJS%g
+s%@YPBINDIR@%$YPBINDIR%g
 
 CEOF
 EOF
@@ -3380,7 +3385,8 @@ cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
 	yppush/Makefile makedbm/Makefile revnetgroup/Makefile Makefile
-	yphelper/Makefile"}
+	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
+	scripts/ypxfr_1perday scripts/ypxfr_2perday"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

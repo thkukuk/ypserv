@@ -222,9 +222,13 @@ AC_CHECK_FUNCS(_dns_gethostbyname)
 AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
 AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
 
+YPBINDIR=$(libexecdir)
+AC_SUBST(YPBINDIR)
+
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
 	yppush/Makefile makedbm/Makefile revnetgroup/Makefile Makefile
-	yphelper/Makefile)
+	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
+	scripts/ypxfr_1perday scripts/ypxfr_2perday)
 
 echo "
 Configuration:

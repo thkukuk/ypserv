@@ -11,11 +11,10 @@
 # PARTICULAR PURPOSE.
 
 #
-# Copyright (c) 2000 Thorsten Kukuk, Germany
+# Copyright (c) 2001 SuSE GmbH, Nuernberg
 #
 # Author: Thorsten Kukuk <kukuk@suse.de>
 #
-# Process this file with automake to produce Makefile.in.
 
 
 SHELL = @SHELL@
@@ -53,7 +52,6 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 transform = @program_transform_name@
@@ -86,14 +84,27 @@ VERSION = @VERSION@
 YPBINDIR = @YPBINDIR@
 
 AUTOMAKE_OPTIONS = 1.4 gnits
+MAINT_CHARSET = latin1
+#
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
-EXTRA_DIST = README locale netgroup netmasks securenets timezone ypserv.conf
+CLEANFILES = *~ ${SCRIPTS}
 
-CLEANFILES = *~
+EXTRA_DIST = ${MANS} ypxfr_1perhour.in ypxfr_1perday.in ypxfr_2perday.in
+
+man_MANS = 
+
+libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
-CONFIG_CLEAN_FILES = 
-DIST_COMMON =  README Makefile.am Makefile.in
+CONFIG_CLEAN_FILES =  ypxfr_1perhour ypxfr_1perday ypxfr_2perday
+SCRIPTS =  $(libexec_SCRIPTS)
+
+MANS = $(man_MANS)
+
+NROFF = nroff
+DIST_COMMON =  Makefile.am Makefile.in ypxfr_1perday.in \
+ypxfr_1perhour.in ypxfr_2perday.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -103,26 +114,57 @@ GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnits etc/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnits scripts/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+ypxfr_1perhour: $(top_builddir)/config.status ypxfr_1perhour.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+ypxfr_1perday: $(top_builddir)/config.status ypxfr_1perday.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+ypxfr_2perday: $(top_builddir)/config.status ypxfr_2perday.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+install-libexecSCRIPTS: $(libexec_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libexecdir)
+	@list='$(libexec_SCRIPTS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(INSTALL_SCRIPT) $$p $(DESTDIR)$(libexecdir)/`echo $$p|sed '$(transform)'`"; \
+	    $(INSTALL_SCRIPT) $$p $(DESTDIR)$(libexecdir)/`echo $$p|sed '$(transform)'`; \
+	  else if test -f $(srcdir)/$$p; then \
+	    echo " $(INSTALL_SCRIPT) $(srcdir)/$$p $(DESTDIR)$(libexecdir)/`echo $$p|sed '$(transform)'`"; \
+	    $(INSTALL_SCRIPT) $(srcdir)/$$p $(DESTDIR)$(libexecdir)/`echo $$p|sed '$(transform)'`; \
+	  else :; fi; fi; \
+	done
+
+uninstall-libexecSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	list='$(libexec_SCRIPTS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(libexecdir)/`echo $$p|sed '$(transform)'`; \
+	done
+install-man: $(MANS)
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS)
+uninstall-man:
+	@$(NORMAL_UNINSTALL)
+	$(MAKE) $(AM_MAKEFLAGS)
 tags: TAGS
 TAGS:
 
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
-subdir = etc
+subdir = scripts
 
 distdir: $(DISTFILES)
 	here=`cd $(top_builddir) && pwd`; \
 	top_distdir=`cd $(top_distdir) && pwd`; \
 	distdir=`cd $(distdir) && pwd`; \
 	cd $(top_srcdir) \
-	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnits etc/Makefile
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnits scripts/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -141,22 +183,23 @@ check-am: all-am
 check: check-am
 installcheck-am:
 installcheck: installcheck-am
-install-exec-am:
+install-exec-am: install-libexecSCRIPTS
 install-exec: install-exec-am
 
-install-data-am:
+install-data-am: install-man
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am:
+uninstall-am: uninstall-libexecSCRIPTS uninstall-man
 uninstall: uninstall-am
-all-am: Makefile
+all-am: Makefile $(SCRIPTS) $(MANS)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
+	$(mkinstalldirs)  $(DESTDIR)$(libexecdir)
 
 
 mostlyclean-generic:
@@ -187,7 +230,8 @@ maintainer-clean-am:  maintainer-clean-generic distclean-am
 
 maintainer-clean: maintainer-clean-am
 
-.PHONY: tags distdir info-am info dvi-am dvi check check-am \
+.PHONY: uninstall-libexecSCRIPTS install-libexecSCRIPTS install-man \
+uninstall-man tags distdir info-am info dvi-am dvi check check-am \
 installcheck-am installcheck install-exec-am install-exec \
 install-data-am install-data install-am install uninstall-am uninstall \
 all-redirect all-am all installdirs mostlyclean-generic \
