@@ -1,3 +1,13 @@
+2004-04-01  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/ypserv_conf.h: Add slp_timeout prototype.
+
+2004-04-01  Jakub Jelinek  <jakub@redhat.com>
+
+	* scripts/ypMakefile.in (services.byservicename): Add main
+	key with /proto and fix but which would trim any digits from
+	protocol name.
+
 2004-02-14  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.12.1

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -40,6 +40,7 @@
 int dns_flag = 0;
 #if USE_SLP
 int slp_flag = 0;
+unsigned long int slp_timeout = 3600;
 #endif
 int xfr_check_port = 0;
 char *trusted_master = NULL;
@@ -334,8 +335,35 @@ load_ypserv_conf (const char *path)
 		else if (strcasecmp (buf2, "no") == 0)
 		  slp_flag = 0;
 		else
-		  log_msg ("Unknown dns option in line %d: => Ignore line",
+		  log_msg ("Unknown slp option in line %d: => Ignore line",
 			   line);
+
+		if (debug_flag)
+		  log_msg ("ypserv.conf: slp: %d", slp_flag);
+#else
+		log_msg ("Support for SLP (line %d) is not compiled in.",
+			 line);
+#endif
+	      }
+	    else if ((buf1[i - 1] == ':') &&
+		     (strcasecmp (buf2, "slp_timeout") == 0))
+	      {
+#if USE_SLP
+		size_t j;
+
+		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
+		       (i <= strlen (buf1)))
+		  i++;
+		j = 0;
+		while ((buf1[i] != '\0') && (buf1[i] != '\n'))
+		  buf3[j++] = buf1[i++];
+		buf3[j] = 0;
+
+		sscanf (buf3, "%lu", &slp_timeout);
+
+		if (debug_flag)
+		  log_msg ("ypserv.conf: slp_timeout: %lu", slp_timeout);
+
 #else
 		log_msg ("Support for SLP (line %d) is not compiled in.",
 			 line);
@@ -344,10 +372,6 @@ load_ypserv_conf (const char *path)
 	    else
 	      log_msg ("Parse error in line %d: => Ignore line", line);
 
-#if USE_SLP
-	    if (debug_flag)
-	      log_msg ("ypserv.conf: slp: %d", slp_flag);
-#endif
 	    break;
 	  }
 	case 'T':

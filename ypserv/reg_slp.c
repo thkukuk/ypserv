@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -37,6 +38,12 @@
 #include "reg_slp.h"
 #include "log_msg.h"
 
+#include "ypserv_conf.h"
+
+/*  This is the minimum we'll use, irrespective of config setting.
+    definately don't set to less than about 30 seconds.  */
+#define SLP_MIN_TIMEOUT 120
+
 static void
 ypservSLPRegReport (SLPHandle hslp UNUSED, SLPError errcode, void* cookie)
 {
@@ -44,9 +51,23 @@ ypservSLPRegReport (SLPHandle hslp UNUSED, SLPError errcode, void* cookie)
   *(SLPError*)cookie = errcode;
 }
 
-/* the URL we use to register.  */
+static void
+do_refresh (int sig UNUSED)
+{
+  if (debug_flag)
+    log_msg ("Service registration almost expired, refreshing it");
+  register_slp ();
+}
 
+
+/* the URL we use to register.  */
 static char *url = NULL;
+
+static char hostname[1024];
+#if USE_FQDN
+static struct hostent *hp = NULL;
+#endif
+static char *hname;
 
 int
 register_slp ()
@@ -54,48 +75,55 @@ register_slp ()
   SLPError err;
   SLPError callbackerr;
   SLPHandle hslp;
-  char hostname[1024];
-  char *hname;
-#if USE_FQDN
-  struct hostent *hp = NULL;
-#endif
+  int timeout;
 
   if (url != NULL)
     {
-      log_msg ("URL already registerd!\n");
-      return -1;
-    }
-
-  gethostname (hostname, sizeof (hostname));
-#if !USE_FQDN
-  hname = hostname;
-#else
-  if (isdigit (hostname[0]))
-    {
-      char addr[INADDRSZ];
-      if (inet_pton (AF_INET, hostname, &addr))
-        hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
+      free (url);
+      url = NULL;
     }
   else
-    hp = gethostbyname (hostname);
-  hname = hp->h_name;
+    {
+      gethostname (hostname, sizeof (hostname));
+#if !USE_FQDN
+      hname = hostname;
+#else
+      if (isdigit (hostname[0]))
+	{
+	  char addr[INADDRSZ];
+	  if (inet_pton (AF_INET, hostname, &addr))
+	    hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
+	}
+      else
+	hp = gethostbyname (hostname);
+      hname = hp->h_name;
 #endif
+    }
+
+  if (slp_timeout == 0)
+    timeout = SLP_LIFETIME_MAXIMUM; /* don't expire, ever */
+  else if (SLP_MIN_TIMEOUT > slp_timeout)
+    timeout = SLP_MIN_TIMEOUT; /* use a reasonable minimum */
+  else if (SLP_LIFETIME_MAXIMUM <= slp_timeout)
+    timeout = (SLP_LIFETIME_MAXIMUM - 1); /* as long as possible */
+  else
+    timeout = slp_timeout;
 
   if (asprintf (&url, "service:ypserv://%s/", hname) < 0)
     {
-      log_msg ("Out of memory\n");
+      log_msg ("Out of memory");
       return -1;
     }
 
   err = SLPOpen ("en", SLP_FALSE, &hslp);
   if(err != SLP_OK)
     {
-      log_msg ("Error opening slp handle %i\n", err);
+      log_msg ("Error opening slp handle %i", err);
       return -1;
     }
 
-    /* Register a service with SLP */
-  err = SLPReg (hslp, url, SLP_LIFETIME_MAXIMUM, 0,
+  /* Register a service with SLP */
+  err = SLPReg (hslp, url, timeout, 0,
 		"",
 		SLP_TRUE,
 		ypservSLPRegReport,
@@ -105,7 +133,7 @@ register_slp ()
   /* _prepared_ to make the call.                                     */
   if ((err != SLP_OK) || (callbackerr != SLP_OK))
     {
-      log_msg ("Error registering service with slp %i\n", err);
+      log_msg ("Error registering service with slp %i", err);
       return -1;
     }
 
@@ -114,13 +142,25 @@ register_slp ()
   /* the wire */
   if( callbackerr != SLP_OK)
     {
-      log_msg ("Error registering service with slp %i\n",
+      log_msg ("Error registering service with slp %i",
 	       callbackerr);
       return callbackerr;
     }
 
   /* Now that we're done using slp, close the slp handle */
   SLPClose (hslp);
+
+  /* Set up a timer to refresh the service records */
+  if (timeout != SLP_LIFETIME_MAXIMUM)
+    {
+      struct sigaction act;
+
+      act.sa_handler = do_refresh;
+      if (sigaction (SIGALRM, &act, NULL) != 0)
+	log_msg ("SLP: error establishing signal handler\n");
+
+      alarm (timeout - 15);
+    }
 
   return 0;
 }
@@ -134,16 +174,19 @@ deregister_slp ()
 
   if (url == NULL)
     {
-      log_msg ("URL not registerd!\n");
+      log_msg ("URL not registerd!");
       return -1;
     }
 
   err = SLPOpen ("en", SLP_FALSE, &hslp);
   if(err != SLP_OK)
     {
-      log_msg ("Error opening slp handle %i\n", err);
+      log_msg ("Error opening slp handle %i", err);
       return -1;
     }
+
+  /* Disable possibel alarm call.  */
+  alarm (0);
 
     /* DeRegister a service with SLP */
   err = SLPDereg (hslp, url, ypservSLPRegReport, &callbackerr);
@@ -155,7 +198,7 @@ deregister_slp ()
   /* _prepared_ to make the call.                                     */
   if ((err != SLP_OK) || (callbackerr != SLP_OK))
     {
-      log_msg ("Error registering service with slp %i\n", err);
+      log_msg ("Error registering service with slp %i", err);
       return -1;
     }
 
@@ -164,7 +207,7 @@ deregister_slp ()
   /* the wire */
   if( callbackerr != SLP_OK)
     {
-      log_msg ("Error registering service with slp %i\n",
+      log_msg ("Error registering service with slp %i",
 	       callbackerr);
       return callbackerr;
     }
