@@ -196,7 +196,10 @@ print_maps (char *server)
 #if USE_FQDN
   hp = gethostbyname (server);
   if (hp != NULL)
-    server = hp->h_name;
+    {
+      server = alloca (strlen (hp->h_name) + 1);
+      strcpy (server, hp->h_name);
+    }
 #endif
 
   ret = _yp_maplist (server, domainname, &ypmap);
@@ -206,10 +209,13 @@ print_maps (char *server)
       for (y = ypmap; y;)
 	{
 	  ret = _yp_master (server, domainname, y->map, &master);
-	  if (ret == YPERR_SUCCESS && strcmp (server, master) == 0)
+	  if (ret == YPERR_SUCCESS)
 	    {
-	      fputs (y->map, stdout);
-	      fputs ("\n", stdout);
+	      if (strcmp (server, master) == 0)
+		{
+		  fputs (y->map, stdout);
+		  fputs ("\n", stdout);
+		}
 	      free (master);
 	    }
 	  old = y;

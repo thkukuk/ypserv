@@ -1,3 +1,16 @@
+2001-08-05  Thorsten Kukuk  <kukuk@suse.de>
+
+	* etc/netgroup.5: Add comment about non existing getnetgrent manual
+	  page.
+
+	* rpc.ypxfrd/ypxfrd.c (closedown): Removed external svs_fdset
+	  declaration.
+	Patches from Miquel van Smoorenburg <miquels@cistron.nl>)
+
+	* yphelper/yphelper.c (print_maps): Make a copy of gethostbyname
+	  result (we call gethostbyname later again) and fix a minor memory
+	  leak. Based on patch by Richard Gooch <rgooch@atnf.csiro.au>
+
 2001-04-08  Thorsten Kukuk  <kukuk@suse.de>
 
 	* scripts/Makefile.am: Add ypinit script and manual page
@@ -61,4 +74,3 @@
 	* ypserv/Makefile.am (noinst_HEADERS): Add access.h
 
 	* start major rewrite of ypserv for version 2
-

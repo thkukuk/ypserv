@@ -109,7 +109,6 @@ _rpc_dtablesize()
 /*
 ** Needed, if we start rpc.ypxfrd from inetd
 */
-extern fd_set svc_fdset;
 static void
 closedown (int sig)
 {

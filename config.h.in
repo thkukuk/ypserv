@@ -49,9 +49,6 @@
 /* The number of bytes in a long.  */
 #undef SIZEOF_LONG
 
-/* Define if you have the _dns_gethostbyname function.  */
-#undef HAVE__DNS_GETHOSTBYNAME
-
 /* Define if you have the _rpc_dtablesize function.  */
 #undef HAVE__RPC_DTABLESIZE
 
