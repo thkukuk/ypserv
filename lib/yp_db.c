@@ -1,4 +1,4 @@
-/* Copyright (c)  2000, 2001, 2002, 2003 Thorsten Kukuk
+/* Copyright (c)  2000, 2001, 2002, 2003, 2004 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -361,6 +361,12 @@ ypdb_open (const char *domain, const char *map)
 	  {
 	    int j;
 	    Fopen tmp;
+	    DB_FILE dbp;
+
+	    /* Check, if we can open the file. Else there is no reason
+	       to close a cached handle.  */
+	    if ((dbp = _db_open (domain, map)) == NULL)
+	      return NULL;
 
 	    if (debug_flag)
 	      {
@@ -376,7 +382,7 @@ ypdb_open (const char *domain, const char *map)
 	    fast_open_files[i].domain = strdup (domain);
 	    fast_open_files[i].map = strdup (map);
 	    fast_open_files[i].flag = F_OPEN_FLAG;
-	    fast_open_files[i].dbp = _db_open (domain, map);
+	    fast_open_files[i].dbp = dbp;
 
 	    /* LRU: Move the new entry to the first positon */
 	    tmp = fast_open_files[i];

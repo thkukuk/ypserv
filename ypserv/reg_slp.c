@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -69,6 +71,61 @@ static struct hostent *hp = NULL;
 #endif
 static char *hname;
 
+static
+char *create_domain_attr (void)
+{
+  DIR *dp;
+  struct dirent *dep;
+  char *str = NULL;
+
+  dp = opendir (YPMAPDIR);
+  if (dp == NULL)
+    return NULL;
+
+  while ((dep = readdir (dp)) != NULL)
+    {
+      struct stat st;
+
+      /* ignore files starting with . */
+      if (dep->d_name[0] == '.')
+	continue;
+
+      /* Ignore all files which are not a directory.  */
+      if (stat (dep->d_name, &st) < 0)
+	continue; /* Don't add something we cannot stat. */
+
+      if (!S_ISDIR (st.st_mode))
+	continue;
+
+      /* We also don't wish to see ypbind data as domain name.  */
+      if (strcmp (dep->d_name, "binding") == 0)
+	continue;
+
+      if (str == NULL)
+	{
+	  asprintf (&str, "(domain=%s", dep->d_name);
+	}
+      else
+	{
+	  char *cp;
+
+	  asprintf (&cp, "%s,%s", str, dep->d_name);
+	  free (str);
+	  str = cp;
+	}
+    }
+  closedir (dp);
+  if (str)
+    {
+      char *cp;
+
+      asprintf (&cp, "%s)", str);
+      free (str);
+      return cp;
+    }
+  return NULL;
+}
+
 int
 register_slp ()
 {
@@ -76,6 +133,7 @@ register_slp ()
   SLPError callbackerr;
   SLPHandle hslp;
   int timeout;
+  char *attr = NULL;
 
   if (url != NULL)
     {
@@ -122,12 +180,23 @@ register_slp ()
       return -1;
     }
 
+  if (slp_flag == 2)
+    {
+      attr = create_domain_attr ();
+      printf ("Set attribute %s\n", attr);
+    }
+
+  if (attr == NULL) /* can also be NULL if create_domain_attr fails.  */
+    attr = strdup ("");
+
   /* Register a service with SLP */
   err = SLPReg (hslp, url, timeout, 0,
-		"",
+		attr,
 		SLP_TRUE,
 		ypservSLPRegReport,
 		&callbackerr);
+
+  free (attr);
 
   /* err may contain an error code that occurred as the slp library    */
   /* _prepared_ to make the call.                                     */

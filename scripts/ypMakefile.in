@@ -273,7 +273,8 @@ services.byservicename: $(SERVICES) $(YPDIR)/Makefile
 		print $$1 TMP"\t"$$0 ; \
 		if (! seen[$$1]) { seen[$$1] = 1 ; print $$1"\t"$$0 ; } \
 		for (N = 3; N <= NF && $$N !~ "#" ; N++) { \
-			if ($$N !~ "#" && $$N != "") print $$N TMP"\t"$$0 \
+			if ($$N !~ "#" && $$N != "") print $$N TMP"\t"$$0 ; \
+			if (! seen[$$N]) { seen[$$N] = 1 ; print $$N"\t"$$0 ; } \
 		} } } ' \
 		$(SERVICES) | $(DBLOAD) -r -i $(SERVICES) \
 		-o $(YPMAPDIR)/$@ - $@

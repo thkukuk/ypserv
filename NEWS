@@ -4,6 +4,10 @@ Copyright (C) 1998-2004 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@suse.de>.
 
+Version 2.13
+* ypserv: Set SLP domain attribute if configured
+* ypserv: Fix memory leak if file cache is too small
+
 Version 2.12.2
 * ypserv: Refresh SLP registering after some time
 * ypserv: Fixes for creating services.byservicename

@@ -1,6 +1,28 @@
+2004-04-14  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.13
+
+	* etc/ypserv.conf.5 (slp): Document slp: domain option.
+
+	* ypserv/slp_reg.c: If slp: domain option is set, create attr
+	with all supported domain names.
+
+	* lib/yp_db.c (ypdb_open): Fix memory leak if the cache is too small
+	and the map does not exist. Reported by Feng Qin <fengqin@uiuc.edu>.
+
+	* rpc.ypxfrd/ypxfrd_svc.c: Reformat.
+
+	* scripts/ypMakefile.in (services.byservicename): Add aliases
+	as key with /proto, too. Patch from Jakub Jelinek <jakub@redhat.com>.
+
 2004-04-01  Thorsten Kukuk  <kukuk@suse.de>
 
+	* release version 2.12.2
+
+	* lib/ypserv.conf: Add slp_timeout.
 	* lib/ypserv_conf.h: Add slp_timeout prototype.
+	* lib/ypserv_conf.c: Add slp_timeout support.
+	* ypserv/reg_slp.c: Set alarm handler to re-register service.
 
 2004-04-01  Jakub Jelinek  <jakub@redhat.com>
 
