@@ -96,7 +96,7 @@ register_slp ()
 
     /* Register a service with SLP */
   err = SLPReg (hslp, url, SLP_LIFETIME_MAXIMUM, 0,
-		"(domain=d1),(domain=d2)",
+		"",
 		SLP_TRUE,
 		ypservSLPRegReport,
 		&callbackerr);
