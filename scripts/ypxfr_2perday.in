@@ -6,7 +6,9 @@
 
 YPBINDIR=@YPBINDIR@
 
-for map in hosts.byname hosts.byaddr netgroup netgroup.byuser netgroup.byhost
+MAPS_TO_GET="hosts.byname hosts.byaddr netgroup netgroup.byuser netgroup.byhost"
+
+for map in $MAPS_TO_GET
 do
   $YPBINDIR/ypxfr $map
 done

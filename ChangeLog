@@ -1,3 +1,14 @@
+2003-06-26  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.9
+
+	* configure.in: Bump version number to 2.9, remove -Werror.
+
+	* scripts/ypxfr_1perday.in: Add variable which contains maps
+	to update.
+	* scripts/ypxfr_1perhour.in: Likewise.
+	* scripts/ypxfr_2perday.in: Likewise.
+
 2003-06-06  Thorsten Kukuk  <kukuk@suse.de>
 
 	* Add more portability changes from

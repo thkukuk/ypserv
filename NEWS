@@ -4,7 +4,7 @@ Copyright (C) 1998-2003 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@suse.de>.
 
-Version 2.8.94
+Version 2.9
 * ypxfr: query ypserv for correct master name
 * Make it more portable
 * Make number of allowed childs a compile time option

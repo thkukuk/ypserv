@@ -6,7 +6,9 @@
 
 YPBINDIR=@YPBINDIR@
 
-for map in group.byname group.bygid protocols.byname protocols.bynumber networks.byname networks.byaddr rpc.byname rpc.bynumber services.byname ypservers
+MAPS_TO_GET=group.byname group.bygid protocols.byname protocols.bynumber networks.byname networks.byaddr rpc.byname rpc.bynumber services.byname ypservers
+
+for map in $MAPS_TO_GET
 do
   $YPBINDIR/ypxfr $map
 done

@@ -2,7 +2,7 @@
 # Copyright (C) 1999, 2000, 2001, 2002, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ypserv, 2.8.94, kukuk@linux-nis.org)
+AC_INIT(ypserv, 2.9, kukuk@linux-nis.org)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AM_CONFIG_HEADER(config.h)
@@ -239,8 +239,6 @@ AC_CHECK_FUNCS(xdr_domainname xdr_ypxfrstat xdr_ypresp_xfr xdr_ypreq_xfr)
 AC_CHECK_FUNCS(xdr_ypmap_parms xdr_ypreq_nokey xdr_ypresp_master xdr_mapname)
 AC_CHECK_FUNCS(xdr_peername xdr_ypstat xdr_ypbind_binding xdr_yppushresp_xfr)
 AC_CHECK_FUNCS(xdr_yppush_status)
-
-JAPHAR_GREP_CFLAGS(-Werror, [ CFLAGS="$CFLAGS -Werror" ])
 
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
 	ypxfr/Makefile ypxfr/ypxfr.8 yppush/Makefile yppush/yppush.8
