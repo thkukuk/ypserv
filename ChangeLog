@@ -1,7 +1,8 @@
-2002-10-02  Thorsten Kukuk  <kukuk@suse.de>
+2002-10-26  Thorsten Kukuk  <kukuk@suse.de>
 
-	* lib/yp_db.c: Add new parameter: dont_cache. If 1, don't cache
-	the the file handle.
+	* rpc.ypxfrd/ypxfrd_server.c (ypxfrd_getmap_1_svc): Close file
+	handle of database (we don't need it).
+	Reported by Tsutomu Hoshino <hoshino@sic.shibaura-it.ac.jp>
 
 2002-08-08  Thorsten Kukuk  <kukuk@suse.de>
 
