@@ -1,3 +1,9 @@
+2004-07-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr.c (ypxfr): Don't free xdr_ypresp_val,
+	if no data was send.
+	Reported by Artur Niederstebruch <artur@sgi.com>.
+
 2004-04-14  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.13
