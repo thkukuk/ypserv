@@ -7533,8 +7533,7 @@ done
 
 
 
-
-for ac_func in _rpc_dtablesize getdtablesize getrpcport
+for ac_func in _rpc_dtablesize getdtablesize
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5

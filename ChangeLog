@@ -3,6 +3,7 @@
 	* release version 2.9
 
 	* configure.in: Bump version number to 2.9, remove -Werror.
+	Remove duplicate getrpcport check.
 
 	* scripts/ypxfr_1perday.in: Add variable which contains maps
 	to update.
