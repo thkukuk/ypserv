@@ -86,6 +86,7 @@ map. A list of hosts can be specified by using multiple
 instances of the
 .B "\-h"
 flag.
+.TP
 .B \-v
 Verbose mode: causes
 .B yppush
