@@ -127,6 +127,9 @@
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
 
+/* Define if the system supports svc_max_pollfd. */
+#undef HAVE_SVC_MAX_POLLFD
+
 /* Define to 1 if you have the <syslog.h> header file. */
 #undef HAVE_SYSLOG_H
 

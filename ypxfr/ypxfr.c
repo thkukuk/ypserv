@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002, 2003  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -23,7 +23,9 @@
 
 #include <unistd.h>
 #include <syslog.h>
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
+#endif /* HAVE_GETOPT_H */
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -32,6 +34,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <alloca.h>
+#include <sys/stat.h>
 #include "log_msg.h"
 #include "yp.h"
 #include "ypxfr.h"
@@ -326,6 +330,9 @@ ypxfr_foreach (int status, char *key, int keylen,
 
 extern struct ypall_callback *xdr_ypall_callback;
 
+/* Don't replace the source_host with the FQDN in this function. Or ypserv
+   cannot compare the name of the host, who initiated a yppush, with the
+   master name of the map. */
 static enum ypxfrstat
 ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
        int noclear, int force)
@@ -374,6 +381,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       h = gethostbyname (source_host);
       if (!h)
 	return YPXFR_RSRC;
+      master_host = alloca (strlen (source_host) + 1);
+      strcpy (master_host, source_host);
     }
   else
     {
@@ -383,14 +392,15 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 
       if (yp_master (source_domain, map, &master_name))
         return YPXFR_MADDR;
-      h = gethostbyname (master_name);
+      master_host = alloca (strlen (master_name) + 1);
+      strcpy (master_host, master_name);
+      free (master_name);
+      h = gethostbyname (master_host);
       if (!h)
 	return YPXFR_RSRC;
     }
   memcpy (&sockaddr.sin_addr, h->h_addr, sizeof sockaddr.sin_addr);
   memcpy (&sockaddr_udp, &sockaddr, sizeof (sockaddr));
-  master_host = alloca (strlen (h->h_name) + 1);
-  strcpy (master_host, h->h_name);
 
   /* Create a udp socket to the server */
   sock = RPC_ANYSOCK;
@@ -649,10 +659,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
     }
 
   if (result == 0)
-    {
-      unlink (dbName_orig);
-      rename (dbName_temp, dbName_orig);
-    }
+    rename (dbName_temp, dbName_orig);
   else
     unlink(dbName_temp);
 

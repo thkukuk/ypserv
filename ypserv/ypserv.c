@@ -29,7 +29,9 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <signal.h>
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
+#endif
 #include <poll.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -204,6 +206,8 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
   return;
 }
 
+#if defined(HAVE_SVC_MAX_POLLFD)
+
 static void
 ypserv_svc_run (void)
 {
@@ -244,6 +248,43 @@ ypserv_svc_run (void)
     }
 }
 
+#else
+
+void
+ypserv_svc_run (void)
+{
+#ifdef FD_SETSIZE
+  fd_set readfds;
+#else
+  int readfds;
+#endif /* def FD_SETSIZE */
+
+  for (;;)
+    {
+#ifdef FD_SETSIZE
+      readfds = svc_fdset;
+#else
+      readfds = svc_fds;
+#endif /* def FD_SETSIZE */
+      switch (select(_rpc_dtablesize(), &readfds, NULL, NULL,
+                     (struct timeval *)0))
+        {
+        case -1:
+          if (errno == EINTR)
+            continue;
+          syslog (LOG_ERR, "svc_run: - select failed: %m");
+          return;
+        case 0:
+          continue;
+        default:
+          svc_getreqset (&readfds);
+          if (forked)
+            _exit (0);
+        }
+    }
+}
+
+#endif
 
 /* Create a pidfile on startup */
 static void
