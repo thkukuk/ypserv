@@ -254,12 +254,13 @@ ypdb_close (DB_FILE file)
 }
 
 DB_FILE
-ypdb_open (const char *domain, const char *map)
+ypdb_open (const char *domain, const char *map, int dont_cache)
 {
   int i;
 
   if (debug_flag)
-    log_msg ("\typdb_open(\"%s\", \"%s\")", domain, map);
+    log_msg ("\typdb_open(\"%s\", \"%s\", dont_cache=%i)",
+	     domain, map, dont_cache);
 
   if (map[0] == '.' || strchr (map, '/'))
     {
@@ -299,7 +300,7 @@ ypdb_open (const char *domain, const char *map)
 	      if (fast_open_files[i].flag & F_OPEN_FLAG)
                 {
 		  /* The file is already in use, don't open it twice.
-		     I think this could never happen. */
+		     I think this can never happen. */
 		  log_msg ("\t%s/%s already open.", domain, map);
 		  return NULL;
                 }
@@ -335,6 +336,8 @@ ypdb_open (const char *domain, const char *map)
 	  fast_open_files[i].domain = strdup (domain);
 	  fast_open_files[i].map = strdup (map);
 	  fast_open_files[i].flag |= F_OPEN_FLAG;
+	  if (dont_cache)
+	    fast_open_files[i].flag |= F_MUST_CLOSE;
 
 	  if (debug_flag)
 	    log_msg ("Opening: %s/%s (%d) %x", domain, map, i,
@@ -373,6 +376,8 @@ ypdb_open (const char *domain, const char *map)
 	fast_open_files[i].domain = strdup (domain);
 	fast_open_files[i].map = strdup (map);
 	fast_open_files[i].flag = F_OPEN_FLAG;
+	if (dont_cache)
+	  fast_open_files[i].flag |= F_MUST_CLOSE;
 	fast_open_files[i].dbp = _db_open (domain, map);
 
 	/* LRU: Move the new entry to the first positon */
