@@ -1,5 +1,7 @@
 2002-05-27  Thorsten Kukuk  <kukuk@suse.de>
 
+	* release version 2.4
+
 	* scripts/ypMakefile.in (MINUID/MINGID): increase both variables
 	to 500 as defined by LSB and to be compatible with most Linux
 	distributions.
