@@ -115,6 +115,9 @@
 /* Define to 1 if you have the <shadow.h> header file. */
 #undef HAVE_SHADOW_H
 
+/* Define to 1 if you have the <slp.h> header file. */
+#undef HAVE_SLP_H
+
 /* Define to 1 if you have the `snprintf' function. */
 #undef HAVE_SNPRINTF
 
@@ -239,9 +242,6 @@
 
 /* Define to 1 if you have the `_rpc_dtablesize' function. */
 #undef HAVE__RPC_DTABLESIZE
-
-/* Define how many children ypserv is allowed to create */
-#undef MAX_CHILDREN
 
 /* Name of package */
 #undef PACKAGE

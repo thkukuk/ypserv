@@ -54,7 +54,7 @@ CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DYPMAPDIR=\"@YPMAPDIR@\"
+	-DYPMAPDIR=\"@YPMAPDIR@\" -DUSE_FQDN=@USE_FQDN@ -DUSE_SLP=@USE_SLP@
 
 DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
@@ -72,6 +72,7 @@ LIBCRYPT = @LIBCRYPT@
 LIBDBM = @LIBDBM@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSLP = @LIBSLP@
 LTLIBOBJS = @LTLIBOBJS@
 MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
@@ -90,6 +91,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 USE_FQDN = @USE_FQDN@
+USE_SLP = @USE_SLP@
 VERSION = @VERSION@
 YPBINDIR = @YPBINDIR@
 YPMAPDIR = @YPMAPDIR@
@@ -136,13 +138,13 @@ EXTRA_DIST = $(addsuffix .in,$(MANS))
 
 man_MANS = ypserv.8
 
-noinst_HEADERS = 
+noinst_HEADERS = reg_slp.h
 
 sbin_PROGRAMS = ypserv
 
-ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c slp.c
+ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c reg_slp.c
 
-ypserv_LDADD = $(top_builddir)/lib/libyp.a @LIBDBM@ -lslp
+ypserv_LDADD = $(top_builddir)/lib/libyp.a @LIBDBM@ @LIBSLP@
 subdir = ypserv
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -152,7 +154,7 @@ sbin_PROGRAMS = ypserv$(EXEEXT)
 PROGRAMS = $(sbin_PROGRAMS)
 
 am_ypserv_OBJECTS = ypserv.$(OBJEXT) server.$(OBJEXT) \
-	ypserv_xdr.$(OBJEXT) slp.$(OBJEXT)
+	ypserv_xdr.$(OBJEXT) reg_slp.$(OBJEXT)
 ypserv_OBJECTS = $(am_ypserv_OBJECTS)
 ypserv_DEPENDENCIES = $(top_builddir)/lib/libyp.a
 ypserv_LDFLAGS =
@@ -160,7 +162,7 @@ ypserv_LDFLAGS =
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/server.Po ./$(DEPDIR)/slp.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/reg_slp.Po ./$(DEPDIR)/server.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ypserv.Po ./$(DEPDIR)/ypserv_xdr.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -236,8 +238,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reg_slp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/slp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ypserv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ypserv_xdr.Po@am__quote@
 

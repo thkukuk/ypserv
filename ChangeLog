@@ -1,11 +1,25 @@
+2003-11-24  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Check for SLP presence.
+
+	* ypserv/ypserv.c (main): Register/deregister at SLP server
+	only if we have SLP support and if it is enabled in ypserv.conf.
+
+	* lib/ypserv_conf.h: Add prototype for slp_flag.
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Use strcasecmp for option
+	parsing, add slp option.
+
 2003-11-19  Thorsten Kukuk  <kukuk@suse.de>
 
-	* ypserv/slp.c: New, register ypserv at SLP server.
-	* ypserv/slp.h: New.
+	* ypserv/reg_slp.c: New, register ypserv at SLP server.
+	* ypserv/reg_slp.h: New.
 
 	* ypserv/ypserv.c (main): Call register_slp().
 
 2003-10-22  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.10
 
 	* makedbm/makedbm.c (create_file): If there are spaces before
 	a tab, remove this spaces, too.

@@ -1,4 +1,4 @@
-/* Copyright (c) 2000 Thorsten Kukuk
+/* Copyright (c) 2000, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -33,6 +33,7 @@ typedef struct conffile
 } conffile_t;
 
 extern int dns_flag;
+extern int slp_flag;
 extern int cached_filehandles;
 extern int xfr_check_port;
 extern char *trusted_master;

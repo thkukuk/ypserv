@@ -44,7 +44,9 @@
 #include "log_msg.h"
 #include "ypserv_conf.h"
 #include "compat.h"
-#include "my_slp.h"
+#if USE_SLP
+#include "reg_slp.h"
+#endif
 
 #ifdef HAVE_PATHS_H
 #include <paths.h>
@@ -350,6 +352,10 @@ sig_quit (int sig UNUSED)
   pmap_unset (YPPROG, YPVERS);
   pmap_unset (YPPROG, YPOLDVERS);
   unlink (_YPSERV_PIDFILE);
+#if USE_SLP
+  if (slp_flag)
+    deregister_slp ();
+#endif
 
   exit (0);
 }
@@ -617,7 +623,10 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  register_slp ();
+#if USE_SLP
+  if (slp_flag)
+    register_slp ();
+#endif
 
 #if 0
   mysvc_run ();
@@ -626,6 +635,10 @@ main (int argc, char **argv)
 #endif
   log_msg ("svc_run returned");
   unlink (_YPSERV_PIDFILE);
+#if USE_SLP
+  if (slp_flag)
+    deregister_slp ();
+#endif
   exit (1);
   /* NOTREACHED */
 }

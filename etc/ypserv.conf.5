@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright (c) 1996, 1997, 1998, 1999, 2000, 2002 Thorsten Kukuk kukuk@suse.de
+.\" Copyright (c) 1996, 1997, 1998, 1999, 2000, 2002, 2003 Thorsten Kukuk kukuk@suse.de
 .\"
 .TH YPSERV.CONF 5 "October 2002" "YP Server" "Reference Manual"
 .SH NAME
@@ -46,6 +46,10 @@ no trusted master is set and new maps will not be accepted.
 Example:
 .br
 trusted_master: ypmaster.example.org
+.TP
+.BR "slp: " [yes|domain|<no>]
+If this option is enabled, the NIS server registers itself on a
+SLP server.
 .TP
 .BR "xfr_check_port: " [<yes>|no]
 With this option enabled, the NIS master server have to run on a

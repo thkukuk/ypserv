@@ -2,7 +2,7 @@
 # Copyright (C) 1999, 2000, 2001, 2002, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ypserv, 2.10, kukuk@linux-nis.org)
+AC_INIT(ypserv, 2.10.90, kukuk@linux-nis.org)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AM_CONFIG_HEADER(config.h)
@@ -10,9 +10,6 @@ AC_PREFIX_DEFAULT(/usr)
 
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
-
-dnl XXX This should be an option
-AC_DEFINE(MAX_CHILDREN, 40, [Define how many children ypserv is allowed to create])
 
 dnl Some hacks...
 test "${prefix}" = "NONE" && prefix="/usr"
@@ -158,7 +155,6 @@ else
 		libdb_parameter=yes
 	fi
 fi
-
 AC_SUBST(LIBDBM)
 
 if test x$libdb_parameter != xyes
@@ -179,6 +175,17 @@ else
   AC_CHECK_HEADERS(xcrypt.h crypt.h)
 fi
 AC_SUBST(LIBCRYPT)
+
+USE_SLP=0
+AC_CHECK_LIB(slp,SLPReg,LIBSLP="-lslp",LIBSLP="")
+AC_SUBST(LIBSLP)
+if test -n "$LIBSLP" ; then
+	AC_CHECK_HEADERS(slp.h)
+        if test "$ac_cv_header_slp_h" = yes; then
+	  USE_SLP=1
+	fi
+fi
+AC_SUBST(USE_SLP)
 
 AC_CHECK_FUNCS(getrpcport)
 if test "$ac_cv_func_getrpcport" = no; then

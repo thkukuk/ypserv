@@ -38,6 +38,9 @@
 #include "compat.h"
 
 int dns_flag = 0;
+#if USE_SLP
+int slp_flag = 0;
+#endif
 int xfr_check_port = 0;
 char *trusted_master = NULL;
 /* cached_filehandles (how many databases will be cached):
@@ -189,6 +192,7 @@ load_ypserv_conf (const char *path)
       line++;
       switch (tolower (c))
 	{
+	case 'F':
 	case 'f':
 	  {
 	    size_t i, j;
@@ -210,7 +214,7 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      ++i;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "files") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "files") == 0))
 	      {
 		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
 		       (i <= strlen (buf1)))
@@ -234,6 +238,7 @@ load_ypserv_conf (const char *path)
 	      log_msg ("ypserv.conf: files: %lu", files);
 	    break;
 	  }
+	case 'D':
 	case 'd':
 	  {
 	    size_t i, j;
@@ -253,7 +258,7 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      i++;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "dns") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "dns") == 0))
 	      {
 		if (!dns_flag)	/* Do not overwrite parameter */
 		  {
@@ -266,9 +271,9 @@ load_ypserv_conf (const char *path)
 		    buf3[j] = 0;
 
 		    sscanf (buf3, "%s", buf2);
-		    if (strcmp (buf2, "yes") == 0)
+		    if (strcasecmp (buf2, "yes") == 0)
 		      dns_flag = 1;
-		    else if (strcmp (buf2, "no") == 0)
+		    else if (strcasecmp (buf2, "no") == 0)
 		      dns_flag = 0;
 		    else
 		      log_msg ("Unknown dns option in line %d: => Ignore line",
@@ -282,8 +287,9 @@ load_ypserv_conf (const char *path)
 	      log_msg ("ypserv.conf: dns: %d", dns_flag);
 	    break;
 	  }
+	case 'S':
 	case 's':
-	  {			/* sunos_kludge */
+	  {			/* sunos_kludge / slp */
 	    size_t i;
 
 	    fgets (buf1, sizeof (buf1) - 1, in);
@@ -301,14 +307,50 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      i++;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "sunos_kludge") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "sunos_kludge") == 0))
 	      {
 		log_msg ("sunos_kludge (line %d) is not longer supported.",
 			line);
 	      }
+
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "slp") == 0))
+	      {
+#if USE_SLP
+		size_t j;
+
+		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
+		       (i <= strlen (buf1)))
+		  i++;
+		j = 0;
+		while ((buf1[i] != '\0') && (buf1[i] != '\n'))
+		  buf3[j++] = buf1[i++];
+		buf3[j] = 0;
+
+		sscanf (buf3, "%s", buf2);
+		if (strcasecmp (buf2, "yes") == 0)
+		  slp_flag = 1;
+		else if (strcasecmp (buf2, "domain") == 0)
+		  slp_flag = 2;
+		else if (strcasecmp (buf2, "no") == 0)
+		  slp_flag = 0;
+		else
+		  log_msg ("Unknown dns option in line %d: => Ignore line",
+			   line);
+#else
+		log_msg ("Support for SLP (line %d) is not compiled in.",
+			 line);
+#endif
+	      }
 	    else
 	      log_msg ("Parse error in line %d: => Ignore line", line);
+
+#if USE_SLP
+	    if (debug_flag)
+	      log_msg ("ypserv.conf: slp: %d", slp_flag);
+#endif
+	    break;
 	  }
+	case 'T':
 	case 't':
 	  {			/* tryresolve / trusted_master */
 	    size_t i, j;
@@ -328,14 +370,14 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      i++;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "tryresolve") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "tryresolve") == 0))
 	      {
 		log_msg ("tryresolve (line %d) is not longer supported.",
 			 line);
 		break;
 	      }
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "trusted_master") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "trusted_master") == 0))
 	      {
 		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
 		       (i <= strlen (buf1)))
@@ -355,6 +397,7 @@ load_ypserv_conf (const char *path)
 	      log_msg ("ypserv.conf: trusted_master: %s", trusted_master);
 	    break;
 	  }
+	case 'X':
 	case 'x':
 	  {			/* xfr_check_port */
 	    size_t i, j;
@@ -374,7 +417,7 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      i++;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "xfr_check_port") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "xfr_check_port") == 0))
 	      {
 		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
 		       (i <= strlen (buf1)))
@@ -385,9 +428,9 @@ load_ypserv_conf (const char *path)
 		buf3[j] = 0;
 
 		sscanf (buf3, "%s", buf2);
-		if (strcmp (buf2, "yes") == 0)
+		if (strcasecmp (buf2, "yes") == 0)
 		  xfr_check_port = 1;
-		else if (strcmp (buf2, "no") == 0)
+		else if (strcasecmp (buf2, "no") == 0)
 		  xfr_check_port = 0;
 		else
 		  log_msg ("Unknown xfr_check_port option in line %d: => Ignore line",
@@ -483,11 +526,11 @@ load_ypserv_conf (const char *path)
 
 	    sscanf (s, "%s", buf2);
 
-	    if (strcmp (buf2, "none") == 0)
+	    if (strcasecmp (buf2, "none") == 0)
 	      tmp->security = SEC_NONE;
-	    else if (strcmp (buf2, "deny") == 0)
+	    else if (strcasecmp (buf2, "deny") == 0)
 	      tmp->security = SEC_DENY;
-	    else if (strcmp (buf2, "port") == 0)
+	    else if (strcasecmp (buf2, "port") == 0)
 	      tmp->security = SEC_PORT;
 	    else
 	      {
