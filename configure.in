@@ -182,7 +182,13 @@ then
   exit
 fi
 
-AC_CHECK_LIB(crypt,crypt,LIBCRYPT="-lcrypt",LIBCRYPT="")
+AC_CHECK_LIB(xcrypt,crypt,LIBCRYPT="-lxcrypt",LIBCRYPT="")
+if test -z "$LIBCRYPT" ; then
+  AC_CHECK_LIB(crypt,crypt,LIBCRYPT="-lcrypt",LIBCRYPT="")
+  AC_CHECK_HEADERS(crypt.h)
+else
+  AC_CHECK_HEADERS(xcrypt.h crypt.h)
+fi
 AC_SUBST(LIBCRYPT)
 AC_CHECK_LIB(nsl,gethostbyname)
 AC_CHECK_LIB(socket,socket)
@@ -200,7 +206,7 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h paths.h sys/file.h sys/time.h syslog.h unistd.h)
-AC_CHECK_HEADERS(getopt.h crypt.h shadow.h rpc/clnt_soc.h rpc/svc_soc.h)
+AC_CHECK_HEADERS(getopt.h shadow.h rpc/clnt_soc.h rpc/svc_soc.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

@@ -34,6 +34,11 @@
 #if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
 #include <getopt.h>
 #endif
+#if defined(HAVE_LIBGDBM)
+#include <gdbm.h>
+#elif defined(HAVE_NDBM)
+#include <ndbm.h>
+#endif
 #include "yp.h"
 #include <rpcsvc/ypclnt.h>
 #include <arpa/nameser.h>
@@ -392,7 +397,7 @@ merge_group (char *group, char *gshadow)
   if (s_input == NULL)
     {
       fclose (g_input);
-      fprintf (stderr, "yphelber: Cannot open %s\n", gshadow);
+      fprintf (stderr, "yphelper: Cannot open %s\n", gshadow);
       exit (1);
     }
 
@@ -457,6 +462,114 @@ merge_group (char *group, char *gshadow)
   exit (0);
 }
 
+static char *
+get_dbm_entry (char *key, char *map, char *domainname)
+{
+  static char mappath[MAXPATHLEN + 2];
+  char *val;
+  datum dkey, dval;
+#if defined(HAVE_LIBGDBM)
+  GDBM_FILE dbm;
+#elif defined (HAVE_NDBM)
+  DBM *dbm;
+#endif
+
+  if (strlen (YPMAPDIR) + strlen (domainname) + strlen (map) + 3 < MAXPATHLEN)
+    sprintf (mappath, "%s/%s/%s", YPMAPDIR, domainname, map);
+  else
+    {
+      fprintf (stderr, "yphelper: path to long: %s/%s/%s\n", YPMAPDIR, domainname, map);
+      exit (1);
+    }
+
+#if defined(HAVE_LIBGDBM)
+  dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
+#elif defined(HAVE_NDBM)
+  dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
+#endif
+  if (dbm == NULL)
+    {
+      fprintf (stderr, "yphelper: cannot open %s\n", mappath);
+      exit (1);
+    }
+
+  dkey.dptr = key;
+  dkey.dsize = strlen (dkey.dptr);
+#if defined(HAVE_LIBGDBM)
+  dval = gdbm_fetch (dbm, dkey);
+#elif defined(HAVE_NDBM)
+  dval = dbm_fetch (dbm, dkey);
+#endif
+  if (dval.dptr == NULL)
+    val = NULL;
+  else
+    {
+      val = malloc (dval.dsize + 1);
+      strncpy (val, dval.dptr, dval.dsize);
+      val[dval.dsize] = 0;
+    }
+#if defined(HAVE_LIBGDBM)
+  gdbm_close (dbm);
+#elif defined(HAVE_NDBM)
+  dbm_close (dbm);
+#endif
+  return val;
+}
+
+/* Show the master for all maps */
+static void
+is_master (char *map, char *domain, char *host)
+{
+#if USE_FQDN
+  struct hostent *hp = NULL;
+#endif
+  char *hostname, *domainname;
+  int ret;
+
+  if (domain != NULL)
+    domainname = domain;
+  else if ((ret = yp_get_default_domain (&domainname)) != 0)
+    {
+      fprintf (stderr, "can't get local yp domain: %s\n",
+	       yperr_string (ret));
+      exit (1);
+    }
+
+  if (host)
+    hostname = host;
+  else
+    {
+      char h_tmp[MAXHOSTNAMELEN+1];
+
+      if (gethostname (h_tmp, sizeof (h_tmp)) != 0)
+	{
+	  perror ("gethostname");
+	  exit (1);
+	}
+      hostname = strdup (h_tmp);
+    }
+
+#if USE_FQDN
+  if (isdigit (hostname[0]))
+    {
+      char addr[INADDRSZ];
+      if (inet_pton (AF_INET, hostname, &addr))
+	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
+    }
+  else
+    hp = gethostbyname2 (hostname, AF_INET);
+
+  if (hp != NULL)
+    hostname = strdupa (hp->h_name);
+#endif
+
+  if (strcasecmp (hostname,
+		  get_dbm_entry ("YP_MASTER_NAME", map, domainname)) == 0)
+    exit (0);
+  else
+    exit (1);
+}
+
 static void
 Warning (void)
 {
@@ -472,6 +585,7 @@ main (int argc, char *argv[])
   int hostname = 0;
   char *master = NULL;
   char *domainname = NULL;
+  char *map = NULL;
   int merge_pwd = 0;
   int merge_grp = 0;
 
@@ -485,8 +599,12 @@ main (int argc, char *argv[])
 	  {"version", no_argument, NULL, 'v'},
 	  {"maps", required_argument, NULL, 'm'},
 	  {"merge_passwd", no_argument, NULL, 'p'},
+	  {"merge-passwd", no_argument, NULL, 'p'},
 	  {"merge_group", no_argument, NULL, 'g'},
+	  {"merge-group", no_argument, NULL, 'g'},
 	  {"domainname", required_argument, NULL, 'd'},
+	  {"is_master", required_argument, NULL, 'i'},
+	  {"is-master", required_argument, NULL, 'i'},
 	  {NULL, 0, NULL, '\0'}
 	};
 
@@ -513,6 +631,9 @@ main (int argc, char *argv[])
 	case 'v':
 	  printf ("revnetgroup (%s) %s", PACKAGE, VERSION);
 	  exit (0);
+	case 'i':
+	  map = optarg;
+	  break;
 	default:
 	  Warning ();
 	  return 1;
@@ -538,6 +659,9 @@ main (int argc, char *argv[])
 
   if (merge_grp && argc == 2)
     merge_group (argv[0], argv[1]);
+
+  if (map)
+    is_master (map, domainname, NULL);
 
   Warning ();
   return 1;

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2001, 2002 Thorsten Kukuk <kukuk@suse.de>
 #
 AUTOMAKE_OPTIONS = 1.4 gnits
 MAINT_CHARSET = latin1
@@ -25,3 +25,4 @@ libexec_PROGRAMS = yphelper
 
 yphelper_SOURCES = yphelper.c
 
+yphelper_LDADD = @LIBDBM@

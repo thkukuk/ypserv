@@ -1,6 +1,21 @@
-2002-04-26  Thorsten Kukuk  <kukuk@suse.de>
+2002-05-14  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.3
+
+	* yppush/yppush.c (hostcmp): Get ride of this function, since it
+	could remove correct slaves which have the same hostname but are
+	in other domains.
+
+	* yphelper/yphelper.c (is_master): New function, check if we are
+	the master for a given map.
+
+	* yphelper/Makefile.am (yphelper_LDADD): Link against dbm library.
+
+2002-05-13  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Prefer libxcrypt over libcrypt.
+
+2002-04-26  Thorsten Kukuk  <kukuk@suse.de>
 
 	* configure.in: Adjust for new autoconf.
 

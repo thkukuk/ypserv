@@ -1,8 +1,6 @@
 
 Things to do (in no particular order):
 
-	o yppush: Replace hostcmp
-
 	o Add cracklib to rpc.yppasswdd.
 
 	o ypmaplist needs to be fixed for Sun's NDBM

@@ -162,6 +162,9 @@
 /* Define to 1 if you have the `vsyslog' function. */
 #undef HAVE_VSYSLOG
 
+/* Define to 1 if you have the <xcrypt.h> header file. */
+#undef HAVE_XCRYPT_H
+
 /* Define to 1 if you have the `_rpc_dtablesize' function. */
 #undef HAVE__RPC_DTABLESIZE
 

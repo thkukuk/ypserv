@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -293,27 +293,6 @@ yppush_svc_run (char *target)
     }
 }
 
-/*
- *    Compare 2 hostnames.
- */
-static int
-hostcmp (char *h1, char *h2)
-{
-  char buf1[MAXHOSTNAMELEN + 1], buf2[MAXHOSTNAMELEN + 1];
-  char *p, *s;
-
-  strncpy (buf1, h1, sizeof (buf1));
-  strncpy (buf2, h2, sizeof (buf2));
-  s = strchr (buf1, '.');
-  p = strchr (buf2, '.');
-  if (s && !p)
-    *s = 0;
-  if (p && !s)
-    *p = 0;
-
-  return strcasecmp (buf1, buf2);
-}
-
 static char *
 get_dbm_entry (char *key)
 {
@@ -432,8 +411,12 @@ add_slave_server (int status, char *key, int keylen,
       exit (1);
     }
 
-  /* Do not add ourself! */
-  if (hostcmp (local_hostname, host) == 0)
+  /* Do not add ourself! But don't put to much work into it. If
+     the ypserver entry does not much the local name, we can also
+     send the data to ourself. Better then to ignore a host only
+     because it starts with the same name but is in a different
+     domain.  */
+  if (strcasecmp (local_hostname, host) == 0)
     {
       if (verbose_flag > 1)
 	log_msg ("YPPUSH INFO: skipping %s", host);
@@ -526,7 +509,8 @@ yppush_foreach (const char *host)
       close (CallbackXprt->xp_sock);
       req.map_parms.domain = (char *) DomainName;
       req.map_parms.map = (char *) current_map;
-      /* local_hostname is correct since we have compared it with YP_MASTER_NAME */
+      /* local_hostname is correct since we have compared it
+	 with YP_MASTER_NAME.  */
       req.map_parms.peer = local_hostname;
       req.map_parms.ordernum = MapOrderNum;
       req.transid = transid;

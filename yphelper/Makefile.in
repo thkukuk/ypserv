@@ -90,7 +90,7 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 
 #
-# Copyright (c) 2001 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2001, 2002 Thorsten Kukuk <kukuk@suse.de>
 #
 AUTOMAKE_OPTIONS = 1.4 gnits
 MAINT_CHARSET = latin1
@@ -114,6 +114,8 @@ man_MANS = yphelper.8
 libexec_PROGRAMS = yphelper
 
 yphelper_SOURCES = yphelper.c
+
+yphelper_LDADD = @LIBDBM@
 subdir = yphelper
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -123,7 +125,6 @@ PROGRAMS = $(libexec_PROGRAMS)
 
 am_yphelper_OBJECTS = yphelper.$(OBJEXT)
 yphelper_OBJECTS = $(am_yphelper_OBJECTS)
-yphelper_LDADD = $(LDADD)
 yphelper_DEPENDENCIES =
 yphelper_LDFLAGS =
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
