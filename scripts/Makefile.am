@@ -1,18 +1,25 @@
 #
-# Copyright (c) 2001 SuSE GmbH, Nuernberg
+# Copyright (c) 2001, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
-# Author: Thorsten Kukuk <kukuk@suse.de>
-#
-AUTOMAKE_OPTIONS = 1.4 gnits
+AUTOMAKE_OPTIONS = 1.7 gnits
 MAINT_CHARSET = latin1
 #
-INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
+INSTALL_SCRIPT = ${INSTALL} -m 755
 
 CLEANFILES = *~ ${SCRIPTS}
 
-EXTRA_DIST = ${MANS} ypxfr_1perhour.in ypxfr_1perday.in ypxfr_2perday.in
+EXTRA_DIST = $(addsuffix .in,$(MANS)) $(addsuffix .in,$(SCRIPTS))
 
-man_MANS = 
+varypdir = /var/yp
 
-libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday
+man_MANS = pwupdate.8 ypinit.8
+
+libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday \
+		create_printcap match_printcap pwupdate ypinit
+
+noinst_SCRIPTS = ypMakefile
+
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(varypdir)
+	$(INSTALL_DATA) $(top_builddir)/scripts/ypMakefile $(DESTDIR)$(varypdir)/Makefile
 

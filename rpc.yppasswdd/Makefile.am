@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2000, 2001, 2003 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2001, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
 AUTOMAKE_OPTIONS = 1.7 gnits
 MAINT_CHARSET = latin1
@@ -10,7 +10,7 @@ localedir = $(datadir)/locale
 
 AM_CFLAGS = @EXTRA_CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\" \
+	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"@YPMAPDIR@\" \
 	-DUSE_FQDN=@USE_FQDN@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
@@ -18,10 +18,13 @@ CLEANFILES = *~ ${MANS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS))
 
-man_MANS = makedbm.8
+noinst_HEADERS = yppasswd.h yppasswd.x
 
-libexec_PROGRAMS = makedbm
+man_MANS = yppasswdd.8 rpc.yppasswdd.8
 
-makedbm_SOURCES = makedbm.c
+sbin_PROGRAMS = rpc.yppasswdd
 
-makedbm_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a
+rpc_yppasswdd_SOURCES = update.c yppasswd_xdr.c yppasswdd.c
+
+rpc_yppasswdd_LDADD =  $(LIBDBM) $(LIBCRYPT) $(top_builddir)/lib/libyp.a
+

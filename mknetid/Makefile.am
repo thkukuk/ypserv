@@ -8,23 +8,20 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
-MAXCHILDREN = 40
-
 AM_CFLAGS = @EXTRA_CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DYPMAPDIR=\"@YPMAPDIR@\" -DMAX_CHILDREN=$(MAXCHILDREN)
+	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
-CLEANFILES = *~
+CLEANFILES = *~ ${MANS}
 
 EXTRA_DIST = $(addsuffix .in,$(MANS))
 
-man_MANS = ypserv.8
+man_MANS = mknetid.8
 
-noinst_HEADERS =
+libexec_PROGRAMS = mknetid
 
-sbin_PROGRAMS = ypserv
+noinst_HEADERS = mknetid.h
 
-ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c
+mknetid_SOURCES = mknetid.c netid_hash.c
 
-ypserv_LDADD =  $(top_builddir)/lib/libyp.a @LIBDBM@

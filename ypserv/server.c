@@ -1,4 +1,4 @@
-/* Copyright (c) 2000  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002, 2003  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -37,6 +37,9 @@
 #include "access.h"
 #include "ypserv_conf.h"
 #include "log_msg.h"
+
+extern volatile int children; /* ypserv.c  */
+extern int forked; /* ypserv.c  */
 
 bool_t
 ypproc_null_2_svc (void *argp __attribute__ ((unused)),
@@ -503,12 +506,18 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
           if ((size_t)val.dsize != strlen (argp->map_parms.peer) ||
               strncmp (val.dptr, argp->map_parms.peer, val.dsize) != 0)
             {
+	      char buf[val.dsize + 1];
+
+	      strncpy (buf, val.dptr, val.dsize);
+	      buf[val.dsize] = '\0';
+
               if (debug_flag)
-                log_msg ("\t->Ignored (%s is not the master!)",
-			 argp->map_parms.peer);
+		log_msg ("\t->Ignored (%s is not the master, master is %s)",
+			 argp->map_parms.peer, buf);
               else
-                log_msg ("refuse to transfer %s from %s, not master",
-			 argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
+                log_msg ("refuse to transfer %s from %s, master is %s)",
+			 argp->map_parms.map, inet_ntoa (rqhost->sin_addr),
+			 buf);
 
 	      ypdb_close (dbp);
               result->xfrstat = YPXFR_NODOM;
@@ -596,7 +605,8 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     case -1:
       log_msg ("Cannot fork: %s", strerror (errno));
       result->xfrstat = YPXFR_XFRERR;
-    default:
+      break;
+   default:
       result->xfrstat = YPXFR_SUCC;
       break;
     }
@@ -636,7 +646,7 @@ typedef struct ypall_data {
 static int
 ypall_close (void *data)
 {
-  if (debug_flag && data == NULL)
+  if (data == NULL)
     {
       log_msg ("ypall_close() called with NULL pointer.");
       return 0;
@@ -723,6 +733,9 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
     }
 
   memset (result, 0, sizeof (ypresp_all));
+  xdr_ypall_cb.u.encode = NULL;
+  xdr_ypall_cb.u.close = NULL;
+  xdr_ypall_cb.data = NULL;
 
   valid = is_valid (rqstp, argp->map, argp->domain);
   if (valid < 1)
@@ -747,9 +760,56 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
       return TRUE;
     }
 
-  xdr_ypall_cb.u.encode = NULL;
-  xdr_ypall_cb.u.close = NULL;
-  xdr_ypall_cb.data = NULL;
+  if (children >= MAX_CHILDREN)
+    {
+      int wait = 0;
+
+      while (wait < 3)
+        {
+          sleep (1);
+
+          if (children < MAX_CHILDREN)
+            break;
+          ++wait;
+        }
+    }
+
+  if (children < MAX_CHILDREN)
+    {
+      ++children;
+      switch (fork ())
+        {
+        case 0:
+          ++forked;
+#ifdef DEBUG
+          log_msg ("ypserv has forked for ypproc_all(): pid=%i", getpid ());
+          if (!forked)
+            abort ();
+#endif
+          /* Close all databases ! */
+          ypdb_close_all ();
+          break;
+        case -1:
+          --children;
+          log_msg ("WARNING(ypproc_all_2_svc): cannot fork: %s",
+		   strerror (errno));
+          result->ypresp_all_u.val.stat = YP_YPERR;
+          return TRUE;
+        default:
+          return FALSE;
+          break;
+        }
+    }
+  else
+    {
+      log_msg ("WARNING(ypproc_all_2_svc): too many running children!");
+      result->ypresp_all_u.val.stat = YP_YPERR;
+      return TRUE;
+    }
+
+  /* We are now in the child part. Don't let the child ypserv share
+     DB handles with the parent process.  */
+  ypdb_close_all();
 
   result->more = TRUE;
 
@@ -987,10 +1047,10 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
 	}
       else
 	{
-	  char *buf = alloca (val.dsize + 2);
+	  char *buf = alloca (val.dsize + 1);
 
 	  memcpy (buf, val.dptr, val.dsize);
-	  buf[val.dsize + 1] = '\0';
+	  buf[val.dsize] = '\0';
 	  result->ordernum = atoi (buf);
 	  ypdb_free (val.dptr);
 	}

@@ -49,7 +49,7 @@
 /* Define to 1 if you have the `lckpwdf' function. */
 #undef HAVE_LCKPWDF
 
-/* Define if you have the gdbm library (-lgdbm). */
+/* Use gdbm library as database */
 #undef HAVE_LIBGDBM
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
@@ -61,7 +61,7 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define if you have ndbm support. */
+/* Use ndbm library as database */
 #undef HAVE_NDBM
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */

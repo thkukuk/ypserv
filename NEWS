@@ -1,8 +1,12 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2002 Thorsten Kukuk
+Copyright (C) 1998-2003 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@suse.de>.
+
+Version 2.7
+* ypserv now forks again for transfering complete NIS maps
+* Update to latest autoconf/automake version
 
 Version 2.6
 * Fix bug that rpc.ypxfrd doesn't really close maps
