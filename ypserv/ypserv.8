@@ -1,9 +1,9 @@
 .\" -*- nroff -*-
-.TH YPSERV 8 "April 1997" "NYS YP Server" "Linux Reference Manual"
+.TH YPSERV 8 "August 2001" "YP Server" "Reference Manual"
 .SH NAME
 ypserv \- NIS server
 .SH SYNOPSIS
-.B ${exec_prefix}/sbin/ypserv
+.B /usr/sbin/ypserv
 [
 .B \-b
 ]
@@ -52,7 +52,7 @@ but must be running somewhere
 on the network. On startup or when receiving the signal SIGHUP,
 .B ypserv
 parses the file
-.B @CONFDIR@/ypserv.conf.
+.B /etc/ypserv.conf.
 .LP
 .SH OPTIONS
 .TP
@@ -137,20 +137,8 @@ file does not exist,
 .B ypserv
 will allow connections from any host.
 .LP
-If the tcp wrappers security lookups was enabled at compile time in the
-Makefile, then
-.B ypserv
-will use the
-.B /etc/hosts.allow
-and
-.B /etc/hosts.deny
-files (which most people already have) and not the
-/var/yp/securenets. If you have got a binary package, try
-.B ypserv --version
-to get a hint which version you have.
-
 In the
-.B @CONFDIR@/ypserv.conf
+.B /etc/ypserv.conf
 you could specify some access rules for special maps and hosts. But
 it is not very secure, it make the life only a little bit harder
 for potential hacker. If a mapname doesn't match a rule, ypserv will
@@ -162,7 +150,7 @@ updating maps from the same master server as the old one. This means,
 you have to reinstall the slave servers if you change the master server
 for a map.
 .SH FILES
-@CONFDIR@/ypserv.conf
+/etc/ypserv.conf
 /var/yp/securenets
 .SH "SEE ALSO"
 .BR domainname (1),
@@ -190,7 +178,5 @@ The name Yellow Pages is a registered trademark in the United Kingdom
 of British Telecommunications plc,
 and may not be used without permission.
 .SH AUTHOR
-.B ypserv
-was written by Peter Eriksson <pen@lysator.liu.se>.
-Thorsten Kukuk <kukuk@suse.de> added support for master/slave
-server and is the new Maintainer.
+This version of .B ypserv
+was written by Thorsten Kukuk <kukuk@suse.de>.

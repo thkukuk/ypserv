@@ -3,7 +3,7 @@
 #
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(ypserv/ypserv.c)
-AM_INIT_AUTOMAKE("ypserv", 2.0.1)
+AM_INIT_AUTOMAKE("ypserv", 2.1)
 AM_CONFIG_HEADER(config.h)
 AC_PREFIX_DEFAULT(/usr)
 
@@ -43,7 +43,17 @@ fi
 AC_SUBST(YPBINDIR)
 YPMAPDIR="/var/yp"
 AC_SUBST(YPMAPDIR)
-SBINDIR=${sbindir}
+if test ${sbindir} = '${exec_prefix}/sbin'
+then
+  if test "${exec_prefix}" = "NONE"
+  then
+    SBINDIR=/usr/sbin
+  else
+    SBINDIR=${exec_prefix}/sbin
+  fi
+else
+  SBINDIR=${sbindir}
+fi
 AC_SUBST(SBINDIR)
 
 dnl Checks for programs.

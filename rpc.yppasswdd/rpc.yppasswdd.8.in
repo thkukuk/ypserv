@@ -6,7 +6,7 @@
 .\" It is provided in the hope that it is useful. However, the author
 .\" disclaims ALL WARRANTIES, expressed or implied. See the GPL for details.
 .\"
-.TH RPC.YPPASSWDD 8 "20 April 1997" "" ""
+.TH RPC.YPPASSWDD 8 "August 2001" "YP Server" ""
 .SH NAME
 rpc.yppasswdd \- NIS password update daemon
 .SH SYNOPSIS

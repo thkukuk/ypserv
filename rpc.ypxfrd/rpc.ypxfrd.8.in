@@ -1,21 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright 1996, 1999 Thorsten Kukuk <kukuk@suse.de>
-.\"
-.\" This program is free software; you can redistribute it and/or modify
-.\" it under the terms of the GNU General Public License as published by
-.\" the Free Software Foundation; either version 2 of the License, or
-.\" (at your option) any later version.
-.\"
-.\" This program is distributed in the hope that it will be useful,
-.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-.\" GNU General Public License for more details.
-.\"
-.\" You should have received a copy of the GNU General Public License
-.\" along with this program; if not, write to the Free Software
-.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-.\"
-.TH RPC.YPXFRD 8 "August 1996" "NYS YP Server" "Linux Reference Manual"
+.TH RPC.YPXFRD 8 "August 2001" "YP Server" "Reference Manual"
 .SH NAME
 rpc.ypxfrd \- NIS map transfer server
 .SH SYNOPSIS
@@ -90,14 +74,14 @@ or the tcp wrapper.
 If the host is allowed to connect to the server, 
 .B rpc.ypxfrd
 will uses the rules from
-.B @CONFDIR@/ypserv.conf
+.B @sysconfdir@/ypserv.conf
 to check the requested map. If a mapname doesn't match a rule, 
 .B rpc.ypxfrd
 will look for the YP_SECURE key in the map. If it exists,
 .B rpc.ypxfrd
 will only allow requests on a reserved port.
 .SH FILES
-@CONFDIR@/ypserv.conf
+@sysconfdir@/ypserv.conf
 @YPMAPDIR@/securenets
 .SH "SEE ALSO"
 .BR ypserv (8),
@@ -122,5 +106,5 @@ and, if necessary, the byte order of the system.
 .LP
 .SH AUTHOR
 ypxfrd protocol and FreeBSD Implementation: Bill Paul <wpaul@ctr.columbia.edu>
-
+.br
 Linux Implementation: Thorsten Kukuk <kukuk@suse.de>
