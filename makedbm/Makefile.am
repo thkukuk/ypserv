@@ -16,9 +16,9 @@ DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DUSE_FQDN=@USE_FQDN@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
-CLEANFILES = *~
+CLEANFILES = *~ ${MANS}
 
-EXTRA_DIST = ${MANS}
+EXTRA_DIST = makedbm.8.in
 
 man_MANS = makedbm.8
 

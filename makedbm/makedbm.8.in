@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.TH MAKEDBM 8 "2 Jan 1998" "NYS YP Server" "Linux Reference Manual"
+.TH MAKEDBM 8 "8 Apr 2001" "YP Server"
 .SH NAME
 makedbm - create or dump a ypserv database file
 .SH SYNOPSIS

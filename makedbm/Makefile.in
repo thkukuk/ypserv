@@ -95,9 +95,9 @@ DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" 	-DCONFD
 
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
-CLEANFILES = *~
+CLEANFILES = *~ ${MANS}
 
-EXTRA_DIST = ${MANS}
+EXTRA_DIST = makedbm.8.in
 
 man_MANS = makedbm.8
 
@@ -108,7 +108,7 @@ makedbm_SOURCES = makedbm.c
 makedbm_LDADD = @LIBDBM@  $(top_builddir)/lib/libyp.a -lefence
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
-CONFIG_CLEAN_FILES = 
+CONFIG_CLEAN_FILES =  makedbm.8
 PROGRAMS =  $(libexec_PROGRAMS)
 
 CPPFLAGS = @CPPFLAGS@
@@ -124,7 +124,7 @@ man8dir = $(mandir)/man8
 MANS = $(man_MANS)
 
 NROFF = nroff
-DIST_COMMON =  Makefile.am Makefile.in
+DIST_COMMON =  Makefile.am Makefile.in makedbm.8.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -145,6 +145,8 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+makedbm.8: $(top_builddir)/config.status makedbm.8.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 mostlyclean-libexecPROGRAMS:
 
