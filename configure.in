@@ -1,5 +1,5 @@
 #
-# Copyright (C) 1999, 2000, 2001, 2002 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (C) 1999, 2000, 2001, 2002, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(ypserv, 2.99.0, kukuk@linux-nis.org)
@@ -118,55 +118,17 @@ AC_ARG_ENABLE(checkroot,
               CHECKROOT=$enableval, CHECKROOT=yes)
 AC_SUBST(CHECKROOT)
 
-dnl Checks for libraries.
-libdb_parameter=no
-AC_ARG_WITH(gdbm-dir,
-        [  --with-gdbm-dir=BASE-DIR         Specifies the base gdbm directory],
-        if test x$withval = xyes
-        then
-                LIBDBM="-lgdbm"
-                AC_DEFINE(HAVE_LIBGDBM, 1, [Define if you have the gdbm library (-lgdbm).])
-		libdb_parameter=yes
-        else
-                LIBDBM="-L$withval/lib -lgdbm"
-                AC_DEFINE(HAVE_LIBGDBM)
-                CPPFLAGS="$CPPFLAGS -I$withval/include"
-		libdb_parameter=yes
-        fi
-)
-
-AC_ARG_WITH(ndbm,
-        [  --with-ndbm=[yes|no]             Use ndbm instead of gdbm],
-	LIBDBM=""
-	if test x$libdb_parameter != xno
-	then
-		AC_MSG_WARN(You could specify only one database!)
-	fi
-        if test x$withval = xyes
-        then
-		AC_CHECK_FUNCS(dbm_open)
-		if eval "test \"`echo '$ac_cv_func_dbm_open'`\" = yes"; then
-	                AC_DEFINE(HAVE_NDBM, 1, [Define if you have ndbm support.])
-		else
-			AC_MSG_WARN(No Solaris NDBM functions found!)
-		fi
-		libdb_parameter=yes
-        fi
-)
-
-if test x$libdb_parameter != xyes
+AC_CHECK_LIB(gdbm,gdbm_open,LIBDBM="-lgdbm",LIBDBM="")
+if test x"" != x"${LIBDBM}"
 then
-	AC_CHECK_LIB(gdbm,gdbm_open,LIBDBM="-lgdbm",LIBDBM="")
-	if test x"" != x"${LIBDBM}"
+	AC_DEFINE(HAVE_LIBGDBM, 1, [Use gdbm library as database])
+	libdb_parameter=yes
+else
+	AC_CHECK_FUNCS(dbm_open)
+	if test x$ac_cv_func_dbm_open = xyes
 	then
-		AC_DEFINE(HAVE_LIBGDBM)
+		AC_DEFINE(HAVE_NDBM, 1, [Use ndbm library as database])
 		libdb_parameter=yes
-	else
-		AC_CHECK_FUNCS(dbm_open)
-		if eval "test \"`echo '$ac_cv_func_dbm_open'`\" = yes"; then
-			AC_DEFINE(HAVE_NDBM)
-			libdb_parameter=yes
-		fi
 	fi
 fi
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001, 2002  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002, 2003  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -37,6 +37,9 @@
 #include "access.h"
 #include "ypserv_conf.h"
 #include "log_msg.h"
+
+extern volatile int children; /* ypserv.c  */
+extern int forked; /* ypserv.c  */
 
 bool_t
 ypproc_null_2_svc (void *argp __attribute__ ((unused)),
@@ -569,6 +572,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     }
 #endif
 
+  ++children;
   switch (fork ())
     {
     case 0:
@@ -600,6 +604,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
         exit (0);
       }
     case -1:
+      --children;
       log_msg ("Cannot fork: %s", strerror (errno));
       result->xfrstat = YPXFR_XFRERR;
       break;
@@ -756,6 +761,57 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	}
       return TRUE;
     }
+
+  if (children >= MAX_CHILDREN)
+    {
+      int wait = 0;
+
+      while (wait < 3)
+        {
+          sleep (1);
+
+          if (children < MAX_CHILDREN)
+            break;
+          ++wait;
+        }
+    }
+
+  if (children < MAX_CHILDREN)
+    {
+      ++children;
+      switch (fork ())
+        {
+        case 0:
+          ++forked;
+#ifdef DEBUG
+          log_msg ("ypserv has forked for ypproc_all(): pid=%i", getpid ());
+          if (!forked)
+            abort ();
+#endif
+          /* Close all databases ! */
+          ypdb_close_all ();
+          break;
+        case -1:
+          --children;
+          log_msg ("WARNING(ypproc_all_2_svc): cannot fork: %s",
+		   strerror (errno));
+          result->ypresp_all_u.val.stat = YP_YPERR;
+          return TRUE;
+        default:
+          return FALSE;
+          break;
+        }
+    }
+  else
+    {
+      log_msg ("WARNING(ypproc_all_2_svc): too many running children!");
+      result->ypresp_all_u.val.stat = YP_YPERR;
+      return TRUE;
+    }
+
+  /* We are now in the child part. Don't let the child ypserv share
+     DB handles with the parent process.  */
+  ypdb_close_all();
 
   result->more = TRUE;
 

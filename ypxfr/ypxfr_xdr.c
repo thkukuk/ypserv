@@ -30,7 +30,7 @@
 
 struct {
   union {
-    int (*encoder) (char *, int, char **, int *, char **, int *);
+    ypstat (*encoder) (char *, int, char **, int *, char **, int *);
     int (*decoder) (int, char *, int, char *, int, char *);
   }
   foreach;
@@ -269,7 +269,7 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
 	      return TRUE;
 	    }
 	  objp->ypresp_all_u.val.stat =
-	    (enum ypstat) (*(xdr_ypall_callback->foreach.encoder))
+	    (*(xdr_ypall_callback->foreach.encoder))
 	    (objp->ypresp_all_u.val.key.keydat_val,
 	     objp->ypresp_all_u.val.key.keydat_len,
 	     &(objp->ypresp_all_u.val.key.keydat_val),

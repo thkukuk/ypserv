@@ -1,4 +1,4 @@
-/* Copyright (C) 1997, 1998, 1999, 2000, 2002 Thorsten Kukuk
+/* Copyright (C) 1997, 1998, 1999, 2000, 2002, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -121,7 +121,8 @@ is_valid_domain (const char *domain)
 /* By default, we use the securenet list, to check if the client
    is secure.
 
-   return 1, if request comes from an authorized host
+   return  1, if request comes from an authorized host
+   return  0, if securenets does not allow access from this host
    return -1, if request comes from an unauthorized host
    return -2, if the map name is not valid
    return -3, if the domain is not valid */
@@ -202,9 +203,11 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
     {
       if (status < 1 && ((sin->sin_addr.s_addr != oldaddr)
 			 || (status != oldstatus)))
-	syslog (LOG_WARNING, "refused connect from %s:%d to procedure %s\n",
+	syslog (LOG_WARNING,
+		"refused connect from %s:%d to procedure %s (%s,%s;%d)\n",
 		inet_ntoa (sin->sin_addr), ntohs (sin->sin_port),
-		ypproc_name (rqstp->rq_proc));
+		ypproc_name (rqstp->rq_proc),
+		domain ? domain : "", map ? map : "", status);
     }
   oldaddr = sin->sin_addr.s_addr;
   oldstatus = status;

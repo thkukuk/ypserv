@@ -1,9 +1,9 @@
 #
-# Copyright (c) 2000, 2001 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2000, 2001, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
 # Process this file with automake to produce Makefile.in.
 
-AUTOMAKE_OPTIONS = 1.4 gnits
+AUTOMAKE_OPTIONS = 1.7 gnits
 
 rpcsvcdir = ${prefix}/include/rpcsvc
 
@@ -12,7 +12,7 @@ noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h
 
 rpcsvc_HEADERS = ypxfrd.x
 
-CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
+AM_CFLAGS = @EXTRA_CFLAGS@
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\"
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 

@@ -1,7 +1,7 @@
 #
-# Copyright (c) 2001 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2001, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
-AUTOMAKE_OPTIONS = 1.4 gnits
+AUTOMAKE_OPTIONS = 1.7 gnits
 MAINT_CHARSET = latin1
 #
 INSTALL_SCRIPT = ${INSTALL} -m 755

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -507,8 +507,8 @@ load_ypserv_conf (const char *path)
 	      }
 	    if (debug_flag)
 	      {
-		log_msg ("ypserv.conf: %s/", inet_ntoa (tmp->network));
-		log_msg ("%s:%s:%s:%d", inet_ntoa (tmp->netmask),
+		log_msg ("ypserv.conf: %s/%s:%s:%s:%d",
+			 inet_ntoa (tmp->network), inet_ntoa (tmp->netmask),
 			 tmp->domain, tmp->map, tmp->security);
 	      }
 
@@ -556,13 +556,13 @@ main ()
 
   ptr = load_ypserv_conf (".");
 
-  log_msg ("Ausgabe:");
+  log_msg ("Output:");
 
   while (ptr != NULL)
     {
-      log_msg ("%s/", inet_ntoa (ptr->network));
-      log_msg ("%s:%s:%d:%d", inet_ntoa (ptr->netmask), ptr->map,
-	      ptr->security, ptr->mangle);
+      log_msg ("%s/%s:%s:%d:%d",
+	       inet_ntoa (ptr->network), inet_ntoa (ptr->netmask), ptr->map,
+	       ptr->security, ptr->mangle);
       ptr = ptr->next;
     }
 

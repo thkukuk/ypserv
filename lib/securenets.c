@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -153,8 +153,8 @@ load_securenets (void)
       tmp = securenets;
       while (tmp)
 	{
-	  log_msg ("Find securenet: %s", inet_ntoa (tmp->netmask));
-	  log_msg (" %s\n", inet_ntoa (tmp->network));
+	  log_msg ("Find securenet: %s %s", inet_ntoa (tmp->netmask),
+		   inet_ntoa (tmp->network));
 	  tmp = tmp->next;
 	}
     }

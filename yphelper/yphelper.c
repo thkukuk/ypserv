@@ -60,7 +60,7 @@ static struct timeval RPCTIMEOUT = {25, 0};
 static struct timeval UDPTIMEOUT = {5, 0};
 
 static int
-_yp_maplist (const char *server, const char *indomain,
+_yp_maplist (const char *server, char *indomain,
 	     struct ypmaplist **outmaplist)
 {
   CLIENT *clnt;

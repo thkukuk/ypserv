@@ -1,16 +1,18 @@
 #
-# Copyright (c) 2000, 2001 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2000, 2001, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
-AUTOMAKE_OPTIONS = 1.4 gnits
+AUTOMAKE_OPTIONS = 1.7 gnits
 MAINT_CHARSET = latin1
 #
 INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
-CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
+MAXCHILDREN = 40
+
+AM_CFLAGS = @EXTRA_CFLAGS@
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DYPMAPDIR=\"@YPMAPDIR@\"
+	-DYPMAPDIR=\"@YPMAPDIR@\" -DMAX_CHILDREN=$(MAXCHILDREN)
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~

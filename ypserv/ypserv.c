@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@
 #include <syslog.h>
 #include <signal.h>
 #include <getopt.h>
+#include <poll.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -53,6 +54,9 @@
 #ifndef YPOLDVERS
 #define YPOLDVERS 1
 #endif
+
+volatile int children = 0;
+int forked = 0;
 
 static char *path_ypdb = YPMAPDIR;
 
@@ -200,6 +204,46 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
   return;
 }
 
+static void
+ypserv_svc_run (void)
+{
+  int i;
+
+  for (;;)
+    {
+      struct pollfd *my_pollfd;
+
+      if (svc_max_pollfd == 0 && svc_pollfd == NULL)
+        return;
+
+      my_pollfd = malloc (sizeof (struct pollfd) * svc_max_pollfd);
+      for (i = 0; i < svc_max_pollfd; ++i)
+        {
+          my_pollfd[i].fd = svc_pollfd[i].fd;
+          my_pollfd[i].events = svc_pollfd[i].events;
+          my_pollfd[i].revents = 0;
+        }
+
+      switch (i = poll (my_pollfd, svc_max_pollfd, -1))
+        {
+        case -1:
+          free (my_pollfd);
+          if (errno == EINTR)
+            continue;
+          syslog (LOG_ERR, "svc_run: - poll failed: %m");
+          return;
+        case 0:
+          free (my_pollfd);
+          continue;
+        default:
+          svc_getreq_poll (my_pollfd, i);
+          free (my_pollfd);
+          if (forked)
+            _exit (0);
+        }
+    }
+}
+
 
 /* Create a pidfile on startup */
 static void
@@ -310,14 +354,29 @@ sig_hup (int sig __attribute__ ((unused)))
     cached_filehandles = old_cached_filehandles;
 }
 
+/* Clean up after child processes signal their termination. */
 static void
-sig_child (int sig __attribute__ ((unused)))
+sig_child (int sig)
 {
   int st;
+  pid_t pid;
+
+  if (debug_flag)
+    log_msg ("sig_child: got signal %i", sig);
+
 
   /* Clear all childs */
-  while (waitpid(-1, &st, WNOHANG) > 0)
-    ;
+  while ((pid = waitpid (-1, &st, WNOHANG)) > 0)
+    {
+      if (debug_flag)
+        log_msg ("pid=%d", pid);
+      --children;
+    }
+
+  if (children < 0)
+    log_msg ("children is lower 0 (%i)!", children);
+  else if (debug_flag)
+    log_msg ("children = %i", children);
 }
 
 
@@ -530,7 +589,7 @@ main (int argc, char **argv)
     }
 #endif
 
-  svc_run ();
+  ypserv_svc_run ();
   log_msg ("svc_run returned");
   unlink (_YPSERV_PIDFILE);
   exit (1);

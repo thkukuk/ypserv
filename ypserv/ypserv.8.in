@@ -5,9 +5,6 @@ ypserv \- NIS server
 .SH SYNOPSIS
 .B @SBINDIR@/ypserv
 [
-.B \-b
-]
-[
 .B \-d
 [
 .B path
@@ -64,16 +61,6 @@ each request that it revceives.
 is an optionally parameter.
 .B ypserv
 is using this directory instead of @YPMAPDIR@
-.TP
-.B "\-b" "\--dns"
-If we don't find the host in the hosts maps, we query the
-.SM DNS
-(Domain Name Service) service for more host information. This
-is done in an extra subprocess.
-.B ypserv
-ignores the
-.B YP_INTERDOMAIN
-keys for dns lookup.
 .TP
 .B "\-v" "\--version"
 Prints the version number
