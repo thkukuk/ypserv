@@ -1,0 +1,1266 @@
+2000-11-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr.c: Major rewrite.
+	* ypxfr/ypxfr.c(ypxfr): properly terminate a string before
+	  run "atoi" on it (reported by Andy Stevens <stevens@2agent.com>)
+
+	* ypserv/ypserv.c (main): Fix typo (install SIGCHLD handler)
+
+2000-10-28  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c: Add SIGCHLD handler for forked processes.
+
+	* ypserv/yp_db.c (_db_open): Add hook to set gdbm cache size.
+
+2000-10-24  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Parse for trusted_master
+
+	* lib/ypserv_conf.h: Add prototype for trusted_master.
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Check if new map is from
+	  trusted master
+
+	* ypserv/Makefile.am (noinst_HEADERS): Add access.h
+
+2000-03-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 1.3.11
+
+	* ypmake/Makefile.in (MANPATH): Remove unused Variable
+
+	* ypmake/configure (MANDIR): Search for /usr/share/man, too.
+
+	* Makefile.in (MANDIR): Correct use of MANDIR.
+
+	* ypserv_xdr.c (xdr_ypresp_all): Fix RPC protocol error.
+
+	* ypxfr.c (ypxfr): If lookup of order number failed, use current
+	  time, not max. int. So the next update should work again.
+
+	* ypserv.c (sig_child): Fix debug code.
+
+2000-01-20  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 1.3.10
+
+	* ypxfrd_getmap.c (xdr_ypxfr_xfr): Use sprintf if we don't
+	  have snprintf.
+	* update.c (external_update_env): Use putenv.
+	* makedbm.c (strapp): Use alloca for non GNU compiler.
+	* server.c: Likewise.
+	* compat/getopt.c: Add fixes for Sun CC compiler.
+	Based on patches from Gary Mills <mills@cc.UManitoba.CA>
+
+	* Makefile.in: Remove support for yppasswd
+
+1999-12-10  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush_xdr.c: Rename xdr_ypxfrstat to __xdr_ypxfrstat.
+
+	* Makefile.in: Install timezone, locale and netmasks if not
+	  already installed.
+	* etc/locale: New.
+	* etc/netmaks: New.
+	* etc/timezone: New.
+	* ypMakefile.in: Add support for auto.local, timezone, locale,
+	  netmaks and services.byservicename.
+	Patches from Ferdy Hanssen <hanssen@huygens.org>.
+
+1999-12-07  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypMakefile.in (mail.aliases): Use lower case keys for mail.aliases
+	  map. Patch from Charles Lopes <Charles.Lopes@iee.lu>.
+
+1999-12-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* HOWTO.SuSE: Update
+	* server.c: Better error handling if fork() fails
+	* yppush.c: Fix last patch.
+
+1999-11-21  Thorsten Kukuk  <kukuk@suse.de>
+
+	* getnetgrent.c: Use stdlib.h, not malloc.h. Some Unix have
+	  a broken malloc.h to tell the developer to use stdelib.h.
+	* netid_hash.c: Likewise.
+	* hash.c: Likewise.
+	* yp_db.c: Likewise.
+	* compat/strdup.c: Likewise.
+
+1999-10-18  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 1.3.9
+
+	* server.c (ypproc_xfr_2_svc): By default, don't allow new maps.
+
+	* update.c: Complete rewrite to fix a lot of bugs.
+
+	* yppush_xdr.c (xdr_ypresp_xfr): New function.
+
+1999-10-16  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypMakefile.in (shadow.byname): Don't build this map if
+	  MERGE_PASSWD=true
+
+1999-10-13  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 1.3.8
+
+1999-10-13  Andreas Jaeger  <aj@suse.de>
+
+	* create_printcap.in: Fix sed rules.
+
+1999-10-10  Thorsten Kukuk  <kukuk@suse.de>
+
+	* update.c (yppasswdproc_pwupdate_1): Save and restore correct
+	  uid/gid/mode of passwd and shadow file.
+
+	* configure.in: Remove support for libdb and ndbm compat mode.
+
+	* makedbm.c: Print error if neither gdbm nor ndbm was found.
+	* yp_db.h: Likewise.
+	* yp_db.c: Likewise.
+
+1999-10-09  Thorsten Kukuk  <kukuk@suse.de>
+
+	* Makefile.in: Add create_printcap and match_printcap.
+
+	* ypMakefile.in (printcap): New rule for NIS printcap maps.
+
+	* create_printcap.in: New, convert /etc/printcap into a NIS map.
+
+	* match_printcap.in: New. Needed by LPRng.
+
+	* update.c: Fix shadow expire bugs, better error handling.
+
+	* configure.in: Remove check for libdb1/libdb2.
+
+	* yppush.c (yppush_foreach): Use udp, not tcp.
+	(get_dbm_entry): Save return value before we close the database.
+	Patch from H.J. Lu <hjl@varesearch.com>
+
+1999-07-29  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 1.3.7
+
+	* ypxfr_xdr.c: code cleanup.
+	* ypxfrd_xdr.c: Likewise.
+	* ypxfr_clnt.c: Likewise.
+	* ypxfrd_server.c: Likewise.
+	* ypxfrd_svc.c: Likewise.
+
+	* ypxfrd_getmap.c: Cosmetic fix for debug output
+	* ypxfr.c: do not rename map after failure
+	Patches from Miquel van Smoorenburg <miquels@cistron.nl>
+
+	* update.c: Remove old debug message.
+
+1999-06-01  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfrd.c (main): lose controlling tty when daemonizing.
+
+	* ypserv.c: lose the controlling tty when daemonizing.
+	* yppasswdd.c: Likewise.
+	Patches from Jeff Johnson <jbj@redhat.com>
+
+1999-05-29  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush.c: Use strcasecmp for hostname compare.
+
+	* ypxfrd_getmap.c: Set endian field correct for big endian machines.
+	* update.c (yppasswdproc_pwupdate_1): Use yp_msg instead of syslog,
+	  remove fixed rootpass buffer for md5 passwords.
+
+1999-05-17  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppasswd.h: Add missing prototypes.
+
+	* yppasswdd.c (main): Add -x option.
+	* update.c: Move support for -E in separate function. Add
+	  support for -x.
+	* rpc.yppasswdd.8.in: Add -x description.
+	Based on patches from Jonathan Abbey <jonabbey@arlut.utexas.edu>
+
+	* server.c: Make gcc happy.
+	* ypserv.c: Likewise.
+	* ypxfrd.c: Likewise.
+	* yppasswdd.c: Likewise.
+	* hash.c: Likewise.
+	* yppush.c: Likewise.
+	* ypxfr.c: Likewise.
+
+1999-05-14  Thorsten Kukuk  <kukuk@suse.de>
+
+	* compat/stpcpy.c: New.
+	* configure.in: Check for stpcpy.
+	* config.h.in: Add define for HAVE_STPCPY.
+	* server.c: Include compat/stpcpy.c if necessary.
+	  Patches from Jonathan Abbey <jonabbey@arlut.utexas.edu>
+
+	* update.c (validate_string): Use unsigned char to check for
+	  invalid characters.
+	  Patch by Miquel van Smoorenburg <miquels@cistron.nl>
+
+1999-05-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppasswdd.c (main): Add support for -E parameter.
+	* update.c (yppasswdproc_pwupdate_1): Implement call of external
+	  update program.
+	* Makefile.in (CPPFLAGS): Define EXTERNAL_UPDATE_PROGRAM
+	* yppasswd.h: Add prototype for external program name.
+	  Patches from Elliot Lee <sopwith@redhat.com>.
+
+	* rpc.yppasswdd.8.in: Add documenation for external program.
+
+	* yphelper.c: Renamge struct sgrp to __sgrp since on some
+	  systems shadow.h declares it already.
+	* Define YPERR_SUCCESS if not already defined.
+	  Based on patches from <nico.augustijn@mint.nl>.
+
+1999-03-14  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yphelper.c (merge_passwd/merge_group): Fix typo.
+
+1999-02-28  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv.c: Fix handling of dead children.
+
+	* server.c: Fix NDBM Support for SunOS/Solaris.
+	  After fork () always close database filehandles.
+	  Replace strcat through stpcpy, it is faster.
+	  Better error handling if we have started max. children.
+	  Now the server will do the job self and not ignore it.
+
+1999-02-27  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yphelper.c (merge_passwd/merge_group): Some old systems
+	  uses "*" as shadow marker, bad, newer systems uses it as
+	  disabled marker.
+
+1999-02-26  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv.c (sig_child): Check for negativ children value
+	  if DEBUG is defined.
+
+1999-02-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv_v1.c: include <string.h>, pretty print.
+
+	* makedbm.c (create_file): use size_t, not int for second
+	  getline() parameter. Needed for Alpha.
+
+1999-02-18  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yphelper.c: Add support for merging group/gshadow.
+
+1999-02-17  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush.c (add_slave_server): Remove const to match prototype
+	  in rpcsvc/ypclnt.h.
+
+	* ypxfrd_getmap.c: Include getrpcport prototype for glibc 2.0
+
+	* yppasswd.c: Include getrpcport prototype and function if
+	  necessary.
+
+	* ypMakefile.in: MERGE_SHADOW could be undeclared.
+
+1999-02-16  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yphelper.c: Implement merging of passwd and group with
+	  shadow passwords.
+
+	* ypMakefile.in: Add support for merging passwd with shadow file.
+
+1999-02-14  Thorsten Kukuk  <kukuk@suse.de>
+
+	* makedbm.c (create_file): Fix handling of comments.
+	  Fix handling of aliases over more then one line,
+	  reported by Ettore Aldrovandi <ettore@ubik.fm.sissa.it>
+
+1999-02-13  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppasswdd.c (main): Add debug flag, code cleanup.
+
+	* update.c (yppasswdproc_pwupdate_1): Print debug information.
+
+1999-01-10  Thorsten Kukuk  <kukuk@suse.de>
+
+	* server.c (ypproc_master_2_svc): Don't check specific map.
+
+	* ypMakefile.in (DBLOAD): Use yphelper --hostname instead of
+	  /bin/hostname.
+	* ypmake/ypmake.in ($master): Likewise.
+	* ypinit.in (HOST): Likewise. Replace ypwhich -m with
+	  yphelper --maps.
+
+	* Makefile.in: Add rules for yphelper.
+
+	* configure.in: Check for aliases file in /etc and /etc/mail.
+	  Reported by Allan Clark <agent@connected.bc.ca>
+
+	* yphelper.c: New, helper utilitiy for scripts and ypMakefile.
+
+1999-01-04  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv.conf.5.in: Add BUGS section for Solaris clients.
+
+	* makedbm.c: Add new option "no-limit-check".
+	* makedbm.8.in: Add description for new option.
+
+	* ypxfr_xdr.c: Remove key/val datum limit.
+	* ypserv_xdr.c: Likewise.
+
+1998-12-01  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* Makefile.in: Fix check if SECURENETS is defined.
+	  Reported by Siegmar Gross <Siegmar.Gross@informatik.fh-fulda.de>
+
+1998-11-05  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* configure.in: Add configure option for libdb2.
+
+	* ypxfr_1perhour.in (YPBINDIR): Fix typo.
+
+1998-10-16  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* Makefile.in (install_progs): Strip rpc.yppasswdd before install.
+
+1998-10-13  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.3.6
+
+	* ypserv_conf.c (load_ypserv_conf): Fix parser, don't overwrite
+	  current buffer.
+
+1998-10-10  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* makedbm.c (main): Make gcc happy.
+
+	* ypxfrd_server.c: Check, if GDBM database is from 64bit system.
+	* ypxfrd_getmap.c: Likewise.
+
+	* configure.in: Check for 64bit systems.
+
+1998-10-09  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* server.c (ypproc_all_2_svc): Set correct return value if map
+	  is empty.
+
+	* ypxfrd.x: Add XFR_DB_GNU_GDBM64.
+
+	* ypmake: Upgrade to version 0.11 from Olaf Kirch.
+
+1998-09-08  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* ypMakefile.in (passwd.adjunct.byname): New rule for
+	  old SunOS 4.1.x systems.
+
+	* update.c (validate_string): Don't use iscntrl, allow all
+	  characters >= 32, locale could be wrong.
+
+1998-08-18  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.3.5
+
+	* makedbm.c (create_file): Check for CR/LF line ending, fix
+	  reading of multiple line entries.
+
+	* INSTALL: Fix some typos.
+
+1998-07-02  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.3.4
+
+	* ypMakefile.in: Fix Makefile dependency.
+
+	* ypxfr.c: Fix output of yp_msg.
+
+1998-06-23  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.3.3
+
+1998-06-15  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* configure.in: Check for strndup.
+
+	* config.h.in: Add HAVE_STRNDUP.
+
+	* compat/strndup.c: New.
+
+1998-06-07  Stephan Mantler <step@step.cg.tuwien.ac.at>
+
+	* update.c: Make sure, that filehandles will not be closed twice
+
+1998-06-07  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.3.2
+
+	* ypMakefile.in: Add some of the RedHat 5.1 changes.
+
+	* configure.in: Enable check for root passwords by default.
+
+	* README: Add some comments about ndbm/db and gdbm.
+
+	* README.secure: Add some comments about tcp-wrappers.
+
+	* INSTALL: Add comment for --with-ndbm option.
+
+	* server.c: Rewrite database handling.
+
+	* yp_db.c: Make it faster, and fix ndbm support.
+
+1998-05-28  Bernd Rinn  <Bernd.Rinn@uni-konstanz.de>
+
+	* ypmake/ypmake.in (openout): Add -c to makedbm call.
+	* ypmake/automount.in: reset master and keys for new maps.
+
+1998-05-29  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* ypMakefile.in: Move some more defines in the "Don't edit !"
+	  section.
+
+1998-04-07  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.3.1
+
+1998-04-06  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* ypxfr.c (ypxfr_foreach): If keylen/vallen include
+	  the trailing 0, decrement it.
+
+1998-04-01  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* ypinit.in (is_correct): Set NOPUSH to true, not 1.
+
+1998-03-29  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* yp_db.c: set MAX_FOPEN to 30 to get the CPU load down.
+	  Reported by a lot of people.
+
+1998-03-06  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.3.0
+
+	* Much more changes for NDBM support
+
+1998-02-27  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* configure.in: Check for libndbm if ndbm support is requested
+
+	* yp_db.c: Include <fcntl.h>
+
+	* makedbm.c (create_file): Make sure that we doesn't read the
+	  last line twice.
+
+	* ypserv.c (create_pidfile): Make sure pidfile gets correctly
+	  closed when process finished.
+
+1998-02-19  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* system.h: Use snprintf prototype only for libc 4/5 under Linux
+
+1998-02-05  Thorsten Kukuk  <kukuk@dionysos>
+
+	* configure.in: Check for ndbm support in libc (SunOS/Solaris)
+
+	* config.h.in: Define HAVE_NDBM
+
+	* makedbm.c: Add ndbm support
+	* yp_db.h: Likewise.
+	* yp_db.c: Likewise.
+
+1998-02-04  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* Makefile.in: Add ypserv_v1.
+	* yp.h: Add YP V1 prototypes.
+
+	* ypserv.c: Remove sunos_kludge, not longer necessary.
+	* ypxfrd.c: Likewise.
+	* ypserv_conf.c: Likewise.
+	* ypserv.conf.5.in: Likewise.
+
+	* yppasswd.c (ypgetpw): Use memset to clear response struct.
+
+	* configure.in: Add --enable-fqdn switch.
+	* Makefile.in: Add supprt for USE_FQDN.
+	* makedbm.c (main): Likewise.
+	* yppush.c (main): Likewise.
+	* server.c (ypproc_master_2_svc): Likewise.
+
+1998-01-29  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.2.8
+
+1998-01-29  Miquel van Smoorenburg <miquels@cistron.nl>
+
+	* makedbm.c: Change sizeof(key) to keylen.
+
+	* ypxfr.c: less verbose error message
+
+	* ypinit.in: fix typo
+
+1998-01-25  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* ypMakefile.in (amd.home): Remove @ from $(AWK). Bug reported
+	by Niels Bakker <niels@euro.net>
+
+1998-01-25  Eric Valette  <valette@crf.canon.fr>
+
+	* makedbm.c (create_file): Fix second fgets parameter
+
+1998-01-10  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.2.7
+
+	* HOWTO.SuSE: Add patch from ypserv-1.2.5.dif
+	(Florian La Roche <florian@suse.de>)
+	* ypMakefile.in: Likewise
+	* ypmake/group.in: Add mingid patch
+	* ypmake/passwd.in: Add minuid patch
+
+	* configure.in: Remove check for cat and rm
+
+	* Makefile.in: Remove rm and cat in sedscript
+
+	* pwupdate.in: Change comments.
+
+1998-01-09  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* makedbm.c (create_file): cast tv_sec to long for libc5
+
+	* yppasswd.c: include rpc/clnt_soc.h
+
+	* ypserv.c (create_pidfile): Cast getpid to long
+	* yppasswdd.c (create_pidfile): Likewise
+
+	* ypxfrd_getmap.c: Include string.h, rpc/clnt_soc.h
+
+	* makedbm.c: Include rpc/clnt_soc.h under Solaris, use getline
+	or getdelim or fgets.
+
+	* configure.in: Check first for gmake, then for make.
+	* configure.in: Check for getline, getdelim, rpc/svc_soc.h
+	* config.h.in: Add getline, getdelim, RPC_SVC_SOC_H
+	* system.h: Remove __getline hack
+
+1998-01-08  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* system.h: Add __getline fix for libc5
+
+1998-01-02  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.2.6
+
+	* Makefile.in: Generate and install pwupdate.8 and makedbm.8
+
+	* pwupdate.8.in: New.
+
+	* makedbm.8.in: New.
+
+1997-12-30  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* ypserv.c: Remove tryresolve flag.
+	* ypserv.h: Likewise.
+	* access.c: Likewise.
+	* ypserv_conf.c: Likewise.
+
+	* rpc.yppasswdd.8.in: Add new options.
+
+	* access.c: Make egcs happy.
+	* yp_db.c: Likewise.
+
+	* makedbm.c: Don't use a fix buffer for reading from files
+
+1997-12-21  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* yppasswdd.c: generate a pidfile at startup.
+	Patch from Carlos A M dos Santos <casantos@cpmet.ufpel.tche.br>
+	* Makefile.in: Add SECURENETS to CPPFLAGS, install netgroup and
+	securenets sample.
+	* etc/netgroup: New, from the DEBIAN nis-3.0-2 package.
+	* etc/ypserv.init: Start rpc.ypxfrd.
+	* server.c: Allow creation of new maps with yppush/ypxfr.
+	* ypserv.c: Remove not portable debug code for memory.
+	* version.h: increase version number to 1.2.6.
+	* configure.in: Fix makedbm check.
+
+Fri Oct 17 23:20:00 1997  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.2.5
+
+	* ypxfr.c: Add prototypes for NetBSD.
+	* ypxfrd_getmap.c: Likewise.
+	  Patch from Petter Reinholdtsen <pere@td.org.uit.no>
+
+Thu Oct 16 20:28:00 1997  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* etc/ypserv.init: New, for RedHat.
+	* ypserv.spec: New, for rpm generating.
+
+Thu Oct 16 19:19:20 1997  Florian La Roche  <florian@knorke.saar.de>
+
+	* contrib/mknetid: Change ^+: to ^+
+	* ypMakefile.in: Add MINGID support
+	* yp_db.c: Set MAX_FOPEN to 10.
+	* yppush.8.in: Fix typo.
+	* ypxfr.8.in: Fix typo.
+	* contrib/ypslave: New.
+	* HOWTO.SuSE: New.
+
+Wed Aug 13 18:48:59 1997  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.2.4
+
+	* yppasswd.c: Fix some problems where old passwords are empty
+
+	* update.c: Fix locking problem (deadlock).
+
+Thu Aug  7 08:30:53 1997  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.2.3
+
+	* system.h: Use _dns_gethostbyname under Linux, if we don't have
+	  _res_gethostbyname and _dns_gethostbyname in libc. The result
+	  was a deadlock with ypserv -b and a standard Linux libc 5.
+	  Reported by Andreas Otte <venn@uni-paderborn.de>
+
+	* pwupdate.in: Create lock files in /var/yp, not /tmp, from
+	  Miquel van Smoorenburg <miquels@cistron.nl>
+
+Fri Jul 18 11:26:11 1997  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.2.2
+
+	* ypMakefile.in: Add -r to makedbm
+
+	* makedbm.c: Change "-r" parameter: Now it removes the comments at
+	  the end of a line.
+
+Thu Jul 10 21:04:10 1997  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* ypMakefile.in: Changed [-+] to [-+#] in awk scripts to ignore
+	  comments in source files.
+	  Patch from Massimo Dal Zotto <dz@cs.unitn.it>
+
+Sat Jun 28 16:12:58 1997  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* update.c (yppasswdproc_pwupdate_1): sp_lstchg contains day's
+	  since January1, 1970, not seconds.
+	  Reported by Anthony Kueh <kueh@uiuc.edu>
+
+	* yppasswdd.c (main): Put #ifdef's about shadow support
+	  Reported by Petter Reinholdtsen <pere@td.org.uit.no>
+	* update.c: Likewise.
+
+	* yppasswdd.c (main): Add flags to make rpc.yppasswdd compatible
+	  with the Solaris SUNnskit version.
+	  Based on a patch from Dan Stromberg <stromberg@hydra.acs.uci.edu>
+
+Thu May 29 09:01:17 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* release version 1.2.1
+
+	* configure.in: Test for strsep and lckpwdf
+
+	* update.c: Include <compat/lckpwdf.c> if necessary
+
+	* yppasswd.c: Include <compat/strsep.c> if necessary
+
+Wed May 28 09:45:25 1997  Nicolas St-Pierre  <draggy@kosmic.org>
+
+	* update.c (yppasswdproc_pwupdate_1): Close the correct filehandles
+	                                      in error case.
+
+Wed May 28 09:44:27 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* server.c (ypproc_xfr_2_svc): Fix gcc signed/unsigned warning
+
+Tue May 27 23:11:50 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* update.c (yppasswdproc_pwupdate_1): Add defines for compiling
+	           without shadow support, set sp_lstchg field to "now"
+
+	* yppasswd.c: Add defines for the dat_val/dptr problem with
+	              different yp_prot.h
+	* yppasswd.c (main): If caller is root, query for root password
+	                     if user password is empty
+
+	* makedbm.c: Add callrpc prototype for NetBSD
+	* ypMakefile.in (DBLOAD): Change @MAKEDBMDIR@ to @MAKEDBMPRG@
+	   Both reported by Petter Reinholdtsen <pere@td.org.uit.no>
+
+Tue May 27 23:06:34 1997  Claus-Justus Heine  <claus@momo.math.rwth-aachen.de>
+
+	* yp_db.c (ypdb_close_all): Fix typo, so that F_MUST_CLOSE will be set
+
+Sun May 11 18:23:19 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* server.c (ypproc_xfr_2_svc): Refuse transfer of new maps.
+	* server.c (ypproc_clear_2_svc): Close all open file handles.
+
+	* ypserv.c: use getopt_long, new Usage() function.
+
+	* yp_db.c: Add code for caching database file handles.
+	* yp_db.h: Add prototype for ypdb_close_all
+
+	* pwupdate.in: New, for rpc.yppasswdd.
+	* yppasswdd.c: Likewise.
+	* yppasswd_xdr.c: Likewise.
+	* update.c: Likewise.
+	* yppasswd.h: Likewise.
+	* yppasswd.x: Likewise.
+	* yppasswdd.8: Likewise.
+	* rpc.yppasswdd.8.in: Likewise.
+
+	* yppasswd.c: New, for yppasswd client
+	* yppasswd.1: Likewise.
+	* ypchfn.1: Likewise.
+	* ypchsh.1: Likewise.
+
+	* config.h.in: Add HAVE_CRYPT_H.
+
+	* configure.in: Add checkroot and yppasswd parameters,
+	                a lot of code cleanup and new checks.
+
+	* Makefile.in: Add rpc.yppasswdd rules.
+
+	* ypMakefile.in: comment out NOPUSH by default, add -c to makedbm
+
+Sat Apr 12 18:09:59 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* release version 1.1.7
+
+	* revnetgroup.c: Increase BUFSIZE to 8192
+
+Tue Apr  8 22:59:12 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypserv.conf.5.in: Add yfr_check_port description
+
+	* ypserv_conf.c (load_ypserv_conf): Add xfr_check_port option
+
+	* ypserv.8.in: Add comments about the new xfr behaviour.
+
+	* ypxfr.c (ypxfr): Fix an old comment
+
+	* server.c (ypproc_xfr_2_svc): Add check for reserved port,
+	           check, that the new master is the same as the old one.
+
+	* ypserv.c: Add xfr_check_port variable with default 1
+	* ypserv.h: Likewise.
+
+	* ypMakefile.in: Add auto.master and auto.home rules
+
+Sun Mar 23 11:25:22 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypxfr.c (main): Use strncpy for fixed arrays.
+
+Wed Mar 12 17:02:03 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* release version 1.1.6
+
+Sat Mar  8 08:44:44 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* config.h.in: Add HAVE_GETRPCPORT
+
+	* ypxfrd_getmap.c: Include compat/getrpcport if necessary
+
+Fri Mar  7 16:27:51 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypmake: Upgrade to version 0.10
+
+Tue Mar  4 20:20:03 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypMakefile.in (services.byname): Fix awk rule
+
+Fri Feb 14 21:10:31 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* configure.in: Better checks for getrpcport
+
+Thu Feb  6 21:52:44 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypmake: Upgrade to version 0.9
+
+Thu Feb  6 15:34:21 1997  Terje Malmedal <terje.malmedal@usit.uio.no>
+
+	* ypserv_conf.c (load_ypserv_conf): Add a cast for EOF to char
+
+Thu Jan 30 19:54:11 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* release version 1.1.5
+
+Wed Jan 29 08:46:18 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* getnetgrent.c: Include compat/strdup.c if necessary
+	* hash.c: Likewise
+	* netid_hash.c: Likewise
+	* revnetgroup.c: Likewise
+	* server.c: Likewise
+	* yppush.c: Likewise
+	* ypserv_conf.c: Likewise
+	* ypxfr.c: Likewise
+
+	* ypxfr.c: Remove resultproc_t typedef for NetBSD,
+	           it's now in system.h
+
+Tue Jan 28 20:00:00 1997  Terje Malmedal <terje.malmedal@usit.uio.no>
+
+	* yp_msg.c (yp_msg): Use vsyslog only if we have it
+
+	* system.h (resultproc_t): If not exists define it
+
+	* configure.in: Add tests for ULTRIX, OSF1, resultproc_t,
+	                librpcsvc, wait4, vsyslog
+
+	* config.h.in: Add some more defines
+
+	* access.c: Include <sys/syslog.h> if <syslog.h> does not define
+		    LOG_DAEMON
+
+	* Makefile.in: Add $(LIBRPC)
+
+	* yppush.c (yppush_foreach): Replace HAVE_WAIT3 with new HAVE_WAIT4
+
+	* yppush.c (main): add OSF_KLUDGE
+
+	* ypserv.c: Include <sys/syslog.h> and define SA_RESTART if
+	            necessary
+	* ypxfrd.c: Likewise
+
+	* ypserv_conf.c: Include <sys/types.h>
+
+	* ypxfr.c: Include <time.h> and <sys/syslog.h> for ULTRIX
+
+	* ypxfr_clnt.c: Include <time.h>
+
+	* ypxfrd_getmap.c: Include <fcntl.h>, if it exists, else
+	                   <sys/fcntl.h>
+
+Sat Jan 25 17:15:35 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* Makefile.in: strip revnetgroup before installing
+
+Thu Jan 23 21:06:22 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* release version 1.1.4
+
+	* INSTALL: make some corrections
+
+	* ypmake: Replace with version 0.8 from Olaf Kirch
+
+Mon Jan 13 17:43:17 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* server.c (ypproc_order_2_svc): Add '\0' to Ordernum string
+	                                 before parseing by atoi
+
+Thu Jan  9 20:19:43 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+
+	* ypMakefile.in (services.byname): the port/protocol pair
+					   is the key, not the name
+
+Thu Jan  9 17:16:23 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* mknetid.c (main): Check if host isn't a NULL pointer,
+	            print warnings on stderr, not stdout.
+		    Reported by Tarjei T. Jensen <tarjeij@ulrik.uio.no>
+
+Fri Jan  3 19:54:54 1997  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* Makefile.in: Remove obsolete rules, fix rules for compiling
+	               ypserv in another directory then the source tree
+
+	* makedbm.c (create_file): Remove obsolete #if
+
+	* server.c (ypproc_first_2_svc, ypproc_next_2_svc):
+	           In debug message: Don't print an error, if
+		   result is YP_NOMORE.
+	* configure: generate new from autoconf 2.12
+
+Tue Nov 19 19:08:45 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* release version 1.1.3
+
+	* server.c (get_dtm): Replace fixed array size with dynamic one
+	(ypproc_xfr_2_svc): dito.
+	(ypproc_master_2_svc): Remove static from hostbuf declaration
+
+Tue Nov 19 18:34:53 1996  Swen Thuemmler  <swen@uni-paderborn.de>
+
+	* ypxfr.c (ypxfr_foreach): Don't bail out if we get an empty key
+
+Sun Nov 10 14:16:56 1996  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.1.2
+
+Sun Nov 10 14:13:59 1996  Curtis Varner  <cvarner@cs.ucr.edu>
+
+	* revnetgroup.c, getnetgrent.c : Fix pointer errors
+	* hash.c : Rewritten, old version contained serveral errors
+
+Wed Oct 30 19:46:33 1996  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.1.1
+
+	* makedbm.c (create_file): value could be empty, but not the key
+
+	* yppush.c, ypxfr.c : Add little changes for NetBSD
+
+	* Makefile.in: Fix "install_ypmake" rule
+
+Mon Oct 28 15:01:53 1996 Swen Thuemmler <swen@uni-paderborn.de>
+
+	* ypxfr.c: Fix seg.fault on timeout, ypproc_match call's
+	           uses now udp, not tcp.
+
+Fri Oct 11 19:48:40 1996  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* release version 1.1.0
+
+	* ypxfr.c (ypxfr_foreach): don't store pair's with empty key
+
+Thu Oct 10 19:21:42 1996  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* ypxfr.c (ypxfr_foreach): In debug mode, don't print an
+	                           empty key/val pair
+
+Sat Sep 21 15:21:50 1996  Thorsten Kukuk  <kukuk@vt.uni-paderborn.de>
+
+	* Makefile.in: Install ypMakefile as Makefile.new, if we have
+	               an old Makefile
+
+Tue Sep  3 21:41:03 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* configure.in: Add --enable-ypmake flag
+
+	* mknetid.8.in: New
+
+Sun Aug 18 16:33:48 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* rpc.ypxfrd.8.in: New
+
+	* ypMakefile, mknetid : Add support for /etc/netid
+
+	* Add first support for new GNU libc
+
+Wed Aug 14 20:30:59 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* configure.in : Quit if we do not find the gnu gdbm library
+
+	* Add ypmake 0.7 from Olaf Kirch
+
+Mon Aug 12 19:11:46 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* access.c : Check for YP_SECURE key in map
+
+	* yp_db.c : New, contains the database functions
+
+Sun Aug 11 15:32:43 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* configure : print installation path for ypserv.conf
+
+	* Makefile.in, access.c : Change ETCDIR to CONFDIR
+
+	* ypserv.conf.5.in : Add rpc.ypxfrd refernces
+
+Tue Aug  6 12:33:33 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypxfr.c (__yp_master) : check if the result of
+	                          xdr_ypresp_master is empty.
+
+Sun Aug  4 21:29:31 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* access.c,
+	  server.c : Rename _dns_gethostby* to res_gethostby*
+
+Sat Aug  3 21:51:37 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypxfrd.c : Add support for starting rpc.ypxfrd from inetd
+
+Sun Jul 28 18:03:57 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypxfr.c : Add -p flag
+
+	* ypserv.h,
+	  access.c,
+	  ypserv_conf.c : Add SEC_DES, so DES authentication is
+	                  required. Most libc's doesn't support it
+			  in the moment.
+
+Sat Jul 20 19:42:14 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* rpc.ypxfrd : New, Daemon for a faster transfer of maps.
+	               The protocol is from the FreeBSD version,
+		       it is incompatible to the SunOS version.
+
+	* ypxfrd_getmap.c : New, support for query the rpc.ypxfrd daemon
+
+	* ypxfr.c : Try at first, if there is a rpc.ypxfrd running.
+	            Network code cleanup, use broadcast, if there
+		    is no ypbind running.
+
+Tue Jul  2 20:10:34 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* Makefile.in : Fixed install routines for ypxfr_*
+
+	* makedbm.c : Add "-s" flag
+
+	* ypserv.c : Fix error messages in create_pidfile()
+
+Mon Jul  1 17:29:00 1996  Petter Reinholdtsen  <pere@td.org.uit.no>
+
+	* ypxfr.h : Fixed typo
+
+	* access.c : Fix support for tcp-wrapper
+
+Sun Jun 30 19:28:47 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* Released version 1.0.2
+
+	* Makefile.in : Replace rev_liste.* through hash.*
+
+	* rev_liste.* : removed
+
+	* hash.*      : New, hash table for revnetgroups
+
+Fri Jun 28 21:04:47 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypMakefile : Add mail.aliases (from Petter Reinholdtsen)
+
+	* makedbm.c  : Add special support for aliases file and
+	               add YPPROC_CLEAR call.
+
+Thu Jun 27 14:28:28 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* makedbm.c,
+	  revnetgroup.c : If the last character of a input line is
+	                  a "\", add the next line to this line.
+
+Wed Jun 26 12:52:05 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* Released version 1.0.1
+
+	* netid_table.c : removed
+	  netid_hash.c  : New, use a hash table and not a list, faster
+	                  then the old one.
+
+Thu Jun 20 12:00:00 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* Released version 1.0
+
+Wed Jun 19 13:02:51 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* mknetid.c,
+	  netid_table.c : New, much more  faster then the old mknetid
+	                  script from O. Kirch.
+
+Mon Jun 17 18:21:21 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypMakefile.in : Add publickey and shadow maps, fix
+	                  wrong parameter in ethers rules
+
+Sat Jun 15 10:58:29 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* configure,
+	  system.h,
+	  dns_hosts.c : If we have a Linux libc with NYS support,
+	                don't include _dns_gethostby* from dns_hosts.c
+
+Sun May 12 16:15:55 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* access.c : Use IPPORT_RESERVED define for port checking
+
+Sun Apr 14 16:58:47 1996  Petter Reinholdtsen  <pere@td.org.uit.no>
+
+	* Port to NetBSD 1.1
+
+Sun Apr 14 11:39:21 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypxfr.c : simple check, if there are enough arguments
+                    for the -C parameter.
+
+Sat Apr 13 13:24:16 1996  Miquel van Smoorenburg  <miquels@cistron.nl>
+
+	* Makefile.in : Add define for SECURENETS
+
+	* ypMakefile.in : better "+ entry" matching
+	                  (uses the regexp "!/^[+-]/")
+			  and only uid >= MINUID will be put in
+			  the passwd.* databases
+
+	* yppush.c : never pushes files to the local server now..
+
+	* Fixed some spelling errors ;)
+
+Fri Apr 12 18:06:17 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypMakefile.in : Ignore empty input lines for maps
+
+Thu Apr 11 22:04:00 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* Released version 0.18
+
+	* Implement ypserv.conf after an idea from Miquels van
+	  Smoorenburg <miquels@cistron.nl> and add some patches
+	  from him
+
+	* Add a lot of new man pages.
+
+Sat Mar 16 16:14:38 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* server.c : fix memory leak and possible security holes
+
+Fri Mar 15 10:23:00 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* yppush : mostly rewritten, fixes a lot of bugs, security
+	           holes and add the -v, -h and -p parmameter.
+		   yppush can now transfer a maps parrallel to
+		   more then one host.
+
+Wed Mar 13 21:55:16 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* server.c : transfer maps only, if they are newer
+
+Fri Mar 8  20:38:00 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* access.c : fix securnets
+
+Fri Mar 1  19:20:00 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypserv.c : clear the ports, if program quits
+
+Sun Feb 18 21:30:00 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypxfr, yppush, ypserv: implement --version option
+
+	* revnetgroup.c : New, for reverse netgroup dbm
+
+	* getnetgrent.c : New, from the libc with changes
+	                  for parsing netgroup entrys
+
+	* man pages for ypserv, ypinit, revnetgroup
+
+	* ypinit.sh : some minor bugfixes
+
+Fri Jan 26 13:42:00 1996  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypxfr, yppush: changed some names due conflicts with
+			 libc 5.0.9 and SunOS 4.1.3 shared librarys.
+
+Sun Dec 3  16:00:00 1995  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* server.c: if tcp_wrapper not enabled, look at
+		    /var/yp/securenets for secure clients.
+
+Sun Nov 26 22:58:00 1995  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* server.c: fix dns lookup implementation
+
+Fri Nov 11 1995  Swen Thuemmler  <swen@uni-paderborn.de>
+
+	* server.c: changes for -dns option
+
+	* dns_hosts.c: New, for raw dns lookup.
+
+Fri Oct 6  10:24:31 1995  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* Make some changes for Solaris 2.4
+
+	* server.c: (ypproc_maplist_2_svc) Fixed wrong returncode
+
+	* ypxfr.c: Fixed bug for FreeBSD 2.x
+
+	* ypinit: New, for easier installing of data maps
+
+	* configure: New options for configure.
+		     Try configure --help
+
+Fri Sep 29 21:00:00 1995  Thorsten Kukuk  <kukuk@uni-paderborn.de>
+
+	* ypserv: Added slave feature + many bugfixes for that,
+		  most changes are from the FreeBSD Port.
+
+	* makedbm.c : New, mostly compatible to the SunOS 4 makedbm,
+		  inserts the YP_* keys, needed for update with slave
+		  server.
+
+	* yppush: New, sends a new map to the slave servers in the
+		  ypservers map. (Ported from the yps-0.21 package)
+
+	* ypxfr:  New, started from ypserv to get a new map.
+                  (Ported from the yps-0.21 package)
+
+	* configure: Added GNU autoconf/configure.
+
+Tue Mar 14 00:03:41 1995  Peter Eriksson  <peter@ifm.liu.se>
+
+	* yp_svc.c (main): Made the YP server switch to background mode.
+
+	* yp_svc.c (main): Fixed SunOS 4 ypbind compatibility kludge
+		(respond to YP version 1 Domain Nonack calls with a "OK").
+
+Mon Mar 13 20:31:25 1995  <O.Flebbe@science-computing.uni-tuebingen.de>
+
+	* server.c (ypproc_master_2_svc)
+
+		Added support for `ypwhich -m'.
+
+Mon Aug  8 16:36:00 1994  Mitchum DSouza  (mitch@mrc-apu.cam.ac.uk)
+
+	* server.c (is_valid_domain): Implemented a sort of securenets.
+
+		Added support for a kind of securenets using the
+		tcp_wrappers (/etc/hosts.allow and /etc/hosts.deny)
+		utility.
+
+Mon Aug  8 16:24:12 1994   Herb Weiner  (herbw@wiskit.rain.com)
+
+	* yp_svc.c (main):  Security Enhancements.
+
+		Added an optional -p switch (e.g. -p1111) specifying the
+		UDP and TCP port number that should be used by ypserv.
+		This makes it possible to have a router filter packets
+		to the NIS ports, so that access to the NIS server from
+		hosts on the Internet can be restricted.
+
+Tue Aug  2 14:26:22 1994  Peter Eriksson  (peter@ifm.liu.se)
+
+	* ypMakefile (group.bygid): Fixed indexing (from mm@lunetix.de).
+
+Tue Aug  2 10:37:22 1994  Peter Eriksson  (peter@ifm.liu.se)
+
+	* Released version 0.10
+
+	* server.c (ypall_close): Made sure gdbm_close() wasn't called
+	  with NULL pointer.
+
+	* yp_xdr.c (ypall_xdr): Made sure we don't derefence a NULL
+	  pointer when doing a function call. (*...close)(...)
+
+Mon Aug  1 00:18:49 1994  Peter Eriksson  (pen@lysator.liu.se)
+
+	* Released version 0.9
+
+	* Moved the check for valid host to after the debug fprintf's.
+
+	* Do a chdir() to /var/yp (saves a lot of inode lookups...)
+
+	* Made the domain string checks better.
+
+	* Added a couple of fixes from Mitch.
+
+Sat Jul 16 18:47:51 1994  Peter Eriksson  (peter@ifm.liu.se)
+
+	* Released version 0.8.
+
+	* Added support for Sun Solaris 2.3, and fixed compilation
+	  problems for Linux & HP-UX 9.
+
+Sat Jul 16 15:16:00 1994  Peter Eriksson  (peter@ifm.liu.se)
+
+	* yp_svc.c (ypprog_2): Changed XDR encoding routine for YP_FIRST
+	  to use "ypreq_nokey" instead of "ypreq_key".
+
+Sat Jul 15 17:00:00 1994  Peter Eriksson  (peter@ifm.liu.se)
+
+	* Released version 0.7.

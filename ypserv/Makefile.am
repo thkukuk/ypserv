@@ -1,0 +1,30 @@
+#
+# Copyright (c) 2000 SuSE GmbH, Nuernberg
+#
+# Author: Thorsten Kukuk <kukuk@suse.de>
+#
+AUTOMAKE_OPTIONS = 1.4 gnits
+MAINT_CHARSET = latin1
+#
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
+
+localedir = $(datadir)/locale
+
+CFLAGS = @EXTRA_CFLAGS@ @CFLAGS@
+DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
+	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"/var/yp\"
+INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
+
+CLEANFILES = *~
+
+EXTRA_DIST = ${MANS}
+
+man_MANS = ypserv.8
+
+noinst_HEADERS = yp_db.h access.h
+
+sbin_PROGRAMS = ypserv
+
+ypserv_SOURCES = ypserv.c server.c securenets.c yp_db.c ypserv_xdr.c access.c
+
+ypserv_LDADD =  @LIBDBM@ $(top_builddir)/lib/libyp.a -lefence

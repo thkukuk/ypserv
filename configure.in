@@ -1,0 +1,244 @@
+#
+# Copyright (C) 1999, 2000 SuSE GmbH Nuernberg, Germany
+#
+# Author: Thorsten Kukuk <kukuk@suse.de>
+#
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(ypserv/ypserv.c)
+AM_INIT_AUTOMAKE("ypserv", 1.99.0)
+AM_CONFIG_HEADER(config.h)
+AC_PREFIX_DEFAULT(/usr)
+
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+
+AC_CANONICAL_HOST
+
+dnl Some hacks...
+test "${prefix}" = "NONE" && prefix="/usr"
+if test ${prefix} = '/usr'
+then
+dnl If we use /usr as prefix, use /etc for ypserv.conf
+	if test ${sysconfdir} = '${prefix}/etc'
+	then
+	   sysconfdir="/etc"
+	fi
+dnl If we use /usr as prefix, use /usr/share/man for manual pages
+	if test ${mandir} = '${prefix}/man'
+	then
+	   mandir='${prefix}/share/man'
+	fi
+fi
+dnl Change libexec to lib/yp
+if test ${libexecdir} = '${exec_prefix}/libexec'
+then
+  libexecdir='${exec_prefix}/lib/yp'
+fi
+
+dnl Checks for programs.
+EXTRA_CFLAGS="-W -Wall -Wbad-function-cast -Wcast-align -Wcast-qual"
+AC_SUBST(EXTRA_CFLAGS)
+AC_PROG_CC
+AC_ISC_POSIX
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+dnl Check for big or little endian system
+AC_C_BIGENDIAN
+dnl Check for 64bit systems
+AC_CHECK_SIZEOF(long)
+
+dnl Search a awk program
+AC_PATH_PROGS(AWK, mawk gawk nawk awk, ERROR)
+if test $AWK = ERROR
+then
+   echo " "
+   echo "ERROR: You must have at last one of the following programs:"
+   echo "       mawk, gawk, nawk or awk !"
+   echo " "
+   exit
+fi
+
+dnl Search the bash
+AC_PATH_PROGS(BASH, bash /sbin/sh, /bin/sh)
+
+dnl Search make
+AC_PATH_PROGS(MAKE, gmake make, "", $PATH:/usr/ccs/bin:/usr/local/bin)
+if test x$MAKE = x
+then
+   echo " "
+   echo "Warning: No make on this system?"
+   echo " "
+   exit
+fi
+AC_SUBST(MAKE)
+
+dnl Check for aliases path
+AC_PATH_PROG(MAIL_ALIASES, aliases, /etc/mail/aliases, /etc/mail:/etc)
+
+dnl Should we use a gethostbyname after gethostname to use FQDN ? default no
+dnl XXX Should be enabled by default !
+AC_ARG_ENABLE(fqdn,
+	[  --disable-fqdn                    Always use FQDN [default=yes]],
+              USE_FQDN=$enableval, USE_FQDN=yes)
+AC_SUBST(USE_FQDN)
+
+dnl Should we allow root to change a password with yppasswd ? default: yes
+AC_ARG_ENABLE(checkroot,
+	[  --disable-checkroot              Disable check for root password [default=yes]],
+              CHECKROOT=$enableval, CHECKROOT=yes)
+AC_SUBST(CHECKROOT)
+
+dnl Checks for libraries.
+AC_ARG_ENABLE(tcp-wrapper,
+	[  --enable-tcp-wrapper[=BASE-DIR]  Specifies the use of tcp wrapper [default=no]],
+	if test x$enableval != xno
+	then
+	   if test x$enableval = xyes
+	   then
+	      AC_CHECK_LIB(wrap, main, TCP_WRAP="-lwrap", TCP_WRAP="")
+	      AC_DEFINE(HAVE_LIBWRAP)
+           else
+	      TCP_WRAP="-L$enableval/lib -lwrap"
+	      AC_DEFINE(HAVE_LIBWRAP)
+	      CPPFLAGS="$CPPFLAGS -I$enableval/include"
+	   fi
+	fi
+)
+AC_SUBST(TCP_WRAP)
+
+libdb_parameter=no
+AC_ARG_WITH(gdbm-dir,
+        [  --with-gdbm-dir=BASE-DIR         Specifies the base gdbm directory],
+        if test x$withval = xyes
+        then
+                LIBDBM="-lgdbm"
+                AC_DEFINE(HAVE_LIBGDBM)
+		libdb_parameter=yes
+        else
+                LIBDBM="-L$withval/lib -lgdbm"
+                AC_DEFINE(HAVE_LIBGDBM)
+                CPPFLAGS="$CPPFLAGS -I$withval/include"
+		libdb_parameter=yes
+        fi
+)
+
+AC_ARG_WITH(ndbm,
+        [  --with-ndbm=[yes|no]             Use ndbm instead of gdbm],
+	LIBDBM=""
+	if test x$libdb_parameter != xno
+	then
+		AC_MSG_WARN(You could specify only one database!)
+	fi
+        if test x$withval = xyes
+        then
+		AC_CHECK_FUNCS(dbm_open)
+		if eval "test \"`echo '$ac_cv_func_dbm_open'`\" = yes"; then
+	                AC_DEFINE(HAVE_NDBM)
+		else
+			AC_MSG_WARN(No Solaris NDBM functions found!)
+		fi
+		libdb_parameter=yes
+        fi
+)
+
+if test x$libdb_parameter != xyes
+then
+	AC_CHECK_LIB(gdbm,gdbm_open,LIBDBM="-lgdbm",LIBDBM="")
+	if test x"" != x"${LIBDBM}"
+	then
+		AC_DEFINE(HAVE_LIBGDBM)
+		libdb_parameter=yes
+	else
+		AC_CHECK_FUNCS(dbm_open)
+		if eval "test \"`echo '$ac_cv_func_dbm_open'`\" = yes"; then
+			AC_DEFINE(HAVE_NDBM)
+			libdb_parameter=yes
+		fi
+	fi
+fi
+
+AC_SUBST(LIBDBM)
+
+if test x$libdb_parameter != xyes
+then
+  echo "
+
+ You need the GNU GDBM or the Solaris NDBM functions for this package !"
+  echo ""
+  echo ""
+  exit
+fi
+
+AC_CHECK_LIB(crypt,crypt,LIBCRYPT="-lcrypt",LIBCRYPT="")
+AC_SUBST(LIBCRYPT)
+AC_CHECK_LIB(nsl,gethostbyname)
+AC_CHECK_LIB(socket,socket)
+AC_CHECK_LIB(resolv, res_gethostbyname, RESOLV="-lresolv", RESOLV="")
+if test x$RESOLV != x
+then
+	AC_DEFINE(HAVE_RES_GETHOSTBYNAME)
+else
+	AC_CHECK_LIB(resolv+, gethostbyname, RESOLV="-lresolv+", RESOLV="")
+fi
+AC_SUBST(RESOLV)
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(fcntl.h paths.h sys/file.h sys/time.h syslog.h unistd.h)
+AC_CHECK_HEADERS(getopt.h crypt.h shadow.h rpc/clnt_soc.h rpc/svc_soc.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl Checks if resultproc_t has been defined
+AC_MSG_CHECKING(for resultproc_t in rpc/clnt.h)
+AC_EGREP_HEADER(resultproc_t,rpc/clnt.h,\
+	AC_DEFINE(HAVE_RESULTPROC_T) AC_MSG_RESULT(yes),\
+	AC_MSG_RESULT(no))
+AC_MSG_CHECKING(for resultproc_t in rpc/pmap_clnt.h)
+AC_EGREP_HEADER(resultproc_t,rpc/pmap_clnt.h,\
+	AC_DEFINE(HAVE_RESULTPROC_T) AC_MSG_RESULT(yes),\
+	AC_MSG_RESULT(no))
+
+dnl Checks for library functions.
+AC_FUNC_MEMCMP
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(inet_aton vsyslog lckpwdf)
+AC_CHECK_FUNCS(strdup strndup strerror strstr strsep stpcpy snprintf)
+AC_CHECK_FUNCS(_dns_gethostbyname)
+AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
+AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
+
+AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
+	yppush/Makefile makedbm/Makefile Makefile)
+
+echo "
+Configuration:
+
+  Source code location:   ${srcdir}
+  Compiler:               ${CC}
+  Compiler flags:         ${CFLAGS}
+  Preprocessor:		  ${CPP}
+  Preprocessor flags:     ${CPPFLAGS}
+  Libraries:		  ${LIBS} ${TCP_WRAP} ${LIBDBM} ${LIBCRYPT}
+  Awk:                    ${AWK}
+  Shell:		  ${BASH}
+  Install path prefix:    ${prefix}"
+if test ${sysconfdir} != '${prefix}/etc'
+then
+  echo "  Install ypserv.conf in:  ${sysconfdir}"
+else
+  echo "  Install ypserv.conf in:  ${prefix}/etc"
+fi
+  echo "  Allow root password:     ${CHECKROOT}"
+  echo "  Use FQDN as master name: ${USE_FQDN}"
+echo ""
