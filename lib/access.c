@@ -203,9 +203,10 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
       if (status < 1 && ((sin->sin_addr.s_addr != oldaddr)
 			 || (status != oldstatus)))
 	syslog (LOG_WARNING,
-		"refused connect from %s:%d to procedure %s (%d)\n",
+		"refused connect from %s:%d to procedure %s (%s,%s;%d)\n",
 		inet_ntoa (sin->sin_addr), ntohs (sin->sin_port),
-		ypproc_name (rqstp->rq_proc), status);
+		ypproc_name (rqstp->rq_proc),
+		domain ? domain : "", map ? map : "", status);
     }
   oldaddr = sin->sin_addr.s_addr;
   oldstatus = status;
