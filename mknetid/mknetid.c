@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1999, 2001 Thorsten Kukuk
+/* Copyright (c) 1996, 1999, 2001, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -32,8 +32,6 @@
 #include <getopt.h>
 
 #include "mknetid.h"
-
-#define MAX_LENGTH 1024
 
 static int quiet_flag = 0;
 
@@ -75,7 +73,8 @@ Usage (int exitcode)
 int
 main (int argc, char *argv[])
 {
-  char line[MAX_LENGTH];
+  char *line = NULL;
+  size_t length = 0;
   char *pwname = "/etc/passwd";
   char *grpname = "/etc/group";
   char *hostname = "/etc/hosts";
@@ -155,8 +154,16 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  while (fgets (line, MAX_LENGTH, file) != NULL)
+  while (!feof (file))
     {
+#ifdef HAVE_GETLINE
+      ssize_t n = getline (&line, &length, file);
+#elif HAVE_GETDELIM
+      ssize_t n = getdelim (&line, &length, '\n', file);
+#endif
+      if (n < 1)
+	break;
+
       if (line[0] != '+' && line[0] != '-')
 	{
 
@@ -172,7 +179,6 @@ main (int argc, char *argv[])
 		       uid, domain);
 	}
     }
-
   fclose (file);
 
   if ((file = fopen (grpname, "r")) == NULL)
@@ -181,8 +187,16 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  while (fgets (line, MAX_LENGTH, file) != NULL)
+  while (!feof (file))
     {
+#ifdef HAVE_GETLINE
+      ssize_t n = getline (&line, &length, file);
+#elif HAVE_GETDELIM
+      ssize_t n = getdelim (&line, &length, '\n', file);
+#endif
+      if (n < 1)
+	break;
+
       if (line[0] != '+' && line[0] != '-')
 	{
 	  char *grpname, *ptr, *gid, *user;
@@ -200,7 +214,6 @@ main (int argc, char *argv[])
 			 user, grpname);
 	}
     }
-
   fclose (file);
 
   if ((file = fopen (hostname, "r")) == NULL)
@@ -209,8 +222,16 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  while (fgets (line, MAX_LENGTH, file) != NULL)
+  while (!feof (file))
     {
+#ifdef HAVE_GETLINE
+      ssize_t n = getline (&line, &length, file);
+#elif HAVE_GETDELIM
+      ssize_t n = getdelim (&line, &length, '\n', file);
+#endif
+      if (n < 1)
+	break;
+
       if (line[0] != '#')
 	{
 	  char *ptr, *host;
@@ -237,8 +258,16 @@ main (int argc, char *argv[])
   */
   if ((file = fopen (netidname, "r")) != NULL)
     {
-      while (fgets (line, MAX_LENGTH, file) != NULL)
+      while (!feof (file))
 	{
+#ifdef HAVE_GETLINE
+	  ssize_t n = getline (&line, &length, file);
+#elif HAVE_GETDELIM
+	  ssize_t n = getdelim (&line, &length, '\n', file);
+#endif
+	  if (n < 1)
+	    break;
+
 	  if (line[0] != '#')
 	    {
 	      if (strpbrk (line, " \t") == NULL)
@@ -249,5 +278,7 @@ main (int argc, char *argv[])
 	}
       fclose (file);
     }
+
+  free (line);
   return 0;
 }

@@ -7,7 +7,7 @@
 # information from NIS.
 #
 # Copyright (C) 2000  Massimo Dal Zotto <dz@cs.unitn.it>
-# This file is distributed under the GNU General Public License version 2 
+# This file is distributed under the GNU General Public License version 2
 
 BEGIN       { FS=":"; OFS="\t"; delim="_"; space="^B"; cont=1 }
 /^[\t ]*#/  { next }
@@ -21,7 +21,7 @@ function print_entry() {
     for (i=1; i<=n; i++) {
 	if (!(name=names[i])) { continue }
 	if (i==1 && !match(name,"^[._@]") && !p[name]++) { all = all "," name }
-	suffix = delim(++count[name])
+	suffix = delim (++count[name])
 	gsub("[ \t]", space, name)
 	print name suffix, name suffix "|" entry
     }

@@ -77,4 +77,4 @@ extern char     *external_update_program;
 #define MAP_UPDATE		"pwupdate"
 #define MAP_UPDATE_PATH		YPBINDIR "/" MAP_UPDATE
 
-#endif _YPPASSWD_H_
+#endif /* _YPPASSWD_H_ */

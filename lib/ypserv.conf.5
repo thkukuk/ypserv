@@ -1,7 +1,7 @@
 .\" -*- nroff -*-
-.\" Copyright (c) 1996, 1997, 1998, 1999, 2000 Thorsten Kukuk kukuk@suse.de
+.\" Copyright (c) 1996, 1997, 1998, 1999, 2000, 2002 Thorsten Kukuk kukuk@suse.de
 .\"
-.TH YPSERV.CONF 5 "January 1999" "NYS YP Server" "NIS Server Reference Manual"
+.TH YPSERV.CONF 5 "April 2002" "YP Server" "Reference Manual"
 .SH NAME
 ypserv.conf - configuration file for ypserv and rpc.ypxfrd
 .SH DESCRIPTION
@@ -41,6 +41,16 @@ supports the most YP version 1 functions.
 .B xfr_check_port
 With this option enabled, the NIS master server have to run on a
 port < 1024. The default is "yes" (enabled).
+.TP
+.B trusted_master
+This option expects a different argument than the other above. The argument
+is the FQDN of the master host. If this option is set on a slave server,
+new maps from this host as master will be accepted. The default is, that
+no trusted master is set and new maps will not be accepted.
+.br
+Example:
+.br
+trusted_master: ypmaster.example.org
 .LP
 The field descriptions for the access rule lines are:
 .TP

@@ -1,9 +1,6 @@
 
 Things to do (in no particular order):
 
-	o ypserv/server.c(xfr): host comparing does not work
-	  with FQHN.
-
 	o yppush: Replace hostcmp
 
 	o Add cracklib to rpc.yppasswdd.

@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -655,9 +655,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
     }
 
   if (result == 0)
-    {
-      rename (dbName_temp, dbName_orig);
-    }
+    rename (dbName_temp, dbName_orig);
   else
     unlink(dbName_temp);
 

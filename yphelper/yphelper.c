@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2001 Thorsten Kukuk
+/* Copyright (c) 1999, 2001, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -72,7 +72,7 @@ _yp_maplist (const char *server, const char *indomain,
   memset (&saddr, 0, sizeof saddr);
   saddr.sin_family = AF_INET;
   saddr.sin_addr.s_addr = inet_addr (server);
-  if (saddr.sin_addr.s_addr == -1)
+  if (saddr.sin_addr.s_addr == (in_addr_t) -1)
     {
       struct hostent *hent = gethostbyname (server);
       if (hent == NULL)
@@ -100,8 +100,7 @@ _yp_maplist (const char *server, const char *indomain,
 }
 
 static int
-_yp_master (const char *server, const char *indomain, const char *inmap,
-	    char **outname)
+_yp_master (const char *server, char *indomain, char *inmap, char **outname)
 {
   CLIENT *clnt;
   int sock;
@@ -114,8 +113,8 @@ _yp_master (const char *server, const char *indomain, const char *inmap,
       inmap == NULL || inmap[0] == '\0')
     return YPERR_BADARGS;
 
-  req.domain = (char *) indomain;
-  req.map = (char *) inmap;
+  req.domain = indomain;
+  req.map = inmap;
 
   memset (&resp, '\0', sizeof (ypresp_master));
   memset (&resp, '\0', sizeof (resp));
@@ -123,7 +122,7 @@ _yp_master (const char *server, const char *indomain, const char *inmap,
   memset (&saddr, 0, sizeof saddr);
   saddr.sin_family = AF_INET;
   saddr.sin_addr.s_addr = inet_addr (server);
-  if (saddr.sin_addr.s_addr == -1)
+  if (saddr.sin_addr.s_addr == (in_addr_t) -1)
     {
       struct hostent *hent = gethostbyname (server);
       if (hent == NULL)
@@ -525,7 +524,7 @@ main (int argc, char *argv[])
 
   if (hostname)
     {
-      if (argc == NULL)
+      if (argc == 0)
 	print_hostname (NULL);
       else
 	print_hostname (argv[0]);
