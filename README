@@ -11,6 +11,9 @@ the GNU General Public License.
 The primary ftp site for ypserv is:
 ftp://ftp.kernel.org/pub/linux/utils/net/NIS
 
+ypserv does not longer have support for tcp_wrappers. You need to
+use /var/yp/securenets to allow/deny queries from other hosts.
+
 This version has support for the ndbm database from Sun.  gdbm is
 about 3 times faster for most YP functions, except yp_first/yp_next.
 gdbm has a runtime from O(n) for viewing all entries with this, ndbm

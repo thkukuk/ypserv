@@ -1,3 +1,9 @@
+2001-08-20  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Create ypserv/ypserv.8
+	* ypserv/ypserv.8: renamed from this ..
+	* ypserv/ypserv.8.in: .. to this.
+
 2001-08-12  Thorsten Kukuk  <kukuk@suse.de>
 
 	* configure.in: Rename variable MAIL_ALIASES to ALIASES.

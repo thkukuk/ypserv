@@ -15,7 +15,7 @@ INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
 
-EXTRA_DIST = ${MANS}
+EXTRA_DIST = $(addsuffix .in,$(MANS))
 
 man_MANS = ypserv.8
 

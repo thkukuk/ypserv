@@ -21,5 +21,5 @@ noinst_SCRIPTS = ypMakefile
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(varypdir)
-	$(INSTALL_DATA) $(srcdir)/ypMakefile $(DESTDIR)$(varypdir)/Makefile
+	$(INSTALL_DATA) $(top_builddir)/scripts/ypMakefile $(DESTDIR)$(varypdir)/Makefile
 

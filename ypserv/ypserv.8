@@ -3,7 +3,7 @@
 .SH NAME
 ypserv \- NIS server
 .SH SYNOPSIS
-.B @SBINDIR@/ypserv
+.B ${exec_prefix}/sbin/ypserv
 [
 .B \-b
 ]
@@ -25,7 +25,7 @@ provides a simple network lookup service
 consisting of databases and processes.  The databases are
 .B gdbm
 files in a directory tree rooted at
-.BR @YPMAPDIR@ .
+.BR /var/yp .
 .LP
 The
 .B ypserv
@@ -66,7 +66,7 @@ each request that it revceives.
 .B path
 is an optionally parameter.
 .B ypserv
-is using this directory instead of @YPMAPDIR@
+is using this directory instead of /var/yp
 .TP
 .B "\-b" "\--dns"
 If we doesn't find the host in the hosts maps, we query the
@@ -100,7 +100,7 @@ At startup or when arriving the SIGHUP Signal,
 .B ypserv
 will attempt to load the securenets information from a file
 called
-.B @YPMAPDIR@/securenets .
+.B /var/yp/securenets .
 This file contains entries that consist of a netmask
 and a network pair separated by white spaces.
 Lines starting with ``#'' are considered to be comments.
@@ -132,7 +132,7 @@ If
 receives a request from an address that fails to match a rule,
 the request will be ignored and a warning message will be
 logged. If the
-.B @YPMAPDIR@/securenets
+.B /var/yp/securenets
 file does not exist,
 .B ypserv
 will allow connections from any host.
@@ -145,7 +145,7 @@ will use the
 and
 .B /etc/hosts.deny
 files (which most people already have) and not the
-@YPMAPDIR@/securenets. If you have got a binary package, try
+/var/yp/securenets. If you have got a binary package, try
 .B ypserv --version
 to get a hint which version you have.
 
@@ -163,7 +163,7 @@ you have to reinstall the slave servers if you change the master server
 for a map.
 .SH FILES
 @CONFDIR@/ypserv.conf
-@YPMAPDIR@/securenets
+/var/yp/securenets
 .SH "SEE ALSO"
 .BR domainname (1),
 .BR ypcat (1),

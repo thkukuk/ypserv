@@ -215,7 +215,8 @@ AC_CHECK_FUNCS(strdup strndup strerror strstr strsep stpcpy snprintf)
 AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
 AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize getspnam getline getdelim)
 
-AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypxfr/Makefile
+AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
+	ypxfr/Makefile
 	yppush/Makefile makedbm/Makefile makedbm/makedbm.8
 	revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile
 	mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile
