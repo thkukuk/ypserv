@@ -1,4 +1,4 @@
-/* Copyright (c)  2000, 2001 Thorsten Kukuk
+/* Copyright (c)  2000, 2001, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -329,10 +329,12 @@ ypdb_open (const char *domain, const char *map)
 	  /* Good, we have a free entry and don't need to close a map */
 	  int j;
 	  Fopen tmp;
+
+	  if ((fast_open_files[i].dbp = _db_open (domain, map)) == NULL)
+	    return NULL;
 	  fast_open_files[i].domain = strdup (domain);
 	  fast_open_files[i].map = strdup (map);
 	  fast_open_files[i].flag |= F_OPEN_FLAG;
-	  fast_open_files[i].dbp = _db_open (domain, map);
 
 	  if (debug_flag)
 	    log_msg ("Opening: %s/%s (%d) %x", domain, map, i,

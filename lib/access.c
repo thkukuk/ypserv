@@ -1,4 +1,4 @@
-/* Copyright (C) 1997, 1998, 1999, 2000 Thorsten Kukuk
+/* Copyright (C) 1997, 1998, 1999, 2000, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -188,6 +188,8 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 		  status = -1;
 	      ypdb_close (dbp);
 	    }
+	  else
+	    status = -2;
 	}
     }
 
