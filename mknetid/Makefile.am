@@ -27,4 +27,3 @@ noinst_HEADERS = mknetid.h
 
 mknetid_SOURCES = mknetid.c netid_hash.c
 
-mknetid_LDADD = -lefence

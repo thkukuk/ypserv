@@ -26,4 +26,4 @@ libexec_PROGRAMS = makedbm
 
 makedbm_SOURCES = makedbm.c
 
-makedbm_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a -lefence
+makedbm_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a

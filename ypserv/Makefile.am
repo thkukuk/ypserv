@@ -27,4 +27,4 @@ sbin_PROGRAMS = ypserv
 
 ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c
 
-ypserv_LDADD =  @LIBDBM@ $(top_builddir)/lib/libyp.a -lefence
+ypserv_LDADD =  @LIBDBM@ $(top_builddir)/lib/libyp.a

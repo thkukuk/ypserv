@@ -26,5 +26,5 @@ sbin_PROGRAMS = yppush
 
 yppush_SOURCES = yppush.c
 
-yppush_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a -lefence
+yppush_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a
 

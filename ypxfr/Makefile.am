@@ -26,4 +26,4 @@ libexec_PROGRAMS = ypxfr
 
 ypxfr_SOURCES = ypxfr.c ypxfr_clnt.c ypxfr_xdr.c
 
-ypxfr_LDADD = @LIBDBM@ $(top_builddir)/lib/libyp.a -lefence
+ypxfr_LDADD = @LIBDBM@ $(top_builddir)/lib/libyp.a

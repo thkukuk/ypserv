@@ -55,6 +55,8 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
+AM_WITH_DMALLOC
+AM_WITH_EFENCE
 
 dnl Check for big or little endian system
 AC_C_BIGENDIAN
@@ -91,7 +93,7 @@ AC_PATH_PROG(MAIL_ALIASES, aliases, /etc/mail/aliases, /etc/mail:/etc)
 
 dnl Should we use a gethostbyname after gethostname to use FQDN ? default yes
 AC_ARG_ENABLE(fqdn,
-	[  --disable-fqdn                    Always use FQDN [default=yes]],
+	[  --disable-fqdn                   Always use FQDN [default=yes]],
               USE_PARAM_FQDN=$enableval, USE_PARAM_FQDN=yes)
 if test "$USE_PARAM_FQDN" = "no"; then
   USE_FQDN=0

@@ -175,3 +175,9 @@
 /* Version number of package */
 #undef VERSION
 
+/* Define if using the dmalloc debugging malloc package */
+#undef WITH_DMALLOC
+
+/* Define if using the ElectricFence debugging malloc package */
+#undef WITH_EFENCE
+

@@ -27,4 +27,3 @@ noinst_HEADERS = hash.h
 
 revnetgroup_SOURCES = revnetgroup.c getnetgrent.c hash.c
 
-revnetgroup_LDADD = -lefence

@@ -27,4 +27,3 @@ libexec_PROGRAMS = yphelper
 
 yphelper_SOURCES = yphelper.c
 
-yphelper_LDADD =  -lefence

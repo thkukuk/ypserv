@@ -105,7 +105,7 @@ libexec_PROGRAMS = makedbm
 
 makedbm_SOURCES = makedbm.c
 
-makedbm_LDADD = @LIBDBM@  $(top_builddir)/lib/libyp.a -lefence
+makedbm_LDADD = @LIBDBM@  $(top_builddir)/lib/libyp.a
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES =  makedbm.8
