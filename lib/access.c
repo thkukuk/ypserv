@@ -37,6 +37,7 @@
 #include "access.h"
 #include "yp_db.h"
 #include "yp.h"
+#include "compat.h"
 
 static conffile_t *conf = NULL;
 
@@ -130,7 +131,7 @@ is_valid_domain (const char *domain)
 int
 is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 {
-  struct sockaddr_in *sin;
+  const struct sockaddr_in *sin;
   int status;
   static unsigned long int oldaddr = 0;		/* so we dont log multiple times */
   static int oldstatus = -1;

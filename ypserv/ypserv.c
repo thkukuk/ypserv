@@ -32,7 +32,6 @@
 #if defined(HAVE_GETOPT_H)
 #include <getopt.h>
 #endif
-#include <poll.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/wait.h>

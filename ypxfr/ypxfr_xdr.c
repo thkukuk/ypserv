@@ -39,32 +39,6 @@ struct {
 
 
 bool_t
-xdr_domainname (XDR *xdrs, domainname *objp)
-{
-  if (!xdr_string (xdrs, objp, YPMAXDOMAIN))
-    return (FALSE);
-
-  return (TRUE);
-}
-
-bool_t
-xdr_mapname (XDR *xdrs, mapname *objp)
-{
-  if (!xdr_string (xdrs, objp, YPMAXMAP))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_peername (XDR *xdrs, peername *objp)
-{
-  if (!xdr_string (xdrs, objp, YPMAXPEER))
-    return (FALSE);
-  return (TRUE);
-}
-
-bool_t
 xdr_keydat (XDR *xdrs, keydat *objp)
 {
   if (!xdr_bytes (xdrs, (char **) &objp->keydat_val,
@@ -108,31 +82,11 @@ xdr_ypresp_key_val (XDR *xdrs, ypresp_key_val *objp)
 }
 
 bool_t
-xdr_ypresp_master (XDR *xdrs, ypresp_master *objp)
-{
-  if (!xdr_ypstat (xdrs, &objp->stat))
-    return FALSE;
-  if (!xdr_peername (xdrs, &objp->peer))
-    return FALSE;
-  return TRUE;
-}
-
-bool_t
 xdr_ypresp_order (XDR *xdrs, ypresp_order *objp)
 {
   if (!xdr_ypstat (xdrs, &objp->stat))
     return FALSE;
   if (!xdr_u_int (xdrs, &objp->ordernum))
-    return FALSE;
-  return TRUE;
-}
-
-bool_t
-xdr_ypbind_binding (XDR *xdrs, ypbind_binding *objp)
-{
-  if (!xdr_opaque (xdrs, objp->ypbind_binding_addr, 4))
-    return FALSE;
-  if (!xdr_opaque (xdrs, objp->ypbind_binding_port, 2))
     return FALSE;
   return TRUE;
 }
@@ -164,46 +118,6 @@ xdr_ypreq_key (XDR *xdrs, ypreq_key *objp)
   if (!xdr_keydat (xdrs, &objp->key))
     return FALSE;
 
-  return TRUE;
-}
-
-bool_t
-xdr_ypreq_nokey (XDR *xdrs, ypreq_nokey *objp)
-{
-  if (!xdr_domainname (xdrs, &objp->domain))
-    return FALSE;
-
-  if (!xdr_mapname (xdrs, &objp->map))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_ypstat (XDR *xdrs, ypstat *objp)
-{
-  if (!xdr_enum (xdrs, (enum_t *) objp))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_ypxfrstat (XDR *xdrs, ypxfrstat *objp)
-{
-  if (!xdr_enum (xdrs, (enum_t *) objp))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_ypresp_xfr (XDR * xdrs, ypresp_xfr * objp)
-{
-  if (!xdr_u_int (xdrs, &objp->transid))
-    return FALSE;
-  if (!xdr_ypxfrstat (xdrs, &objp->xfrstat))
-    return FALSE;
   return TRUE;
 }
 

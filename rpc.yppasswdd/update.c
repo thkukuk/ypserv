@@ -26,7 +26,10 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
@@ -41,6 +44,7 @@
 #ifdef HAVE_SHADOW_H
 #include <shadow.h>
 #endif
+#include "compat.h"
 
 #ifndef CHECKROOT
 /* Set to 0 if you don't want to check against the root password
@@ -188,7 +192,7 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
   int retries;
   static int res;                /* I hate static variables */
   char *logbuf;
-  struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+  const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
 
   /* Be careful here with the debug option. You can see the old
      and new password in clear text !! */
@@ -277,6 +281,7 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
     }
   else
     {
+#ifdef HAVE_LCKPWDF
       /* Lock the passwd file. We retry several times. */
       retries = 0;
       while (lckpwdf () && retries < MAX_RETRIES)
@@ -291,11 +296,14 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 	  log_msg ("password file locked");
 	  return &res;
 	}
+#endif /* HAVE_LCKPWDF */
 
       res = update_files (yppw, logbuf, &shadow_changed, &passwd_changed,
 			  &chfn, &chsh);
 
+#ifdef HAVE_LCKPWDF
       ulckpwdf ();
+#endif /* HAVE_LCKPWDF */
     }
 
   /* Fork off process to rebuild NIS passwd.* maps. */
@@ -359,6 +367,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
     {
       if (strcmp (pw->pw_passwd, "x") == 0)
 	{
+#ifdef HAVE_GETSPNAM /* shadow password */
 	  struct spwd *spw;
 
 	  if ((spw = getspnam ("root")) != NULL)
@@ -366,6 +375,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	      rootpass = alloca (strlen (spw->sp_pwdp) + 1);
 	      strcpy (rootpass, spw->sp_pwdp);
 	    }
+#endif /* HAVE_GETSPNAM */
 	}
       else
 	{
@@ -403,6 +413,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
   chmod (path_passwd_tmp, passwd_stat.st_mode);
   chown (path_passwd_tmp, passwd_stat.st_uid, passwd_stat.st_gid);
 
+#ifdef HAVE_GETSPNAM
   /* Open the shadow file for reading. */
   if ((oldsf = fopen (path_shadow, "r")) != NULL)
     {
@@ -427,6 +438,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       chmod (path_shadow_tmp, shadow_stat.st_mode);
       chown (path_shadow_tmp, shadow_stat.st_uid, shadow_stat.st_gid);
     }
+#endif /* HAVE_GETSPNAM */
 
   /* Loop over all passwd entries */
   while ((pw = fgetpwent (oldpf)) != NULL)
@@ -443,6 +455,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	  if (oldsf != NULL &&
 	      pw->pw_passwd[0] == 'x' && pw->pw_passwd[1] == '\0')
 	    {
+#ifdef HAVE_GETSPNAM /* shadow password */
 	      /* Search for the shadow entry of this user */
 	      while ((spw = fgetspent (oldsf)) != NULL)
 		{
@@ -464,6 +477,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		      goto error;
 		    }
 		}
+#endif /* HAVE_GETSPNAM */
 	    }
 
 	  /* We don't have a shadow password file or we don't find the
@@ -484,6 +498,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		yppw->newpw.pw_passwd[1] == '\0') &&
 	      yppw->newpw.pw_passwd[0] != '\0')
 	    {
+#ifdef HAVE_GETSPNAM /* shadow password */
 	      if (spw)
 		{
 		  /* test if password is expired */
@@ -526,6 +541,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		      }
 		}
 	      else /* No shadow entry */
+#endif /* HAVE_GETSPNAM */
 		{
 		  /* set the new passwd */
 		  pw->pw_passwd = yppw->newpw.pw_passwd;
@@ -594,9 +610,12 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
   if (pw || spw)
     {
       unlink (path_passwd_tmp);
+#ifdef HAVE_GETSPNAM
       unlink (path_shadow_tmp);
+#endif /* HAVE_GETSPNAM */
       return 1;
     }
+#ifdef HAVE_GETSPNAM
   if (*shadow_changed)
     {
       unlink (path_shadow_old);
@@ -605,6 +624,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
     }
   else
     unlink (path_shadow_tmp);
+#endif /* HAVE_GETSPNAM */
 
   if (*passwd_changed)
     {

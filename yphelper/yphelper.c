@@ -21,17 +21,22 @@
 #include "config.h"
 #endif
 
+#include <sys/types.h>
 #include <grp.h>
 #include <pwd.h>
 #include <netdb.h>
 #include <rpc/types.h>
 #include <strings.h>
 #include <sys/socket.h>
+#include <sys/param.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <ctype.h>
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
+#include <stdlib.h>
 #if defined(HAVE_GETOPT_H)
 #include <getopt.h>
 #endif
@@ -314,6 +319,7 @@ merge_passwd (char *passwd, char *shadow)
 	  (pwd->pw_passwd[0] == 'x' || pwd->pw_passwd[0] == '*'))
 	{
 	  pass = NULL;
+#ifdef HAVE_GETSPNAM /* shadow password */
 	  spd = fgetspent (s_input);
 	  if (spd != NULL)
 	    {
@@ -332,6 +338,7 @@ merge_passwd (char *passwd, char *shadow)
 		    }
 		}
 	    }
+#endif /* HAVE_GETSPNAM */
 	  if (pass == NULL)
 	    pass = pwd->pw_passwd;
 	}
@@ -349,6 +356,7 @@ merge_passwd (char *passwd, char *shadow)
   exit (0);
 }
 
+#ifdef HAVE_GETSPNAM /* shadow password */
 static struct __sgrp *
 fgetsgent (FILE *fp)
 {
@@ -379,6 +387,7 @@ fgetsgent (FILE *fp)
     }
   return 0;
 }
+#endif /* HAVE_GETSPNAM */
 
 static void
 merge_group (char *group, char *gshadow)
@@ -423,6 +432,7 @@ merge_group (char *group, char *gshadow)
 	  (grp->gr_passwd[0] == 'x' || grp->gr_passwd[0] == '*'))
 	{
 	  pass = NULL;
+#ifdef HAVE_GETSPNAM /* shadow password */
 	  spd = fgetsgent (s_input);
 	  if (spd != NULL)
 	    {
@@ -441,6 +451,7 @@ merge_group (char *group, char *gshadow)
 		    }
 		}
 	    }
+#endif /* HAVE_GETSPNAM */
 	  if (pass == NULL)
 	    pass = grp->gr_passwd;
 	}

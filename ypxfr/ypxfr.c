@@ -35,8 +35,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
+#include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include "log_msg.h"
 #include "yp.h"
 #include "ypxfr.h"
@@ -353,7 +357,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   struct ypresp_order resp_order;
   struct ypresp_master resp_master;
   struct ypreq_nokey req_nokey;
-  uint32_t masterOrderNum;
+  time_t masterOrderNum;
   struct hostent *h;
   int sock, result;
 
@@ -485,7 +489,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   /* If we doesn't force the map, look, if the new map is really newer */
   if (!force)
     {
-      uint32_t localOrderNum = 0;
+      time_t localOrderNum = 0;
       datum inKey, inVal;
 
 #if defined(HAVE_LIBGDBM)
@@ -571,7 +575,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
           unlink (dbName_temp);
           return YPXFR_DBM;
         }
-      snprintf (orderNum, sizeof (orderNum), "%d", masterOrderNum);
+      snprintf (orderNum, sizeof (orderNum), "%ld", (long)masterOrderNum);
       outKey.dptr = "YP_LAST_MODIFIED";
       outKey.dsize = strlen (outKey.dptr);
       outData.dptr = orderNum;
@@ -723,7 +727,7 @@ main (int argc, char **argv)
   struct in_addr remote_addr;
   unsigned int transid = 0;
   unsigned short int remote_port = 0;
-  uint32_t program_number = 0;
+  unsigned long program_number = 0;
   int force = 0;
   int noclear = 0;
 

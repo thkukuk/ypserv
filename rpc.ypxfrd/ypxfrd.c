@@ -76,40 +76,6 @@ char *path_ypdb = YPMAPDIR;
 
 char *progname;
 
-#if HAVE__RPC_DTABLESIZE
-extern int _rpc_dtablesize(void);
-#elif HAVE_GETDTABLESIZE
-static int
-_rpc_dtablesize()
-{
-  static int size;
-
-  if (size == 0)
-    {
-      size = getdtablesize();
-    }
-  return (size);
-}
-#else
-
-#include <sys/resource.h>
-
-static int
-_rpc_dtablesize()
-{
-  static int size = 0;
-  struct rlimit rlb;
-
-  if (size == 0)
-    {
-      if (getrlimit(RLIMIT_NOFILE, &rlb) >= 0)
-	size = rlb.rlim_cur;
-    }
-
-  return size;
-}
-#endif
-
 /*
 ** Needed, if we start rpc.ypxfrd from inetd
 */

@@ -22,7 +22,9 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

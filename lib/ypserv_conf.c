@@ -28,7 +28,10 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
+#include <unistd.h>
 
 #include "log_msg.h"
 #include "ypserv_conf.h"

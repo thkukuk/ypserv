@@ -23,13 +23,16 @@
 #define _GNU_SOURCE
 
 #include <string.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
 #include <unistd.h>
+#include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -51,7 +54,7 @@ ypproc_null_2_svc (void *argp UNUSED, void *result UNUSED,
 {
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_null() [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr),
 	       ntohs (rqhost->sin_port));
@@ -70,7 +73,7 @@ ypproc_domain_2_svc (domainname *argp, bool_t *result,
 {
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_domain(\"%s\") [From: %s:%d]",
 	       *argp, inet_ntoa (rqhost->sin_addr),
 	       ntohs (rqhost->sin_port));
@@ -105,7 +108,7 @@ ypproc_domain_nonack_2_svc (domainname *argp, bool_t *result,
 {
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_domain_nonack(\"%s\") [From: %s:%d]",
 	       *argp, inet_ntoa (rqhost->sin_addr),
 	       ntohs (rqhost->sin_port));
@@ -145,7 +148,7 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
 
       log_msg ("ypproc_match(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
@@ -233,7 +236,7 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_first(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
 
@@ -328,7 +331,7 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
 
       log_msg ("ypproc_next(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
@@ -425,7 +428,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 		  struct svc_req *rqstp)
 {
   DB_FILE dbp;
-  struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+  const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
   int valid;
 
   if (debug_flag)
@@ -629,7 +632,7 @@ bool_t ypproc_clear_2_svc (void *argp UNUSED, void *result UNUSED,
 {
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_clear_2_svc() [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
     }
@@ -731,7 +734,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost;
+      const struct sockaddr_in *rqhost;
 
       rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_all_2_svc(): [From: %s:%d]",
@@ -901,7 +904,7 @@ ypproc_master_2_svc (ypreq_nokey *argp, ypresp_master *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_master_2_svc(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
 
@@ -1008,7 +1011,7 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost;
+      const struct sockaddr_in *rqhost;
 
       rqhost = svc_getcaller (rqstp->rq_xprt);
 
@@ -1132,7 +1135,7 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
 
       log_msg ("ypproc_maplist_2_svc(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));

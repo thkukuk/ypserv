@@ -40,6 +40,7 @@
 #include "ypxfrd.h"
 #include "access.h"
 #include "yp_db.h"
+#include "compat.h"
 
 static int file = 0;
 
@@ -97,7 +98,7 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
 {
   static struct xfr result;
   char buf[MAXPATHLEN];
-  struct sockaddr_in *rqhost;
+  const struct sockaddr_in *rqhost;
   int valid;
 
   if (debug_flag)

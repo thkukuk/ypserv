@@ -19,12 +19,7 @@
 #ifndef _YPSERV_COMPAT_H
 #define _YPSERV_COMPAT_H
 
-/* __attribute__ is only in GCC */
-#ifdef __GNUC__
-#define UNUSED __attribute__ ((unused))
-#else
-#define UNUSED
-#endif
+#include "config.h"
 
 #ifndef HAVE_STPCPY
 char *stpcpy(char *, const char *);
@@ -52,7 +47,26 @@ int getopt_long (int argc, char *const *argv, const char *shortopts,
 
 #if !defined(HAVE_GETDELIM) && !defined(HAVE_GETLINE)
 /* Use getline() if getdelim() is missing */
+#include <unistd.h> /* size_t */
+#include <stdio.h> /* FILE */
 ssize_t getline (char **lineptr, size_t *n, FILE *stream);
 #endif /*  not HAVE_GETDELIM and not HAVE_GETLINE */
+
+#ifndef HAVE_SVC_GETCALLER
+#  include <rpc/rpc.h>
+#  if !defined(svc_getcaller)
+struct sockaddr_in;
+const struct sockaddr_in *svc_getcaller(const SVCXPRT *xprt);
+#  endif
+#endif /* not HAVE_SVC_GETCALLER */
+
+#ifndef HAVE__RPC_DTABLESIZE
+int _rpc_dtablesize(void);
+#endif
+
+#ifndef HAVE_INET_PTON
+int inet_pton(int af, const char *src, void *dst);
+#endif /* not HAVE_INET_PTON */
+
 
 #endif /* not _YPSERV_COMPAT_H */

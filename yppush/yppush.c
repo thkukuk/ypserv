@@ -29,6 +29,7 @@
 #include <time.h>
 #include "yp.h"
 #include <rpcsvc/ypclnt.h>
+#include <rpc/svc.h>
 #include <arpa/inet.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -73,38 +74,6 @@ static u_int MapOrderNum;
 static u_int maxchildren = 1;
 static u_int children = 0;
 
-#if HAVE__RPC_DTABLESIZE
-extern int _rpc_dtablesize (void);
-#elif HAVE_GETDTABLESIZE
-
-int
-_rpc_dtablesize ()
-{
-  static int size;
-
-  if (size == 0)
-    size = getdtablesize ();
-
-  return size;
-}
-#else
-
-#include <sys/resource.h>
-
-int
-_rpc_dtablesize ()
-{
-  static int size = 0;
-  struct rlimit rlb;
-
-
-  if (size == 0)
-    if (getrlimit (RLIMIT_NOFILE, &rlb) >= 0)
-      size = rlb.rlim_cur;
-
-  return size;
-}
-#endif
 
 static char *
 yppush_err_string (enum yppush_status status)
