@@ -76,6 +76,9 @@
 /* Define if you have the res_gethostbyname function. */
 #undef HAVE_RES_GETHOSTBYNAME
 
+/* Define to 1 if you have the `rpcb_unset' function. */
+#undef HAVE_RPCB_UNSET
+
 /* Define to 1 if you have the <rpc/clnt_soc.h> header file. */
 #undef HAVE_RPC_CLNT_SOC_H
 
@@ -123,6 +126,9 @@
 
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
+
+/* Define to 1 if you have the `svc_create' function. */
+#undef HAVE_SVC_CREATE
 
 /* Define to 1 if you have the <syslog.h> header file. */
 #undef HAVE_SYSLOG_H

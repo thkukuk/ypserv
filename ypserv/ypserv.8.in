@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.TH YPSERV 8 "August 2001" "YP Server" "Reference Manual"
+.TH YPSERV 8 "August 2002" "YP Server" "Reference Manual"
 .SH NAME
 ypserv \- NIS server
 .SH SYNOPSIS
@@ -12,9 +12,6 @@ ypserv \- NIS server
 [
 .B path
 ] ]
-[
-.B \-p port
-]
 .LP
 .SH DESCRIPTION
 .IX  "ypserv"  ""  "\fLypserv\fP \(em NIS server process"
@@ -77,13 +74,6 @@ is done in an extra subprocess.
 ignores the
 .B YP_INTERDOMAIN
 keys for dns lookup.
-.TP
-.B "\-p" "--port"  port
-.B ypserv
-will bind itself to this port.
-This makes it possible to have a router filter packets
-to the NIS ports, so that access to the NIS server from
-hosts on the Internet can be restricted.
 .TP
 .B "\-v" "\--version"
 Prints the version number

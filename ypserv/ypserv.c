@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -284,7 +284,11 @@ create_pidfile (void)
 static void
 sig_quit (int sig __attribute__ ((unused)))
 {
+#if defined(HAVE_RPCB_UNSET)
+  rpcb_unset (YPPROG, YPVERS, NULL);
+#else
   pmap_unset (YPPROG, YPVERS);
+#endif
   pmap_unset (YPPROG, YPOLDVERS);
   unlink (_YPSERV_PIDFILE);
 
@@ -313,7 +317,7 @@ sig_child (int sig __attribute__ ((unused)))
 static void
 Usage (int exitcode)
 {
-  fputs ("usage: ypserv [-d [path]] [-p port]\n", stderr);
+  fputs ("usage: ypserv [-d [path]]\n", stderr);
   fputs ("       ypserv --version\n", stderr);
 
   exit (exitcode);
@@ -323,8 +327,6 @@ int
 main (int argc, char **argv)
 {
   SVCXPRT *transp;
-  int my_port = -1, my_socket, result;
-  struct sockaddr_in s_in;
   struct sigaction sa;
 
   openlog ("ypserv", LOG_PID, LOG_DAEMON);
@@ -336,13 +338,12 @@ main (int argc, char **argv)
       static struct option long_options[] = {
 	{"version", no_argument, NULL, 'v'},
 	{"debug", no_argument, NULL, 'd'},
-	{"port", required_argument, NULL, 'p'},
 	{"usage", no_argument, NULL, 'u'},
 	{"help", no_argument, NULL, 'h'},
 	{NULL, 0, NULL, '\0'}
       };
 
-      c = getopt_long (argc, argv, "vdp:buh", long_options, &option_index);
+      c = getopt_long (argc, argv, "vdbuh", long_options, &option_index);
       if (c == -1)
 	break;
       switch (c)
@@ -353,11 +354,6 @@ main (int argc, char **argv)
 	  return 0;
 	case 'd':
 	  ++debug_flag;
-	  break;
-	case 'p':
-	  my_port = atoi (optarg);
-	  if (debug_flag)
-	    log_msg ("Using port %d\n", my_port);
 	  break;
 	case 'u':
 	case 'h':
@@ -468,44 +464,17 @@ main (int argc, char **argv)
   sigemptyset (&sa.sa_mask);
   sigaction (SIGCHLD, &sa, NULL);
 
+#if defined(HAVE_RPCB_UNSET)
+  rpcb_unset (YPPROG, YPVERS, NULL);
+#else
   pmap_unset (YPPROG, YPVERS);
+#endif
   pmap_unset (YPPROG, YPOLDVERS);
 
-  if (my_port >= 0)
-    {
-      my_socket = socket (AF_INET, SOCK_DGRAM, 0);
-      if (my_socket < 0)
-	{
-	  log_msg ("can not create UDP: %s", strerror (errno));
-	  exit (1);
-	}
-
-      memset ((char *) &s_in, 0, sizeof (s_in));
-      s_in.sin_family = AF_INET;
-      s_in.sin_addr.s_addr = htonl (INADDR_ANY);
-      s_in.sin_port = htons (my_port);
-
-      result = bind (my_socket, (struct sockaddr *) &s_in,
-		     sizeof (s_in));
-      if (result < 0)
-	{
-	  log_msg ("ypserv: can not bind UDP: %s ", strerror (errno));
-	  exit (1);
-	}
-    }
-  else
-    my_socket = RPC_ANYSOCK;
-
-  transp = svcudp_create (my_socket);
+  transp = svcudp_create (RPC_ANYSOCK);
   if (transp == NULL)
     {
       log_msg ("cannot create udp service.");
-      exit (1);
-    }
-
-  if (!svc_register (transp, YPPROG, YPVERS, ypprog_2, IPPROTO_UDP))
-    {
-      log_msg ("unable to register (YPPROG, YPVERS, udp).");
       exit (1);
     }
 
@@ -516,41 +485,18 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  if (my_port >= 0)
+#if !defined (HAVE_SVC_CREATE)
+  if (!svc_register (transp, YPPROG, YPVERS, ypprog_2, IPPROTO_UDP))
     {
-      my_socket = socket (AF_INET, SOCK_STREAM, 0);
-      if (my_socket < 0)
-	{
-	  log_msg ("ypserv: can not create TCP: %s", strerror (errno));
-	  exit (1);
-	}
-
-      memset (&s_in, 0, sizeof (s_in));
-      s_in.sin_family = AF_INET;
-      s_in.sin_addr.s_addr = htonl (INADDR_ANY);
-      s_in.sin_port = htons (my_port);
-
-      result = bind (my_socket, (struct sockaddr *) &s_in,
-		     sizeof (s_in));
-      if (result < 0)
-	{
-	  log_msg ("ypserv: can not bind TCP ", strerror (errno));
-	  exit (1);
-	}
+      log_msg ("unable to register (YPPROG, YPVERS, udp).");
+      exit (1);
     }
-  else
-    my_socket = RPC_ANYSOCK;
+#endif
 
-  transp = svctcp_create (my_socket, 0, 0);
+  transp = svctcp_create (RPC_ANYSOCK, 0, 0);
   if (transp == NULL)
     {
       log_msg ("ypserv: cannot create tcp service\n");
-      exit (1);
-    }
-
-  if (!svc_register (transp, YPPROG, YPVERS, ypprog_2, IPPROTO_TCP))
-    {
-      log_msg ("ypserv: unable to register (YPPROG, YPVERS, tcp)\n");
       exit (1);
     }
 
@@ -560,6 +506,22 @@ main (int argc, char **argv)
       log_msg ("ypserv: unable to register (YPPROG, YPOLDVERS, tcp)\n");
       exit (1);
     }
+
+#if !defined (HAVE_SVC_CREATE)
+  if (!svc_register (transp, YPPROG, YPVERS, ypprog_2, IPPROTO_TCP))
+    {
+      log_msg ("ypserv: unable to register (YPPROG, YPVERS, tcp)\n");
+      exit (1);
+    }
+#endif
+
+#if defined(HAVE_SVC_CREATE)
+  if (!svc_create (ypprog_2, YPPROG, YPVERS, "netpath"))
+    {
+      log_msg ("unable to create (YPPROG, YPVERS) for netpath.");
+      exit (1);
+    }
+#endif
 
   svc_run ();
   log_msg ("svc_run returned");
