@@ -8,6 +8,7 @@ Version 2.2
 * Minor bug fixes
 * Allow IP numbers as master host
 * Lookup master name of NIS map to avoid compare problems
+* Fix problems with ypcat
 
 Version 2.1
 * Minor bug fixes/typos

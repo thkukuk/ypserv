@@ -95,7 +95,7 @@ ypinit_master()
     esac
   done
 
-  echo "We need some  minutes to build the databases..."
+  echo "We need a few minutes to build the databases..."
   echo "Building $YPMAPDIR/$DOMAIN/ypservers..."
   cat $YPMAPDIR/ypservers | awk '{print $$0, $$0}' | $YPBINDIR/makedbm - $YPMAPDIR/$DOMAIN/ypservers
 
@@ -105,17 +105,14 @@ ypinit_master()
     echo "Please fix it."
   fi
 
-  in_pwd=`pwd`
-  cd $YPMAPDIR
   echo "Running $YPMAPDIR/Makefile..."
-  make NOPUSH=true
+  cd $YPMAPDIR && make NOPUSH=true
 
-  if [ $?  -ne 0 ]
+  if [ $? -ne 0 ]
   then
     echo "Error running Makefile."
     echo "Please try it by hand."
-
-    cd $in_pwd
+  else
     echo ""
     echo "$HOST has been set up as a NIS master server."
     echo ""
