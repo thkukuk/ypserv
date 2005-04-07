@@ -15,6 +15,7 @@ rpcsvc_HEADERS = ypxfrd.x
 
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\" -DUSE_SLP=@USE_SLP@
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
+AM_CFLAGS = @PIE_CFLAGS@
 
 libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
 		ypproc_match_2.c securenets.c access.c yp_db.c compat.c

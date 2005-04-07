@@ -25,5 +25,5 @@ sbin_PROGRAMS = rpc.yppasswdd
 
 rpc_yppasswdd_SOURCES = update.c yppasswd_xdr.c yppasswdd.c
 
-rpc_yppasswdd_LDADD =  $(LIBDBM) $(LIBCRYPT) $(top_builddir)/lib/libyp.a
-
+rpc_yppasswdd_LDADD =  @PIE_LDFLAGS@ $(LIBDBM) $(LIBCRYPT) $(top_builddir)/lib/libyp.a
+rpc_yppasswdd_CFLAGS = @PIE_CFLAGS@

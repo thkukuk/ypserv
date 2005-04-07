@@ -1,8 +1,13 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2004 Thorsten Kukuk
+Copyright (C) 1998-2005 Thorsten Kukuk
 
-Please send bug reports, questions and suggestions to <kukuk@suse.de>.
+Please send bug reports, questions and suggestions to <kukuk@thkukuk.de>.
+
+
+Version 2.15
+* makedbm: Use correct seperator if dumping databases
+* rcp.yppasswdd, rpc.ypxfrd, yppush, ypserv: Compile with -fpie
 
 Version 2.14
 * ypxfr: Fix problems with fetching maps from SGI ypserv

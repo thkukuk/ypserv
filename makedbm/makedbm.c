@@ -1,4 +1,4 @@
-/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002, 2003 Thorsten Kukuk
+/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002, 2003, 2005 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -484,7 +484,7 @@ dump_file (char *dbmName)
 	  perror (dbmName);
 	  exit (1);
 	}
-      printf ("%.*s %.*s\n",
+      printf ("%.*s\t%.*s\n",
 	      key.dsize, key.dptr,
 	      data.dsize, data.dptr);
       free (data.dptr);
@@ -500,7 +500,7 @@ dump_file (char *dbmName)
 	  perror (dbmName);
 	  exit (1);
 	}
-      printf ("%.*s %.*s\n",
+      printf ("%.*s\t%.*s\n",
 	      key.dsize, key.dptr,
 	      data.dsize, data.dptr);
       key = dbm_nextkey (dbm);

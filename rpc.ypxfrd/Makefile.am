@@ -23,4 +23,5 @@ sbin_PROGRAMS = rpc.ypxfrd
 
 rpc_ypxfrd_SOURCES = ypxfrd.c ypxfrd_server.c ypxfrd_svc.c
 
-rpc_ypxfrd_LDADD = $(top_builddir)/lib/libyp.a @LIBDBM@
+rpc_ypxfrd_LDADD = @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@
+rpc_ypxfrd_CFLAGS = @PIE_CFLAGS@

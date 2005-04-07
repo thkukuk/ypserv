@@ -1,8 +1,8 @@
 #
-# Copyright (C) 1999-2004 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (C) 1999-2005 Thorsten Kukuk <kukuk@thkukuk.de>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ypserv, 2.14, kukuk@linux-nis.org)
+AC_INIT(ypserv, 2.15, kukuk@linux-nis.org)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AM_CONFIG_HEADER(config.h)
@@ -81,11 +81,32 @@ if eval "test x$GCC = xyes"; then
       -Wmissing-prototypes \
       -Wpointer-arith \
       -Wreturn-type \
-      -Wstrict-prototypes
+      -Wstrict-prototypes 
   do
     JAPHAR_GREP_CFLAGS($flag, [ CFLAGS="$CFLAGS $flag" ])
   done
 fi
+
+AC_CACHE_CHECK(for -fpie, libc_cv_fpie, [dnl
+  cat > conftest.c <<EOF
+int foo;
+main () { return 0;}
+EOF
+  if AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS -pie -fpie
+                              -o conftest conftest.c 1>&AS_MESSAGE_LOG_FD])
+  then
+    libc_cv_fpie=yes
+    PIE_CFLAGS="-fpie"
+    PIE_LDFLAGS="-pie"
+  else
+    libc_cv_fpie=no
+    PIE_CFLAGS=""
+    PIE_LDFLAGS=""
+  fi
+  rm -f conftest*])
+AC_SUBST(libc_cv_fpie)
+AC_SUBST(PIE_CFLAGS)
+AC_SUBST(PIE_LDFLAGS)
 
 AM_WITH_DMALLOC
 AM_WITH_EFENCE

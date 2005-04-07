@@ -204,7 +204,7 @@ print_maps (char *server, char *domain)
 #if USE_FQDN
   struct hostent *hp = NULL;
 #endif
-  char *master, *domainname;
+  char *master = NULL, *domainname;
   struct ypmaplist *ypmap = NULL, *y, *old;
   int ret;
 

@@ -49,10 +49,10 @@ AC_TRY_COMPILE([
 #include <stdlib.h>
 ],
 [
-static void foo(void) __attribute__ ((unused));
+static void foo (void) __attribute__ ((unused));
 
 static void
-foo(void)
+foo (void)
 {
   exit(1);
 }
