@@ -747,6 +747,8 @@ main (int argc, char **argv)
   else
     debug_flag = 1;
 
+  memset (&remote_addr, 0, sizeof (remote_addr));
+
   while (1)
     {
       int c;

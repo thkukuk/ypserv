@@ -1,5 +1,7 @@
 2005-04-07  Thorsten Kukuk  <kukuk@suse.de>
 
+	* release version 2.15
+
 	* configure.in: Check for -fpie/-pie support.
 	* lib/Makefile: Compile with -fpie if supported.
 	* rpc.yppasswdd/Makefile.am: Likewise.

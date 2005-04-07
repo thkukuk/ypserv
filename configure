@@ -7338,11 +7338,6 @@ cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
 #include <stdlib.h>
-
-int
-main ()
-{
-
 static void foo (void) __attribute__ ((unused));
 
 static void
@@ -7350,6 +7345,12 @@ foo (void)
 {
   exit(1);
 }
+
+int
+main ()
+{
+
+  exit (0);
 
   ;
   return 0;
