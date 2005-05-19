@@ -1,3 +1,24 @@
+2005-05-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.16
+
+	* rpc.yppasswdd/yppasswdd.c (sig_child): Restore errno.
+	* rpc.ypxfrd/ypxfrd.c (sig_child): Likewise.
+	* yppush/yppush.c (sig_child): Likewise.
+	Based on patch from Mark Brown <broonie@sirena.org.uk>
+
+	* lib/compat.c (svc_getcaller): Fix return value.
+	* revnetgroup/revnetgroup.c (insert_netgroup): Make static.
+	* rpc.yppasswdd/yppasswd_xdr.c: Cast uid_t/gid_t to int.
+	* rpc.ypxfrd/ypxfrd.c: Fix includes, use int on HPUX for
+	getpeername.
+	* rpc.ypxfrd/ypxfrd_server.c: Fix includes.
+	* yphelper/yphelper.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypserv/ypserv.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+	Patch from Petter Reinholdtsen <petter.reinholdtsen@usit.uio.no>
+
 2005-04-07  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.15

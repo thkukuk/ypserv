@@ -221,7 +221,8 @@ svc_getcaller(const SVCXPRT *xprt)
   log_msg ("warning: Bogus svc_getcaller() called");
   /* XXX find out how the result from svc_getrpccaller relates to
      svc_getcaller */
-  return addr;
+  assert(sizeof(struct sockaddr_in) == addr->len);
+  return (const struct sockaddr_in *)addr->buf;
 #  else /* not HAVE_SVC_GETRPCCALLER */
 #    error "Missing both svc_getcaller() and svc_getrpccaller()"
 #  endif /* not HAVE_SVC_GETRPCCALLER */
@@ -260,7 +261,7 @@ int _rpc_dtablesize()
 
 #ifndef HAVE_INET_ATON
 /* Source: http://mail.gnu.org/archive/html/autoconf/2002-08/msg00036.html */
-/*  $Id: compat.c,v 1.1.2.4 2004/09/06 08:24:49 kukuk Exp $
+/*  $Id: compat.c,v 1.1.2.5 2005/05/19 12:12:06 kukuk Exp $
 **
 **  Replacement for a missing inet_aton.
 **

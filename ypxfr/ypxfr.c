@@ -46,6 +46,9 @@
 #include "ypxfr.h"
 #include "ypxfrd.h"
 #include <rpcsvc/ypclnt.h>
+#if defined(HAVE_RPC_CLNT_SOC_H)
+#include <rpc/clnt_soc.h> /* for clntudp_create() */
+#endif /* HAVE_RPC_CLNT_SOC_H */
 #include "compat.h"
 
 #if defined(HAVE_LIBGDBM)

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2004 Thorsten Kukuk
+/* Copyright (c) 1996-2005 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -30,6 +30,9 @@
 #include "yp.h"
 #include <rpcsvc/ypclnt.h>
 #include <rpc/svc.h>
+#if defined(HAVE_RPC_SVC_SOC_H)
+#include <rpc/svc_soc.h> /* for svcudp_create() */
+#endif /* HAVE_RPC_SVC_SOC_H */
 #include <arpa/inet.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -543,6 +546,7 @@ static void
 sig_child (int sig UNUSED)
 {
   int status;
+  int save_errno = errno;
 
   while (waitpid (-1, &status, WNOHANG) > 0)
     {
@@ -550,6 +554,8 @@ sig_child (int sig UNUSED)
 	log_msg ("Child %d exists", WEXITSTATUS (status));
       children--;
     }
+
+  errno = save_errno;
 }
 
 static inline void

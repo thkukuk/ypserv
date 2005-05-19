@@ -48,6 +48,9 @@
 #include "yp.h"
 #include "compat.h"
 #include <rpcsvc/ypclnt.h>
+#if defined(HAVE_RPC_CLNT_SOC_H)
+#include <rpc/clnt_soc.h> /* for clntudp_create() */
+#endif /* HAVE_RPC_CLNT_SOC_H */
 #include <arpa/nameser.h>
 #ifdef HAVE_SHADOW_H
 #include <shadow.h>

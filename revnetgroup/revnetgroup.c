@@ -334,7 +334,7 @@ usage (int exit_code)
   exit (exit_code);
 }
 
-int
+static int
 insert_netgroup (hash_t ** liste, const char *key, const char *val)
 {
   hash_t *work;

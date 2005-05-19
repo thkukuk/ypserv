@@ -38,6 +38,9 @@
 #include <sys/socket.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
+#if defined(HAVE_RPC_SVC_SOC_H)
+#include <rpc/svc_soc.h> /* for svcudp_create() */
+#endif /* HAVE_RPC_SVC_SOC_H */
 
 #include "yp.h"
 #include "access.h"

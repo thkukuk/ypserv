@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996, 1997, 1998, 1999, 2001 Thorsten Kukuk, <kukuk@suse.de>
+   Copyright (c) 1996, 1997, 1998, 1999, 2001, 2005 Thorsten Kukuk, <kukuk@suse.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
@@ -191,7 +191,11 @@ usage (FILE * fp, int n)
 static void
 sig_child (int sig UNUSED)
 {
-  wait (NULL);
+  int save_errno = errno;
+
+  while (wait3 (NULL, WNOHANG, NULL) > 0)
+    ;
+  errno = save_errno;
 }
 
 /* Clean up if we quit the program. */

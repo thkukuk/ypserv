@@ -33,9 +33,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
-#ifdef NEED_SVCSOC_H
+#ifdef HAVE_RPC_SVC_SOC_H
 #include <rpc/svc_soc.h>
-#endif
+#endif /* HAVE_RPC_SVC_SOC_H */
 #include "log_msg.h"
 #include "ypxfrd.h"
 #include "access.h"

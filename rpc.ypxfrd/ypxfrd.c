@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2003 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2003, 2005 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -41,9 +41,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
-#ifdef NEED_SVCSOC_H
+#ifdef HAVE_RPC_SVC_SOC_H
 #include <rpc/svc_soc.h>
-#endif
+#endif /* HAVE_RPC_SVC_SOC_H */
 #include <rpc/pmap_clnt.h>
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
@@ -106,11 +106,11 @@ closedown (int sig)
 static void
 sig_child (int sig UNUSED)
 {
-   int st;
+  int save_errno = errno;
 
-   /* Clear all childs.  */
-   while (waitpid(-1, &st, WNOHANG) > 0)
-     ;
+  while (wait3 (NULL, WNOHANG, NULL) > 0)
+    ;
+  errno = save_errno;
 }
 
 /* Clean up if we quit the program.  */
@@ -151,7 +151,11 @@ main (int argc, char **argv)
   struct sockaddr_in socket_address;
   int result;
   struct sigaction sa;
+#if defined(__hpux)
+  int socket_size;
+#else /* not __hpux */
   socklen_t socket_size;
+#endif
 
   progname = strrchr (argv[0], '/');
   if (progname == (char *) NULL)
@@ -326,7 +330,11 @@ main (int argc, char **argv)
   _rpcfdtype = 0;
   if (getsockname(0, (struct sockaddr *)&socket_address, &socket_size) == 0)
     {
+#if defined(__hpux)
+      int int_size = sizeof (int);
+#else /* not __hpux */
       socklen_t  int_size = sizeof (int);
+#endif
       if (socket_address.sin_family != AF_INET)
 	return 1;
       if (getsockopt(0, SOL_SOCKET, SO_TYPE, (void*)&_rpcfdtype,

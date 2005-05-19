@@ -5,6 +5,10 @@ Copyright (C) 1998-2005 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@thkukuk.de>.
 
 
+Version 2.16
+* Fix signal handlers
+* Fix HP-UX support
+
 Version 2.15
 * makedbm: Use correct seperator if dumping databases
 * rcp.yppasswdd, rpc.ypxfrd, yppush, ypserv: Compile with -fpie
