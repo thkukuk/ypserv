@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001, 2002, 2003  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002, 2003, 2005  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -56,7 +56,7 @@ ypproc_null_2_svc (void *argp UNUSED, void *result UNUSED,
 	       ntohs (rqhost->sin_port));
     }
 
-  if (!is_valid (rqstp, NULL, NULL))
+  if (is_valid (rqstp, NULL, NULL) < 1)
     return FALSE;
 
   return TRUE;
@@ -84,6 +84,11 @@ ypproc_domain_2_svc (domainname *argp, bool_t *result,
     case -1:
       if (debug_flag)
         log_msg ("\t-> Ignored (not a valid source host)");
+      *result = FALSE;
+      break;
+    case 0:
+      if (debug_flag)
+        log_msg ("\t-> Ignored (forbidden by securenets)");
       *result = FALSE;
       break;
     default:
@@ -123,6 +128,10 @@ ypproc_domain_nonack_2_svc (domainname *argp, bool_t *result,
     case -1:
       if (debug_flag)
         log_msg ("\t-> Ignored (not a valid source host)");
+      return FALSE;
+    case 0:
+      if (debug_flag)
+        log_msg ("\t-> Ignored (forbidden by securenets)");
       return FALSE;
     default:
       *result = TRUE;
@@ -176,6 +185,11 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid domain)");
 	  result->stat = YP_NODOM;
+	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
 	  break;
 	}
       return TRUE;
@@ -251,6 +265,7 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
 	  result->stat = YP_NOMAP;
+	  break;
 	case -2:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid map name)");
@@ -260,6 +275,11 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid domain)");
           result->stat = YP_NODOM;
+	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
 	  break;
         }
       return TRUE;
@@ -361,6 +381,11 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
             log_msg ("\t-> Ignored (not a valid domain)");
           result->stat = YP_NODOM;
 	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
+	  break;
         }
       return TRUE;
     }
@@ -449,6 +474,14 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     {
       switch (valid)
 	{
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  else
+	    log_msg ("refuse to transfer map from %s",
+		     inet_ntoa (rqhost->sin_addr));
+	  result->xfrstat = YPXFR_REFUSED;
+	  break;
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
@@ -748,6 +781,11 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
     {
       switch (valid)
 	{
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->ypresp_all_u.val.stat = YP_NOMAP;
+	  break;
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
@@ -892,6 +930,12 @@ ypproc_master_2_svc (ypreq_nokey *argp, ypresp_master *result,
           if (debug_flag)
             log_msg ("\t-> Ignored (not a domain)");
           result->stat = YP_NODOM;
+	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
+	  break;
         }
       result->peer = strdup ("");
       return TRUE;
@@ -1003,6 +1047,11 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
             log_msg ("\t-> Ignored (not a valid domain)");
           result->stat = YP_NODOM;
 	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
+	  break;
         }
       return TRUE;
     }
@@ -1109,6 +1158,11 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
     {
       switch (valid)
 	{
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
+	  break;
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");

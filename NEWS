@@ -5,6 +5,10 @@ Copyright (C) 1998-2005 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@thkukuk.de>.
 
 
+Version 2.17
+* Fix debug output
+* Don't ignore securenets for ypserv domain functions
+
 Version 2.16
 * Fix signal handlers
 * Fix HP-UX support
