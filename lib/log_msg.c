@@ -38,7 +38,8 @@ log_msg (char *fmt,...)
 #else
       char msg[512];
 
-      vsnprintf (msg, sizeof (buf), fmt, ap);
+      vsnprintf (msg, sizeof (msg), fmt, ap);
+      msg[sizeof (msg) -1] = '\0';
       syslog (LOG_NOTICE, "%s", msg);
 #endif
     }
