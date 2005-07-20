@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -236,7 +236,11 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
     {
       struct passwd *pw;
 
-      pw = getpwnam (yppw->newpw.pw_name);
+      if ((pw = getpwnam (yppw->newpw.pw_name)) == NULL)
+	{
+	  log_msg ("user %s not found", yppw->newpw.pw_name);
+	  return &res;
+	}
       /* Do we need to update the GECOS information and are we allowed
 	 to do it ? */
       chfn = (strcmp (pw->pw_gecos, yppw->newpw.pw_gecos) != 0);
@@ -661,25 +665,8 @@ external_update_env (yppasswd *yppw)
       setenv ("YP_USER", yppw->newpw.pw_name, 1);
       setenv ("YP_GECOS", yppw->newpw.pw_gecos, 1);
       setenv ("YP_SHELL", yppw->newpw.pw_shell, 1);
-#elif defined(HAVE_PUTENV)
-      char aenv[5*64], *p;
-      p = aenv;
-      sprintf(p, "YP_PASSWD_OLD=%s", yppw->oldpass);
-      putenv(p);
-      p += strlen(p) + 1;
-      sprintf(p, "YP_PASSWD_NEW=%s", yppw->newpw.pw_passwd);
-      putenv(p);
-      p += strlen(p) + 1;
-      sprintf(p, "YP_USER=%s", yppw->newpw.pw_name);
-      putenv(p);
-      p += strlen(p) + 1;
-      sprintf(p, "YP_GECOS=%s", yppw->newpw.pw_gecos);
-      putenv(p);
-      p += strlen(p) + 1;
-      sprintf(p, "YP_SHELL=%s", yppw->newpw.pw_shell);
-      putenv(p);
 #else
-#  error "Missing both setenv() and putenv().  Need porting."
+#  error "Missing setenv(). Need porting."
 #endif
       execlp (external_update_program, external_update_program, NULL);
       _exit (1); /* fall-through */
@@ -743,7 +730,8 @@ external_update_pipe (yppasswd *yppw)
   char *shell = NULL;
   char *gcos = NULL;
 
-  char parentmsg[1024];
+  char *parentmsg;
+  size_t msglen;
 
   /* - */
 
@@ -850,36 +838,43 @@ external_update_pipe (yppasswd *yppw)
   /*
    * construct our message
    */
+  msglen = strlen (yppw->newpw.pw_name) + strlen (yppw->oldpass) + 10;
+  if (password)
+    msglen += strlen (password) + 3;
+  if (shell)
+    msglen += strlen (shell) + 3;
+  if (gcos)
+    msglen += strlen (gcos) + 3;
 
-  parentmsg[0] = '\0';
+  if ((parentmsg = malloc (msglen)) == NULL)
+    {
+      log_msg ("rpc.yppasswdd: out of memory");
+      return res;
+    }
 
-  strncat (parentmsg, yppw->newpw.pw_name, sizeof parentmsg);
-  strncat (parentmsg, " o:", sizeof parentmsg);
-  strncat (parentmsg, yppw->oldpass, sizeof parentmsg);
-  strncat (parentmsg, " ", sizeof parentmsg);
+  strcat (parentmsg, yppw->newpw.pw_name);
+  strcat (parentmsg, " o:");
+  strcat (parentmsg, yppw->oldpass);
+  strcat (parentmsg, " ");
 
   if (password)
     {
-      strncat (parentmsg, "p:", sizeof parentmsg);
-      strncat (parentmsg, password, sizeof parentmsg);
+      strcat (parentmsg, "p:");
+      strcat (parentmsg, password);
+      strcat (parentmsg, " ");
     }
 
   if (shell)
     {
-      if (password)
-        strncat (parentmsg, " ", sizeof parentmsg);
-
-      strncat (parentmsg, "s:", sizeof parentmsg);
-      strncat (parentmsg, shell, sizeof parentmsg);
+      strcat (parentmsg, "s:");
+      strcat (parentmsg, shell);
+      strcat (parentmsg, " ");
     }
 
   if (gcos)
     {
-      if (password || shell)
-        strncat(parentmsg, " ", sizeof parentmsg);
-
-      strncat(parentmsg, "g:", sizeof parentmsg);
-      strncat(parentmsg, gcos, sizeof parentmsg);
+      strcat(parentmsg, "g:");
+      strcat(parentmsg, gcos);
     }
 
   /*
@@ -889,6 +884,7 @@ external_update_pipe (yppasswd *yppw)
   fp = fdopen(tochildpipe[1], "w");
   fprintf(fp, "%s\n", parentmsg);
   fclose(fp);
+  free (parentmsg);
 
   /*
    * get output from the child

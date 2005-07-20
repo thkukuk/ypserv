@@ -1,3 +1,12 @@
+2005-07-20  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.18
+
+        * rpc.yppasswdd/update.c (external_update_env): Remove obsolete code.
+	(external_update_pipe): Don't use buffer of fixed length.
+
+        * lib/log_msg.c (log_msg): Use vsnprintf.
+
 2005-05-31  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release vesion 2.17

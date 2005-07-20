@@ -5,6 +5,9 @@ Copyright (C) 1998-2005 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@thkukuk.de>.
 
 
+Version 2.18
+* rpc.yppasswdd: Fix possible buffer overflow with -x/-E option
+
 Version 2.17
 * Fix debug output
 * Don't ignore securenets for ypserv domain functions

@@ -20,9 +20,6 @@ void
 log_msg (char *fmt,...)
 {
   va_list ap;
-#ifndef HAVE_VSYSLOG
-  char msg[512];
-#endif
 
   if (debug_output == NULL)
     debug_output = stderr;
@@ -36,11 +33,13 @@ log_msg (char *fmt,...)
     }
   else
     {
-#ifndef HAVE_VSYSLOG
-      vsprintf (msg, fmt, ap);
-      syslog (LOG_NOTICE, "%s", msg);
-#else
+#ifdef HAVE_VSYSLOG
       vsyslog (LOG_NOTICE, fmt, ap);
+#else
+      char msg[512];
+
+      vsnprintf (msg, sizeof (buf), fmt, ap);
+      syslog (LOG_NOTICE, "%s", msg);
 #endif
     }
   va_end (ap);
