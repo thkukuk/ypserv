@@ -1,3 +1,7 @@
+2005-09-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr.c (ypxfr): Clear response structures before usage.
+
 2005-07-20  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.18

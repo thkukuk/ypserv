@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001, 2002, 2003, 2004  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002, 2003, 2004, 2005  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -422,6 +422,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
      server name for the map on the master host. */
   req_nokey.domain = source_domain;
   req_nokey.map = map;
+  memset (&resp_master, 0, sizeof (resp_master));
   if (ypproc_master_2 (&req_nokey, &resp_master, clnt_udp) != RPC_SUCCESS)
     {
       log_msg (clnt_sperror (clnt_udp, "ypproc_master_2"));
@@ -460,6 +461,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
      for the map on the master host. */
   req_nokey.domain = source_domain;
   req_nokey.map = map;
+  memset (&resp_order, 0, sizeof (resp_order));
   if (ypproc_order_2 (&req_nokey, &resp_order, clnt_udp) != RPC_SUCCESS)
     {
       log_msg (clnt_sperror (clnt_udp, "ypproc_order_2"));
@@ -603,6 +605,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       req_key.map = map;
       req_key.key.keydat_val = "YP_INTERDOMAIN";
       req_key.key.keydat_len = strlen ("YP_INTERDOMAIN");
+      memset (&resp_val, 0, sizeof (resp_val));
       if (ypproc_match_2 (&req_key, &resp_val, clnt_udp) != RPC_SUCCESS)
         {
           clnt_perror (clnt_udp, "ypproc_match(YP_INTERDOMAIN)");
@@ -636,6 +639,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       req_key.map = map;
       req_key.key.keydat_val = "YP_SECURE";
       req_key.key.keydat_len = strlen ("YP_SECURE");
+      memset (&resp_val, 0, sizeof (resp_val));
       if (ypproc_match_2 (&req_key, &resp_val, clnt_udp) != RPC_SUCCESS)
         {
           clnt_perror (clnt_udp, "yproc_match");
@@ -681,6 +685,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
         req_nokey.domain = source_domain;
         req_nokey.map = map;
         xdr_ypall_callback = &callback;
+	memset (&resp_all, 0, sizeof (resp_all));
         if (ypproc_all_2 (&req_nokey, &resp_all, clnt_tcp) != RPC_SUCCESS)
           {
             clnt_perror (clnt_tcp, "ypall");
