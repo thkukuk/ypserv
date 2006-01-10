@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -199,7 +199,12 @@ load_ypserv_conf (const char *path)
 	    size_t i, j;
 	    unsigned long files = 30;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    buf1[sizeof (buf1) - 1] = '\0';
 	    while (c != ':' && i <= strlen (buf1))
@@ -244,7 +249,12 @@ load_ypserv_conf (const char *path)
 	  {
 	    size_t i, j;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    while (c != ':' && i <= strlen (buf1))
 	      {
@@ -293,7 +303,12 @@ load_ypserv_conf (const char *path)
 	  {			/* sunos_kludge / slp */
 	    size_t i;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    while (c != ':' && i <= strlen (buf1))
 	      {
@@ -379,7 +394,12 @@ load_ypserv_conf (const char *path)
 	  {			/* tryresolve / trusted_master */
 	    size_t i, j;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    while (c != ':' && i <= strlen (buf1))
 	      {
@@ -426,7 +446,12 @@ load_ypserv_conf (const char *path)
 	  {			/* xfr_check_port */
 	    size_t i, j;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    while (c != ':' && i <= strlen (buf1))
 	      {
@@ -476,7 +501,11 @@ load_ypserv_conf (const char *path)
 	    conffile_t *tmp;
 
 	    buf1[0] = c;
-	    fgets (&buf1[1], sizeof (buf1) - 2, in);
+	    if (fgets (&buf1[1], sizeof (buf1) - 2, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
 
 	    n = strtok (buf1, ":");
 	    if (n == NULL)
@@ -598,10 +627,11 @@ load_ypserv_conf (const char *path)
 	case '\n':
 	  break;		/* Ignore newline */
 	case '#':
-	  fgets (buf1, sizeof (buf1) - 1, in);
+	  if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	    log_msg ("Read error in line %d => Ignore line", line);
 	  break;
 	default:
-	  fgets (buf1, sizeof (buf1) - 1, in);
+	  char *c = fgets (buf1, sizeof (buf1) - 1, in);
 	  log_msg ("Parse error in line %d: %c%s", line, c, buf1);
 	  break;
 	}
