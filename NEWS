@@ -1,9 +1,12 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2005 Thorsten Kukuk
+Copyright (C) 1998-2006 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@thkukuk.de>.
 
+
+Version 2.19
+* Fix ypxfr crashes
 
 Version 2.18
 * rpc.yppasswdd: Fix possible buffer overflow with -x/-E option

@@ -1,4 +1,4 @@
-/* Copyright (c) 2003, 2004 Thorsten Kukuk
+/* Copyright (c) 2003, 2004, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -196,7 +196,10 @@ register_slp ()
 	}
       else
 	hp = gethostbyname (hostname);
-      hname = hp->h_name;
+      if (hp == NULL)
+	hname = hostname;
+      else
+	hname = hp->h_name;
 #endif
     }
 
