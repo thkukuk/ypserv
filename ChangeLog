@@ -1,4 +1,8 @@
-2006-01-10  Thorsten Kukuk  <kukuk@suse.de>
+2006-01-10  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 2.19
+
+	* ypserv/reg_slp.c (register_slp): Check if hostname is resolveable.
 
 	* configure.in: Make -pie usage configureable.
 	Based on patch by Urs Thuermann <urs@isnogud.escape.de>.
