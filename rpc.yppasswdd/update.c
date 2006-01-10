@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2005 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -415,7 +415,14 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       return 1;
     }
   chmod (path_passwd_tmp, passwd_stat.st_mode);
-  chown (path_passwd_tmp, passwd_stat.st_uid, passwd_stat.st_gid);
+  if (chown (path_passwd_tmp, passwd_stat.st_uid, passwd_stat.st_gid) == -1)
+    {
+      log_msg ("chown failed: %s", strerror (errno));
+      fclose (oldpf);
+      fclose (newpf);
+      unlink (path_passwd_tmp);
+      return 1;
+    }
 
 #ifdef HAVE_GETSPNAM
   /* Open the shadow file for reading. */
@@ -432,15 +439,26 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 
       if ((newsf = fopen (path_shadow_tmp, "w+")) == NULL)
 	{
+	  int err = errno;
 	  log_msg ("%s failed", logbuf);
-	  log_msg ("Can't open %s.tmp: %m", path_passwd);
+	  log_msg ("Can't open %s.tmp: %s",
+		   path_passwd, strerror (err));
 	  fclose (oldsf);
 	  fclose (newpf);
 	  fclose (oldpf);
 	  return 1;
 	}
       chmod (path_shadow_tmp, shadow_stat.st_mode);
-      chown (path_shadow_tmp, shadow_stat.st_uid, shadow_stat.st_gid);
+      if (chown (path_shadow_tmp, shadow_stat.st_uid,
+		 shadow_stat.st_gid) == -1)
+	{
+	  log_msg ("chown failed", strerror (errno));
+	  fclose (newsf);
+	  fclose (oldsf);
+	  fclose (newpf);
+	  fclose (oldpf);
+	  return 1;
+	}
     }
 #endif /* HAVE_GETSPNAM */
 
@@ -598,8 +616,10 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       /* write the passwd entry to tmp file */
       if (putpwent (pw, newpf) < 0)
 	{
+	  int err = errno;
 	  log_msg ("%s failed", logbuf);
-	  log_msg ("Error while writing new password file: %m");
+	  log_msg ("Error while writing new password file: %s",
+		   strerror (err));
 	  *passwd_changed = 0;
 	  break;
 	}
@@ -623,7 +643,9 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
   if (*shadow_changed)
     {
       unlink (path_shadow_old);
-      link (path_shadow, path_shadow_old);
+      if (link (path_shadow, path_shadow_old) == -1)
+	log_msg ("Cannot create backup file %s: %s",
+		 path_shadow_old, strerror (errno));
       rename (path_shadow_tmp, path_shadow);
     }
   else
@@ -633,7 +655,9 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
   if (*passwd_changed)
     {
       unlink (path_passwd_old);
-      link (path_passwd, path_passwd_old);
+      if (link (path_passwd, path_passwd_old) == -1)
+	log_msg ("Cannot create backup file %s: %s",
+		 path_passwd_old, strerror (errno));
       rename (path_passwd_tmp, path_passwd);
     }
   else

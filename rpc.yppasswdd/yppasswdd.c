@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996, 1997, 1998, 1999, 2001, 2005 Thorsten Kukuk, <kukuk@suse.de>
+   Copyright (c) 1996, 1997, 1998, 1999, 2001, 2005, 2006 Thorsten Kukuk, <kukuk@suse.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
@@ -424,19 +424,35 @@ main (int argc, char **argv)
 
       if (i < 0)
 	{
-	  log_msg ("rpc.yppasswdd: cannot fork: %s\n", strerror (errno));
-	  exit (-1);
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: cannot fork: %s\n", strerror (err));
+	  exit (err);
 	}
 
       for (i = 0; i < getdtablesize (); ++i)
         close (i);
       errno = 0;
 
-      chdir ("/");
+      if (chdir ("/") == -1)
+	{
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: chdir failed: %s\n", strerror (err));
+	  exit (err);
+	}
       umask(0);
       i = open("/dev/null", O_RDWR);
-      dup(i);
-      dup(i);
+      if (dup(i) == -1)
+	{
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: dup failed: %s\n", strerror (err));
+	  exit (err);
+	}
+      if (dup(i) == -1)
+	{
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: dup failed: %s\n", strerror (err));
+	  exit (err);
+	}
     }
 
   create_pidfile ();

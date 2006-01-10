@@ -1,4 +1,4 @@
-/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002, 2003, 2005 Thorsten Kukuk
+/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002, 2003, 2005, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -265,7 +265,8 @@ create_file (char *fileName, char *dbmName, char *masterName,
 	      char *nkey = NULL;
 	      size_t nkeylen = 0;
 #ifdef HAVE_GETLINE
-	      getline (&nkey, &nkeylen, input);
+	      if (getline (&nkey, &nkeylen, input) == -1)
+		break;
 #elif HAVE_GETDELIM
 	      getdelim (&nkey, &nkeylen, '\n', input);
 #else

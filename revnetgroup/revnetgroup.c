@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -134,13 +134,16 @@ main (int argc, char **argv)
 
       while (buffer[strlen (buffer) - 1] == '\\')
 	{
+	  char *s;
 #ifdef DEBUG_NETGROUP
-	  fgets (&buffer[strlen (buffer) - 1],
-		 BUFSIZE - strlen (buffer), debug_file);
+	  s = fgets (&buffer[strlen (buffer) - 1],
+		     BUFSIZE - strlen (buffer), debug_file);
 #else
-	  fgets (&buffer[strlen (buffer) - 1],
-		 BUFSIZE - strlen (buffer), stdin);
+	  s = fgets (&buffer[strlen (buffer) - 1],
+		     BUFSIZE - strlen (buffer), stdin);
 #endif
+	  if (s == NULL)
+	    continue;
 	  if ((cptr = strchr (buffer, '\n')) != NULL)
 	    *cptr = '\0';
 	}

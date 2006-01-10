@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -470,7 +470,7 @@ main (int argc, char **argv)
       if (setsid () == -1)
 	{
 	  log_msg ("Cannot setsid: %s\n", strerror (errno));
-	  exit (-1);
+	  exit (1);
 	}
 
       if ((i = fork ()) > 0)
@@ -488,8 +488,16 @@ main (int argc, char **argv)
 
       umask (0);
       i = open ("/dev/null", O_RDWR);
-      dup (i);
-      dup (i);
+      if (dup (i) == -1)
+	{
+	  log_msg ("dup failed: %s\n", strerror (errno));
+	  exit (1);
+	}
+      if (dup (i) == -1)
+	{
+	  log_msg ("dup failed: %s\n", strerror (errno));
+	  exit (1);
+	}
     }
 
   if (argc > 0 && debug_flag)

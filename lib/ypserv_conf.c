@@ -631,7 +631,7 @@ load_ypserv_conf (const char *path)
 	    log_msg ("Read error in line %d => Ignore line", line);
 	  break;
 	default:
-	  char *c = fgets (buf1, sizeof (buf1) - 1, in);
+	  if (fgets (buf1, sizeof (buf1) - 1, in) == NULL) {};
 	  log_msg ("Parse error in line %d: %c%s", line, c, buf1);
 	  break;
 	}

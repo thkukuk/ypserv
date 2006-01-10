@@ -2,6 +2,24 @@
 
 	* release version 2.19
 
+	* lib/ypserv_conf.c (load_ypserv_conf): Don't ignore return value
+	of fgets().
+	* lib/securenets.c (load_securenets): Likewise.
+	* revnetgroup/revnetgroup.c (main): Likewise.
+
+	* ypserv/ypserv.c (main): Don't ignore return value of dup().
+	* ypserv/server.c (ypproc_xfr_2_svc): Likewise.
+	* rpc.ypxfrd/ypxfrd.c (main): Likewise.
+
+	* makedbm/makedbm.c (create_file): Don't ignore return value of
+	getline().
+
+	* rpc.yppasswdd/update.c (update_files): Don't ignore return values
+	of unlink() and chown().
+
+	* rpc.yppasswdd/yppasswdd.c (main): Don't ignore return values of
+	chdir() and dup().
+
 	* ypserv/reg_slp.c (register_slp): Check if hostname is resolveable.
 
 	* configure.in: Make -pie usage configureable.

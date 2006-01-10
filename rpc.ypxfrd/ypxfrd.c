@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2003, 2005 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2003, 2005, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -252,8 +252,18 @@ main (int argc, char **argv)
 
 	umask(0);
 	i = open("/dev/null", O_RDWR);
-	dup(i);
-	dup(i);
+	if (dup(i) == -1)
+	  {
+	    int err = errno;
+	    log_msg ("dup failed: %s\n", strerror (err));
+	    exit (err);
+	  }
+	if (dup(i) == -1)
+	  {
+	    int err = errno;
+	    log_msg ("dup failed: %s\n", strerror (err));
+	    exit (err);
+	  }
       }
 
   /* Change current directory to database location */

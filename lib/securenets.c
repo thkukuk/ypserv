@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2003, 2005 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2003, 2005, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -82,7 +82,8 @@ load_securenets (void)
       memset (buf1, 0, sizeof (buf1));
       memset (buf2, 0, sizeof (buf2));
       memset (buf3, 0, sizeof (buf3));
-      fgets (buf3, 128, in);
+      if (fgets (buf3, 128, in) == NULL)
+	continue;
       line++;
 
       if (buf3[0] == '\0' || buf3[0] == '#' || buf3[0] == '\n')
