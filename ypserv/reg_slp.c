@@ -197,7 +197,11 @@ register_slp ()
       else
 	hp = gethostbyname (hostname);
       if (hp == NULL)
-	hname = hostname;
+	{
+	  log_msg ("Broken setup: cannot resolve %s, please fix",
+		   hostname);
+	  hname = hostname;
+	}
       else
 	hname = hp->h_name;
 #endif
