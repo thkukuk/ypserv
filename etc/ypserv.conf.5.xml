@@ -2,104 +2,123 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <!-- lifted from troff+man by doclifter -->
-<refentry id='ypservconf5'>
-<!--  \-*\- nroff \-*\- -->
-<!--  Copyright (c) 1996, 1997, 1998, 1999, 2000, 2002, 2003, 2004 Thorsten Kukuk kukuk@suse.de -->
+<refentry id='ypserv.conf'>
 
-<refmeta>
-<refentrytitle>YPSERV.CONF</refentrytitle>
-<manvolnum>5</manvolnum>
-<refmiscinfo class='source'>October 2002</refmiscinfo>
-<refmiscinfo class='manual'>YP Server</refmiscinfo>
-</refmeta>
-<refnamediv id='name'>
-<refname>ypserv.conf</refname>
-<refpurpose>configuration file for ypserv and rpc.ypxfrd</refpurpose>
-</refnamediv>
+  <refmeta>
+    <refentrytitle>ypserv.conf</refentrytitle>
+    <manvolnum>5</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>ypserv.conf</refname>
+    <refpurpose>configuration file for ypserv and rpc.ypxfrd</refpurpose>
+  </refnamediv>
+
 <!-- body begins here -->
 
-<refsect1 id='description'><title>DESCRIPTION</title>
-<para><emphasis remap='B'>ypserv.conf</emphasis>
-is an ASCII file which contains some options for ypserv. It also
-contains a list of rules for special host and map access for ypserv
-and rpc.ypxfrd. This file will be read by ypserv and rpc.ypxfrd at
-startup, or when receiving a SIGHUP signal.</para>
+  <refsect1 id='description'>
+    <title>DESCRIPTION</title>
+    <para>
+      <emphasis>ypserv.conf</emphasis> is an ASCII file which contains
+      some options for ypserv. It also contains a list of rules for
+      special host and map access for ypserv and rpc.ypxfrd. This file
+      will be read by ypserv and rpc.ypxfrd at startup, or when receiving
+      a SIGHUP signal.
+    </para>
 
-<para>There is one entry per line. If the line is a option line,
-the format is:</para>
+    <para>
+      There is one entry per line. If the line is a option line, the
+      format is:
+    </para>
 
-<para>option: &lt;argument&gt;</para>
+    <programlisting>
+   option: <emphasis>argument</emphasis></programlisting>
 
-<para>The line for an access rule has the format:</para>
+    <para>
+      The line for an access rule has the format:
+    </para>
 
-<para>host:domain:map:security</para>
+    <programlisting>
+   host:domain:map:security</programlisting>
 
-<para>All rules are tried one by one. If no match is found, access to a
-map is allowed.</para>
+    <para>
+      All rules are tried one by one. If no match is found, access to a
+      map is allowed.
+    </para>
 
-<para>Following
-<emphasis remap='I'>options</emphasis>
-exist:</para>
-<variablelist remap='TP'>
-  <varlistentry>
-  <term><emphasis remap='B'>files: </emphasis>30</term>
-  <listitem>
-<para>This option specifies, how many database files should be cached by
-<emphasis remap='B'>ypserv</emphasis>.
-If
-<literal>0</literal>
-is specified, caching is disabled. Decreasing this number is only
-possible, if
-<emphasis remap='B'>ypserv</emphasis>
-is restarted.</para>
-  </listitem>
-  </varlistentry>
-  <varlistentry>
-  <term><emphasis remap='B'>trusted_master: </emphasis>server</term>
-  <listitem>
-<para>If this option is set on a slave server, new maps from the host
-<emphasis remap='I'>server</emphasis>
-will be accepted as master. The default is, that
-no trusted master is set and new maps will not be accepted.
-<!-- .br -->
-Example:
-<!-- .br -->
-trusted_master: ypmaster.example.org</para>
-  </listitem>
-  </varlistentry>
-  <varlistentry>
-  <term><emphasis remap='B'>slp: </emphasis>[yes|&lt;no&gt;|domain]</term>
-  <listitem>
-<para>If this option is enabled and SLP support compiled in, the NIS server
-registers itself on a SLP server. If the variable is set to
-<emphasis remap='B'>domain</emphasis>,
-an attribute
-<emphasis remap='I'>domain</emphasis>
-with a comma seperated list of supported domainnames is set. Else
-this attribute will not be set.</para>
-  </listitem>
-  </varlistentry>
-  <varlistentry>
-  <term><emphasis remap='B'>xfr_check_port: </emphasis>[&lt;yes&gt;|no]</term>
-  <listitem>
-<para>With this option enabled, the NIS master server have to run on a
-port &lt; 1024. The default is "yes" (enabled).</para>
-  </listitem>
-  </varlistentry>
-</variablelist>
+    <para>
+      Following options exist:
+    </para>
+    <variablelist>
+      <varlistentry>
+      <term>files: <emphasis>30</emphasis></term>
+      <listitem>
+        <para>
+          This option specifies, how many database files should be
+          cached by <emphasis>ypserv</emphasis>. If <literal>0</literal>
+          is specified, caching is disabled. Decreasing this number is only
+          possible, if ypserv is restarted.
+        </para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>trusted_master: <emphasis>server</emphasis></term>
+      <listitem>
+        <para>
+          If this option is set on a slave server, new maps from the
+          host <emphasis>server</emphasis> will be accepted as master. The
+          default is, that no trusted master is set and new maps will not
+          be accepted.
+        </para>
+        <para>
+          Example:
+        </para>
+        <programlisting>
+   trusted_master: ypmaster.example.org
+        </programlisting>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>slp: [<emphasis>yes</emphasis>|<emphasis>&lt;no&gt;</emphasis>|<emphasis>domain</emphasis>]</term>
+      <listitem>
+        <para>
+          If this option is enabled and SLP support compiled in, the NIS
+          server registers itself on a SLP server. If the variable is set
+          to <emphasis>domain</emphasis>, an attribute
+          <emphasis>domain</emphasis> with a comma seperated list of supported
+          domainnames is set. Else this attribute will not be set.
+        </para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>xfr_check_port: [<emphasis>&lt;yes&gt;</emphasis>|<emphasis>no</emphasis>]</term>
+      <listitem>
+        <para>
+          With this option enabled, the NIS master server have to run on a
+          port &lt; 1024. The default is "yes" (enabled).
+        </para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
 
-<para>The field descriptions for the access rule lines are:</para>
-<variablelist remap='TP'>
-  <varlistentry>
-  <term><emphasis remap='B'>host</emphasis></term>
-  <listitem>
-<para>IP address. Wildcards are allowed.
-<!-- .br -->
-Examples:
-<!-- .br -->
-131.234. = 131.234.0.0/255.255.0.0
-<!-- .br -->
-131.234.214.0/255.255.254.0</para>
+  <para>
+    The field descriptions for the access rule lines are:
+  </para>
+  <variablelist>
+    <varlistentry>
+    <term>host</term>
+    <listitem>
+      <para>
+        IP address. Wildcards are allowed.
+      </para>
+      <para>
+        Examples:
+      </para>
+      <programlisting>
+   131.234. = 131.234.0.0/255.255.0.0
+   131.234.214.0/255.255.254.0
+      </programlisting>
   </listitem>
   </varlistentry>
   <varlistentry>
@@ -166,4 +185,3 @@ which depend on privileged ports cause big problems on Solaris clients.</para>
 <para>Thorsten Kukuk &lt;kukuk@suse.de&gt;</para>
 </refsect1>
 </refentry>
-

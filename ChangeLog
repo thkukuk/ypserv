@@ -1,3 +1,10 @@
+2006-04-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* etc/netgroup.5.xml: New file.
+	* etc/netgroup.5: Regenerated from xml source.
+	* etc/Makefile.am: Add rules for xml.
+	* configure.in: Check for xml tools.
+
 2006-01-10  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* release version 2.19

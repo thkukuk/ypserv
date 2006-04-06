@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "YPSERV.CONF" "5" "04/06/2006" "October 2002" "YP Server"
+.TH "YPSERV.CONF" "5" "04/06/2006" "NIS Reference Manual" "NIS Reference Manual"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -15,45 +15,60 @@ ypserv.conf \- configuration file for ypserv and rpc.ypxfrd
 is an ASCII file which contains some options for ypserv. It also contains a list of rules for special host and map access for ypserv and rpc.ypxfrd. This file will be read by ypserv and rpc.ypxfrd at startup, or when receiving a SIGHUP signal.
 .PP
 There is one entry per line. If the line is a option line, the format is:
-.PP
-option: <argument>
+.sp
+.nf
+   option: \fIargument\fR
+.fi
 .PP
 The line for an access rule has the format:
-.PP
-host:domain:map:security
+.sp
+.nf
+   host:domain:map:security
+.fi
 .PP
 All rules are tried one by one. If no match is found, access to a map is allowed.
 .PP
-Following
-\fIoptions\fR
-exist:
+Following options exist:
 .TP
-\fIfiles: \fR30
+files: \fI30\fR
 This option specifies, how many database files should be cached by
 \fIypserv\fR. If
 0
-is specified, caching is disabled. Decreasing this number is only possible, if
-\fIypserv\fR
-is restarted.
+is specified, caching is disabled. Decreasing this number is only possible, if ypserv is restarted.
 .TP
-\fItrusted_master: \fRserver
+trusted_master: \fIserver\fR
 If this option is set on a slave server, new maps from the host
 \fIserver\fR
-will be accepted as master. The default is, that no trusted master is set and new maps will not be accepted.Example:trusted_master: ypmaster.example.org
+will be accepted as master. The default is, that no trusted master is set and new maps will not be accepted.
+.sp
+Example:
+.sp
+.nf
+   trusted_master: ypmaster.example.org
+        
+.fi
 .TP
-\fIslp: \fR[yes|<no>|domain]
+slp: [\fIyes\fR|\fI<no>\fR|\fIdomain\fR]
 If this option is enabled and SLP support compiled in, the NIS server registers itself on a SLP server. If the variable is set to
 \fIdomain\fR, an attribute
 \fIdomain\fR
 with a comma seperated list of supported domainnames is set. Else this attribute will not be set.
 .TP
-\fIxfr_check_port: \fR[<yes>|no]
+xfr_check_port: [\fI<yes>\fR|\fIno\fR]
 With this option enabled, the NIS master server have to run on a port < 1024. The default is "yes" (enabled).
 .PP
 The field descriptions for the access rule lines are:
 .TP
-\fIhost\fR
-IP address. Wildcards are allowed.Examples:131.234. = 131.234.0.0/255.255.0.0131.234.214.0/255.255.254.0
+host
+IP address. Wildcards are allowed.
+.sp
+Examples:
+.sp
+.nf
+   131.234. = 131.234.0.0/255.255.0.0
+   131.234.214.0/255.255.254.0
+      
+.fi
 .TP
 \fIdomain\fR
 specifies the domain, for which this rule should be applied. An asterix as wildcard is allowed.

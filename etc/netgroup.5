@@ -13,13 +13,13 @@ netgroup \- specify network groups
 .PP
 The
 \fInetgroup\fR
-file defines "netgroups", which are sets of (host, user, domain) tuples, used for permission checking when doing remote mounts, remote logins and remote shells.
+file defines "netgroups", which are sets of (host, user, domain) tuples, used for permission checking when doing remote mounts,remote logins and remote shells.
 .PP
 Each line in the file consists of a netgroup name followed by a by a list of members, where a member is either another netgroup name, or a triple:
-.PP
-(\fIhost\fR,
-\fIuser\fR,
-\fIdomain\fR)
+.sp
+.nf
+   (\fIhost\fR, \fIuser\fR, \fIdomain\fR) 
+.fi
 .PP
 where the
 \fIhost\fR,
@@ -30,13 +30,16 @@ are character strings for the corresponding components. Any of the three fields 
 field must either be the local domain name or empty for the netgroup entry to be used. This field does not limit the netgroup or provide security. The domain field refers to the domain in which the triple is valid, not the domain containing the the trusted host.
 .PP
 A gateway machine should be listed under all possible hostnames by which it may be recognized:
+.sp
+.nf
+   gateway (server, , ) (server\-sn, , ) (server\-bb, , )
+.fi
 .PP
-gateway (server, , ) (server\-sn, , ) (server\-bb, , )
-.PP
-The getnetgrent functions should normally be used to access the netgroup database.
+The
+\fBgetnetgrent\fR(3), function should normally be used to access the netgroup database.
 .SH "FILES"
 .PP
-/etc/netgroup
+\fI/etc/netgroup\fR
 .SH "SEE ALSO"
 .PP
 \fBgetnetgrent\fR(3),
@@ -52,4 +55,4 @@ and
 fields of the triple to restrict the access correctly to a specific set of members.
 .SH "AUTHOR"
 .PP
-Thorsten Kukuk <kukuk@suse.de>
+Thorsten Kukuk <kukuk@thkukuk.de>
