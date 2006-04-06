@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id='netgroup'>
+  <refmeta>
+    <refentrytitle>netgroup</refentrytitle>
+    <manvolnum>5</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='netgroup-name'>
+    <refname>netgroup</refname>
+    <refpurpose>specify network groups</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+
+<refsect1 id='description'><title>DESCRIPTION</title>
+<para>The
+<emphasis remap='B'>netgroup</emphasis>
+file  defines "netgroups", which are sets of (host, user, domain)
+tuples, used for permission checking when doing remote mounts,
+remote logins and remote shells.</para>
+
+<para>Each line in the file consists of a netgroup name followed by a
+by a list of members, where a member is either another netgroup name,
+or a triple:</para>
+
+<para>(<emphasis remap='I'>host</emphasis>,
+<emphasis remap='I'>user</emphasis>,
+<emphasis remap='I'>domain</emphasis>)</para>
+
+<para>where the
+<emphasis remap='I'>host</emphasis>,
+<emphasis remap='I'>user</emphasis>,
+and
+<emphasis remap='I'>domain</emphasis>
+are character strings for the
+corresponding components. Any of the three fields can be empty,
+in which case it specifies a "wildcard", or may consist of the string
+"-" to specify "no valid value". The
+<emphasis remap='I'>domain</emphasis>
+field must either be the local domain name or empty for the netgroup
+entry to be used. This field does not limit the netgroup or provide
+security. The domain field refers to the domain in which the triple
+is valid, not the domain containing the the trusted host.</para>
+
+<para>A gateway machine should be listed under all possible
+hostnames by which it may be recognized:</para>
+
+<para>gateway (server,&thinsp;,&thinsp;) (server-sn,&thinsp;,&thinsp;) (server-bb,&thinsp;,&thinsp;)</para>
+
+
+<para>The getnetgrent functions should normally be used to access the
+netgroup database.</para>
+
+</refsect1>
+
+<refsect1 id='files'><title>FILES</title>
+<para>/etc/netgroup</para>
+</refsect1>
+
+<refsect1 id='see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>getnetgrent</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>exports</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>makedbm</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+</refsect1>
+
+<refsect1 id='warnings'><title>WARNINGS</title>
+<para>The triple (,,domain) allows all users and machines trusted
+access, and has the same effect as the triple (,,). Use the
+<emphasis remap='I'>host</emphasis>
+and
+<emphasis remap='I'>user</emphasis>
+fields of the triple to restrict the access
+correctly to a specific set of members.</para>
+</refsect1>
+
+<refsect1 id='author'><title>AUTHOR</title>
+<para>Thorsten Kukuk &lt;kukuk@suse.de&gt;</para>
+</refsect1>
+</refentry>
+

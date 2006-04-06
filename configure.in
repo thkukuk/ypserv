@@ -275,6 +275,23 @@ AC_CHECK_FUNCS(xdr_ypmap_parms xdr_ypreq_nokey xdr_ypresp_master xdr_mapname)
 AC_CHECK_FUNCS(xdr_peername xdr_ypstat xdr_ypbind_binding xdr_yppushresp_xfr)
 AC_CHECK_FUNCS(xdr_yppush_status)
 
+dnl
+dnl Check for xsltproc
+dnl
+enable_man=yes
+AC_PATH_PROG([XSLTPROC], [xsltproc])
+if test -z "$XSLTPROC"; then
+     enable_man=no
+fi
+AC_PATH_PROG([XMLLINT], [xmllint],[/bin/true])
+dnl check for DocBook DTD and stylesheets in the local catalog.
+JH_CHECK_XML_CATALOG([-//OASIS//DTD DocBook XML V4.3//EN],
+                [DocBook XML DTD V4.3], [], enable_man=no)
+JH_CHECK_XML_CATALOG([http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl],
+                [DocBook XSL Stylesheets], [], enable_man=no)
+AM_CONDITIONAL(ENABLE_REGENERATE_MAN, test x$enable_man != xno)
+
+
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
 	ypxfr/Makefile ypxfr/ypxfr.8 yppush/Makefile yppush/yppush.8
 	makedbm/Makefile makedbm/makedbm.8
