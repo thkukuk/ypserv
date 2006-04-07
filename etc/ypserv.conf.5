@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "YPSERV.CONF" "5" "04/06/2006" "NIS Reference Manual" "NIS Reference Manual"
+.TH "YPSERV.CONF" "5" "04/07/2006" "NIS Reference Manual" "NIS Reference Manual"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -30,13 +30,13 @@ All rules are tried one by one. If no match is found, access to a map is allowed
 .PP
 Following options exist:
 .TP
-files: \fI30\fR
+\fBfiles:\fR \fI30\fR
 This option specifies, how many database files should be cached by
 \fIypserv\fR. If
 0
 is specified, caching is disabled. Decreasing this number is only possible, if ypserv is restarted.
 .TP
-trusted_master: \fIserver\fR
+\fBtrusted_master:\fR \fIserver\fR
 If this option is set on a slave server, new maps from the host
 \fIserver\fR
 will be accepted as master. The default is, that no trusted master is set and new maps will not be accepted.
@@ -45,21 +45,21 @@ Example:
 .sp
 .nf
    trusted_master: ypmaster.example.org
-        
+          
 .fi
 .TP
-slp: [\fIyes\fR|\fI<no>\fR|\fIdomain\fR]
+\fBslp:\fR [\fIyes\fR|\fI<no>\fR|\fIdomain\fR]
 If this option is enabled and SLP support compiled in, the NIS server registers itself on a SLP server. If the variable is set to
 \fIdomain\fR, an attribute
 \fIdomain\fR
-with a comma seperated list of supported domainnames is set. Else this attribute will not be set.
+with a comma seperated list of supported domainnames is set. Else this attribute will not be set. The default is "no" (disabled).
 .TP
-xfr_check_port: [\fI<yes>\fR|\fIno\fR]
+\fBxfr_check_port:\fR [\fI<yes>\fR|\fIno\fR]
 With this option enabled, the NIS master server have to run on a port < 1024. The default is "yes" (enabled).
 .PP
 The field descriptions for the access rule lines are:
 .TP
-host
+\fBhost\fR
 IP address. Wildcards are allowed.
 .sp
 Examples:
@@ -67,17 +67,21 @@ Examples:
 .nf
    131.234. = 131.234.0.0/255.255.0.0
    131.234.214.0/255.255.254.0
-      
+          
 .fi
 .TP
-\fIdomain\fR
+\fBdomain\fR
 specifies the domain, for which this rule should be applied. An asterix as wildcard is allowed.
 .TP
-\fImap\fR
+\fBmap\fR
 name of the map, or asterisk for all maps.
 .TP
-\fIsecurity\fR
-one of none, port, deny:
+\fBsecurity\fR
+one of
+\fInone\fR,
+\fIport\fR,
+\fIdeny\fR:
+.RS
 .TP
 \fInone\fR
 always allow access.
@@ -87,9 +91,10 @@ allow access if from port < 1024. Otherwise do not allow access.
 .TP
 \fIdeny\fR
 deny access to this map.
+.RE
 .SH "FILES"
 .PP
-/etc/ypserv.conf
+\fI/etc/ypserv.conf\fR
 .SH "SEE ALSO"
 .PP
 \fBypserv\fR(8),
@@ -97,9 +102,8 @@ deny access to this map.
 .SH "WARNINGS"
 .PP
 The access rules for special maps are no real improvement in security, but they make the life a little bit harder for a potential hacker.
-.SH "BUGS"
 .PP
 Solaris clients don't use privileged ports. All security options which depend on privileged ports cause big problems on Solaris clients.
 .SH "AUTHOR"
 .PP
-Thorsten Kukuk <kukuk@suse.de>
+Thorsten Kukuk <kukuk@thkukuk.de>
