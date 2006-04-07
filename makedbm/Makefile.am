@@ -13,14 +13,22 @@ DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DUSE_FQDN=@USE_FQDN@
 INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
-CLEANFILES = *~ ${MANS}
+CLEANFILES = *~
 
-EXTRA_DIST = $(addsuffix .in,$(MANS))
+EXTRA_DIST = ${MANS} ${XMLS}
 
 man_MANS = makedbm.8
+XMLS = makedbm.8.xml
 
 libexec_PROGRAMS = makedbm
 
 makedbm_SOURCES = makedbm.c
 
 makedbm_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a
+
+if ENABLE_REGENERATE_MAN
+%.8: %.8.xml
+	$(XMLLINT) --nonet --xinclude --postvalid --noout $<
+	$(XSLTPROC) -o $(srcdir)/$@ --path $(srcdir) --xinclude --nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+endif
+

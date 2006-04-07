@@ -294,7 +294,7 @@ AM_CONDITIONAL(ENABLE_REGENERATE_MAN, test x$enable_man != xno)
 
 AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
 	ypxfr/Makefile ypxfr/ypxfr.8 yppush/Makefile yppush/yppush.8
-	makedbm/Makefile makedbm/makedbm.8
+	makedbm/Makefile
 	revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile
 	mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile
 	rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8 rpc.yppasswdd/Makefile
