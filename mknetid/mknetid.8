@@ -1,0 +1,89 @@
+.\"     Title: mknetid
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.70.1 <http://docbook.sf.net/>
+.\"      Date: 08/02/2006
+.\"    Manual: NIS Reference Manual
+.\"    Source: NIS Reference Manual
+.\"
+.TH "MKNETID" "8" "08/02/2006" "NIS Reference Manual" "NIS Reference Manual"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+mknetid \- generate data for netid map
+.SH "SYNOPSIS"
+.HP 20
+\fB/usr/lib/yp/mknetid\fR [\-q] [\-h\ \fIhosts\fR] [\-p\ \fIpasswd\fR] [\-g\ \fIgroup\fR] [\-d\ \fIdomain\fR] [\-n\ \fInetid\fR]
+.HP 20
+\fB/usr/lib/yp/mknetid\fR \-\-version
+.SH "DESCRIPTION"
+.PP
+\fBmknetid\fR
+generates the
+\fInetid.byname\fR
+NIS map from the contents of the group(5), passwd(5), hosts(5) and netid files. It checks for multiple entrys of netids and warn for them or filters them out. It is only called by
+\fI/var/yp/Makefile\fR
+when rebuilding the NIS map.
+.SH "OPTIONS"
+.TP 3n
+\fB\-q\fR
+This flag turns on 'quiet' mode, don't print a warning message when finding an duplicate netid entry.
+.TP 3n
+\fB\-h\fR\fI hosts\fR
+The
+\fB\-h\fR
+flag can be used to specify the use of another hosts file than the default
+\fI/etc/hosts\fR.
+.TP 3n
+\fB\-p\fR\fI passwd\fR
+The
+\fB\-p\fR
+flag can be used to specify the use of another passwd file than the default
+\fI/etc/passwd\fR.
+.TP 3n
+\fB\-g\fR\fI group\fR
+The
+\fB\-g\fR
+flag can be used to specify the use of another group file than the default
+\fI/etc/group\fR.
+.TP 3n
+\fB\-n\fR\fI netid\fR
+The
+\fB\-n\fR
+flag can be used to specify the use of another netid file than the default
+\fI/etc/netid\fR.
+.TP 3n
+\fB\-d\fR\fI domain\fR
+The
+\fBmknetid\fR
+command uses the system domainname by default. If it is not set or you whish to override it, you must use the
+\fB\-d\fR
+parameter.
+.TP 3n
+\fB\-\-version\fR
+Prints the version number
+.SH "FILES"
+.TP 3n
+\fI/etc/group\fR
+groups file
+.TP 3n
+\fI/etc/hosts\fR
+hosts database
+.TP 3n
+\fI/etc/netid\fR
+netname database
+.TP 3n
+\fI/etc/passwd\fR
+password file
+.SH "SEE ALSO"
+.PP
+\fBpasswd\fR(8),
+\fBgroup\fR(5),
+\fBhosts\fR(5),
+\fBpasswd\fR(5)
+.SH "AUTHOR"
+.PP
+
+\fBmknetid\fR
+was written by Thorsten Kukuk <kukuk@suse.de>.
