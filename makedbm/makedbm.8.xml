@@ -1,47 +1,48 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<!-- lifted from troff+man by doclifter -->
-<refentry id='makedbm8'>
-<!--  \-*\- nroff \-*\- -->
-<refmeta>
-<refentrytitle>MAKEDBM</refentrytitle>
-<manvolnum>8</manvolnum>
-<refmiscinfo class='source'>August 2001</refmiscinfo>
-<refmiscinfo class='manual'>YP Server</refmiscinfo>
-</refmeta>
-<refnamediv id='name'>
-<refname>makedbm</refname>
-<refpurpose>create or dump a ypserv database file</refpurpose>
-</refnamediv>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='makedbm'>
+
+  <refmeta>
+    <refentrytitle>makedbm</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>makedbm</refname>
+    <refpurpose>create or dump a ypserv database file</refpurpose>
+  </refnamediv>
+
 <!-- body begins here -->
-<refsynopsisdiv id='synopsis'>
-<cmdsynopsis>
-  <command>/usr/lib/yp/makedbm</command>    
-    <group choice='opt'><arg choice='plain'>-a </arg><arg choice='plain'>-r </arg></group>
-    <arg choice='opt'>-b </arg>
-    <arg choice='opt'>-c </arg>
-    <arg choice='opt'>-s </arg>
-    <arg choice='opt'>-l </arg>
-    <arg choice='opt'>-i <replaceable>YP_INPUT_NAME</replaceable></arg>
-    <arg choice='opt'>-o <replaceable>YP_OUTPUT_NAME</replaceable></arg>
-    <arg choice='opt'>-m <replaceable>YP_MASTER_NAME</replaceable></arg>
-    <arg choice='plain'><replaceable>inputfile</replaceable></arg>
-    <arg choice='plain'><replaceable>dbname</replaceable></arg>
-</cmdsynopsis>
-<cmdsynopsis>
-  <command>/usr/lib/yp/makedbm</command>    
-    <arg choice='plain'>-u <replaceable>dbname</replaceable></arg>
-</cmdsynopsis>
-<cmdsynopsis>
-  <command>/usr/lib/yp/makedbm</command>    
-    <arg choice='plain'>-c </arg>
-</cmdsynopsis>
-<cmdsynopsis>
-  <command>/usr/lib/yp/makedbm</command>    
-    <arg choice='plain'>--version </arg>
-</cmdsynopsis>
-</refsynopsisdiv>
+  <refsynopsisdiv id='synopsis'>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/makedbm</command>    
+      <group choice='opt'><arg choice='plain'>-a </arg><arg choice='plain'>-r </arg></group>
+      <arg choice='opt'>-b </arg>
+      <arg choice='opt'>-c </arg>
+      <arg choice='opt'>-s </arg>
+      <arg choice='opt'>-l </arg>
+      <arg choice='opt'>-i <replaceable>YP_INPUT_NAME</replaceable></arg>
+      <arg choice='opt'>-o <replaceable>YP_OUTPUT_NAME</replaceable></arg>
+      <arg choice='opt'>-m <replaceable>YP_MASTER_NAME</replaceable></arg>
+      <arg choice='plain'><replaceable>inputfile</replaceable></arg>
+      <arg choice='plain'><replaceable>dbname</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/makedbm</command>    
+      <arg choice='plain'>-u <replaceable>dbname</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/makedbm</command>    
+      <arg choice='plain'>-c </arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/makedbm</command>    
+      <arg choice='plain'>--version </arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
 
 
 <refsect1 id='description'><title>DESCRIPTION</title>
@@ -149,9 +150,12 @@ per line, with a single space separating keys from values.</para>
 <para><citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
 </refsect1>
 
-<refsect1 id='author'><title>AUTHOR</title>
-<para><emphasis remap='B'>makedbm</emphasis>
-was written by Thorsten Kukuk &lt;kukuk@suse.de&gt;.</para>
-</refsect1>
+  <refsect1 id='author'>
+    <title>AUTHOR</title>
+    <para>
+      <command>makedbm</command> was written by
+      Thorsten Kukuk &lt;kukuk@suse.de&gt;.
+    </para>
+  </refsect1>
 </refentry>
 

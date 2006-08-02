@@ -1,108 +1,87 @@
-.\" -*- nroff -*-
-.TH MAKEDBM 8 "August 2001" "YP Server"
-.SH NAME
-makedbm - create or dump a ypserv database file
-.SH SYNOPSIS
-.B
-/usr/lib/yp/makedbm
-[
-.B \-a
-|
-.B \-r
-]
-[
-.B \-b
-] [
-.B \-c
-] [
-.B \-s
-] [
-.B \-l
-] [
-.BI \-i " YP_INPUT_NAME"
-] [
-.BI \-o " YP_OUTPUT_NAME"
-] [
-.BI \-m " YP_MASTER_NAME"
-]
-.I inputfile
-.I dbname
-.br
-.B
-/usr/lib/yp/makedbm
-.BI \-u " dbname"
-.br
-.B
-/usr/lib/yp/makedbm
-.B \-c
-.br
-.B
-/usr/lib/yp/makedbm
-.B \--version
-.SH DESCRIPTION
-.B makedbm
-takes the inputfile and converts it to a ypserv database file. In the
-moment, GDBM is used as database. Each line of the input file is converted
-to a single record. All characters up to the first TAB or SPACE are the key,
-and the rest of the line is the data.
-.B makedbm
+.\"     Title: makedbm
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.70.1 <http://docbook.sf.net/>
+.\"      Date: 08/02/2006
+.\"    Manual: NIS Reference Manual
+.\"    Source: NIS Reference Manual
+.\"
+.TH "MAKEDBM" "8" "08/02/2006" "NIS Reference Manual" "NIS Reference Manual"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+makedbm \- create or dump a ypserv database file
+.SH "SYNOPSIS"
+.HP 20
+\fB/usr/lib/yp/makedbm\fR [\-a | \-r] [\-b] [\-c] [\-s] [\-l] [\-i\ \fIYP_INPUT_NAME\fR] [\-o\ \fIYP_OUTPUT_NAME\fR] [\-m\ \fIYP_MASTER_NAME\fR] \fIinputfile\fR \fIdbname\fR
+.HP 20
+\fB/usr/lib/yp/makedbm\fR \-u\ \fIdbname\fR
+.HP 20
+\fB/usr/lib/yp/makedbm\fR \-c
+.HP 20
+\fB/usr/lib/yp/makedbm\fR \-\-version
+.SH "DESCRIPTION"
+.PP
+\fBmakedbm\fR
+takes the inputfile and converts it to a ypserv database file. In the moment, GDBM is used as database. Each line of the input file is converted to a single record. All characters up to the first TAB or SPACE are the key, and the rest of the line is the data.
+\fBmakedbm\fR
 does not treat `#' as a special character.
-.SH OPTIONS
-.TP
-.B \-a
-Special support for mail aliases. We couldn't use sendmail for it, since
-sendmail uses db, but ypserv gdbm as database format.
-.TP
-.B \-b
+.SH "OPTIONS"
+.TP 3n
+\fB\-a\fR
+Special support for mail aliases. We couldn't use sendmail for it, since sendmail uses db, but ypserv gdbm as database format.
+.TP 3n
+\fB\-b\fR
 Insert the
-.B YP_INTERDOMAIN
-into the output.  This key causes
-.BR ypserv (8)
+\fBYP_INTERDOMAIN\fR
+into the output. This key causes
+\fBypserv\fR(8)
 to use
-.B DNS
+\fBDNS\fR
 for host name and address lookups for hosts not found in the maps.
-.TP
-.B \-c
+.TP 3n
+\fB\-c\fR
 send a
-.B YPPROC_CLEAR
+\fBYPPROC_CLEAR\fR
 to the local
-.BR ypserv (8).
-This causes ypserv to invalidate all cached entries.
-.TP
-.B \-l
+\fBypserv\fR(8). This causes ypserv to invalidate all cached entries.
+.TP 3n
+\fB\-l\fR
 Convert the keys of the given map to lower case.
-.TP
-.BI \-i " YP_INPUT_NAME"
+.TP 3n
+\fB\-i\fR\fI YP_INPUT_NAME\fR
 Create a special entry with the key
-.BR YP_INPUT_NAME .
-.TP
-.BI \-m " YP_MASTER_NAME"
+\fBYP_INPUT_NAME\fR.
+.TP 3n
+\fB\-m\fR\fI YP_MASTER_NAME\fR
 Create a special entry with the key
-.BR YP_MASTER_NAME .
-If no master host name is specified,
-.B YP_MASTER_NAME
+\fBYP_MASTER_NAME\fR. If no master host name is specified,
+\fBYP_MASTER_NAME\fR
 will be set to the local host name.
-.TP
-.BI \-o " YP_OUTPUT_NAME"
+.TP 3n
+\fB\-o\fR\fI YP_OUTPUT_NAME\fR
 Create a special entry with the key
-.BR YP_OUTPUT_NAME .
-.TP
-.B \-r
+\fBYP_OUTPUT_NAME\fR.
+.TP 3n
+\fB\-r\fR
 Handle `#' as comment sign and remove the comment.
-.TP
-.B \-s
+.TP 3n
+\fB\-s\fR
 Secure map. Accept connections from secure
-.B NIS
+\fBNIS\fR
 networks only (reserved ports).
-.TP
-.BI \-u " dbname"
-Dump a ypserv database file. Prints out the file in text format, one entry
-per line, with a single space separating keys from values.
-.TP
-.BI \-\-no-limit-check
+.TP 3n
+\fB\-u\fR\fI dbname\fR
+Dump a ypserv database file. Prints out the file in text format, one entry per line, with a single space separating keys from values.
+.TP 3n
+\fB\-\-no\-limit\-check\fR
 Don't check for NIS key and data limit.
 .SH "SEE ALSO"
-.BR ypserv (8)
-.SH AUTHOR
-.B makedbm
+.PP
+\fBypserv\fR(8)
+.SH "AUTHOR"
+.PP
+
+\fBmakedbm\fR
 was written by Thorsten Kukuk <kukuk@suse.de>.

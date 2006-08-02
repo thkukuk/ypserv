@@ -292,13 +292,13 @@ JH_CHECK_XML_CATALOG([http://docbook.sourceforge.net/release/xsl/current/manpage
 AM_CONDITIONAL(ENABLE_REGENERATE_MAN, test x$enable_man != xno)
 
 
-AC_OUTPUT(lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
+AC_OUTPUT(Makefile
+	lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
 	ypxfr/Makefile ypxfr/ypxfr.8 yppush/Makefile yppush/yppush.8
-	makedbm/Makefile
-	revnetgroup/Makefile revnetgroup/revnetgroup.8 Makefile
-	mknetid/Makefile mknetid/mknetid.8 rpc.ypxfrd/Makefile
-	rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8 rpc.yppasswdd/Makefile
-	rpc.yppasswdd/yppasswdd.8 rpc.yppasswdd/rpc.yppasswdd.8
+	makedbm/Makefile mknetid/Makefile revnetgroup/Makefile
+	rpc.yppasswdd/Makefile
+	rpc.ypxfrd/Makefile
+	rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8
 	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
 	scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate
 	scripts/pwupdate.8 scripts/create_printcap scripts/match_printcap
