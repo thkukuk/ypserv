@@ -2,9 +2,7 @@
 # Copyright (c) 2001, 2003 Thorsten Kukuk <kukuk@suse.de>
 #
 AUTOMAKE_OPTIONS = 1.7 gnits
-MAINT_CHARSET = latin1
 #
-INSTALL_SCRIPT = ${INSTALL} -m 755
 
 CLEANFILES = *~ ${SCRIPTS}
 
@@ -20,6 +18,6 @@ libexec_SCRIPTS = ypxfr_1perhour ypxfr_1perday ypxfr_2perday \
 noinst_SCRIPTS = ypMakefile
 
 install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(varypdir)
-	$(INSTALL_DATA) $(top_builddir)/scripts/ypMakefile $(DESTDIR)$(varypdir)/Makefile
+	$(mkdir_p) "$(DESTDIR)$(varypdir)"
+	$(install_sh_DATA) $(top_builddir)/scripts/ypMakefile "$(DESTDIR)$(varypdir)/Makefile"
 

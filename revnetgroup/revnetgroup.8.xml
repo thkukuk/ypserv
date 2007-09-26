@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='revnetgroup'>
+  <refmeta>
+    <refentrytitle>revnetgroup</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>revnetgroup</refname>
+    <refpurpose>generate reverse netgroup data</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+
+  <refsynopsisdiv id='synopsis'>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/revnetgroup</command>
+      <group>
+        <arg choice='plain'>-u</arg>
+        <arg choice='plain'>-h</arg>
+      </group>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+
+  <refsect1 id='description'>
+    <title>DESCRIPTION</title>
+    <para>
+      <command>Revnetgroup</command>
+      processes the standard input in
+      <citerefentry><refentrytitle>netgroup</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+      format into what is called
+      <emphasis remap='I'>reverse netgroup</emphasis>
+      form. That is, where the original file shows netgroup memberships in
+      terms of which members reside in a particular
+      group, the reverse netgroup format specifies what groups are associated
+      with a particular member. This information is used to generate the
+      <filename>netgroup.byuser</filename>
+      and <filename>netgroup.byhosts</filename>
+      NIS maps. These reverse netgroup maps are used to help speed up
+      netgroup lookups, particularly for the
+      <function>innetgr()</function> library function.
+    </para>
+    <para>
+      The <command>revnetgroup</command>
+      command prints its results on the standard output. It is usually called
+      only by <filename>/var/yp/Makefile</filename>
+      when rebuilding the NIS netgroup maps.
+    </para>
+  </refsect1>
+
+  <refsect1 id='options'>
+    <title>OPTIONS</title>
+    <variablelist remap='TP'>
+      <varlistentry>
+        <term><option>-u</option></term>
+        <listitem>
+          <para>
+            Generate <filename>netgroup.byuser</filename>
+            output; only username information in the
+            original netgroup file is processed.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-h</option></term>
+        <listitem>
+          <para>
+            Generate <filename>netgroup.byhost</filename>
+            output; only hostname information in the
+            original netgroup file is processed.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id='files'><title>FILES</title>
+    <variablelist>
+      <varlistentry>
+        <term><filename>/var/yp/Makefile</filename></term>
+        <listitem>
+          <para>The Makefile to build the NIS databases.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><filename>/etc/netgroup</filename></term>
+        <listitem>
+          <para>
+            The default netgroup database file. This file is most
+            often found only on the NIS master server.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id='see_also'>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry><refentrytitle>getnetgrent</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>netgroup</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+    </para>
+  </refsect1>
+
+  <refsect1 id='author'>
+    <title>AUTHOR</title>
+    <para>
+      <command>revnetgroup</command> was written by
+      Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;.
+    </para>
+  </refsect1>
+</refentry>
