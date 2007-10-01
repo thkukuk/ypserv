@@ -1,6 +1,12 @@
+2007-10-01  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.ypxfrd/rpc.ypxfrd.8.xml: New file.
+	* rpc.ypxfrd/rpc.ypxfrd.8: Regenerated from xml source.
+	* rpc.ypxfrd/Makefile.am: Add rules for xml.
+
 2007-09-26  Thorsten Kukuk  <kukuk@suse.de>
 
-	* revnetgroup/revnetgroup.8.xml: New.file.
+	* revnetgroup/revnetgroup.8.xml: New file.
 	* revnetgroup/revnetgroup.8: Regenerated from xml source.
 	* revnetgroup/Makefile.am: Add rules for xml.
 

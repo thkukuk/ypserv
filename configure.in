@@ -1,5 +1,5 @@
 #
-# Copyright (C) 1999-2006 Thorsten Kukuk <kukuk@thkukuk.de>
+# Copyright (C) 1999-2007 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(ypserv, 2.19, kukuk@linux-nis.org)
@@ -294,16 +294,13 @@ AM_CONDITIONAL(ENABLE_REGENERATE_MAN, test x$enable_man != xno)
 
 
 AC_OUTPUT(Makefile
-	lib/Makefile etc/Makefile ypserv/Makefile ypserv/ypserv.8
-	ypxfr/Makefile ypxfr/ypxfr.8 yppush/Makefile yppush/yppush.8
-	makedbm/Makefile mknetid/Makefile revnetgroup/Makefile
-	rpc.yppasswdd/Makefile
-	rpc.ypxfrd/Makefile
-	rpc.ypxfrd/rpc.ypxfrd.8 rpc.ypxfrd/ypxfrd.8
+	lib/Makefile etc/Makefile ypserv/Makefile
+	ypxfr/Makefile yppush/Makefile makedbm/Makefile mknetid/Makefile
+        revnetgroup/Makefile rpc.yppasswdd/Makefile rpc.ypxfrd/Makefile
 	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
 	scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate
-	scripts/pwupdate.8 scripts/create_printcap scripts/match_printcap
-	scripts/ypinit scripts/ypinit.8 scripts/ypMakefile)
+	scripts/create_printcap scripts/match_printcap
+	scripts/ypinit scripts/ypMakefile)
 
 echo "
 Configuration:

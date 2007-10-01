@@ -1,10 +1,7 @@
 #
-# Copyright (c) 2000, 2001, 2003 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2000, 2001, 2003, 2007 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 AUTOMAKE_OPTIONS = 1.7 gnits
-MAINT_CHARSET = latin1
-#
-INSTALL_PROGRAM = @INSTALL_PROGRAM@ -s -m 555
 
 localedir = $(datadir)/locale
 
