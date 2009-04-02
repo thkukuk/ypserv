@@ -1,5 +1,13 @@
 2009-04-02  Thorsten Kukuk  <kukuk@suse.de>
 
+	* ypserv/ypserv.8.xml: New file.
+	* ypserv/ypserv.8: Regenerated from xml source.
+	* ypserv/Makefile.am: Add rules for xml.
+
+	* ypxfr/ypxfr.8.xml: New file.
+	* ypxfr/ypxfr.8: Regenerated from xml source.
+	* ypxfr/Makefile.am: Add rules for xml.
+
 	* yppush/yppush.8.xml: New file.
 	* yppush/yppush.8: Regenerated from xml source.
 	* yppush/Makefile.am: Add rules for xml.

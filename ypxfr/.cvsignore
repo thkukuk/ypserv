@@ -1,14 +1,5 @@
-autom4te.cache
-libtool
-config.h
-config.h.in
-config.status
-config.log
-config.cache
-config.sub
-config.guess
 Makefile
 Makefile.in
-stamp-h1
-configure
-aclocal.m4
+ypxfr
+ypxfr.8
+.deps

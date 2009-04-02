@@ -1,32 +1,32 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<!-- lifted from troff+man by doclifter -->
-<refentry id='ypxfr8'>
-<!--  Copyright (c) 1996, 1997, 1999, 2001 Thorsten Kukuk &lt;kukuk@suse.de&gt; -->
-<refmeta>
-<refentrytitle>YPSERV</refentrytitle>
-<manvolnum>8</manvolnum>
-<refmiscinfo class='source'>August 2001</refmiscinfo>
-<refmiscinfo class='manual'>YP Server</refmiscinfo>
-</refmeta>
-<refnamediv id='name'>
-<refname>ypxfr</refname>
-<refpurpose>transfer NIS database from remote server to local host</refpurpose>
-</refnamediv>
-<!-- body begins here -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='ypxfr'>
+
+  <refmeta>
+    <refentrytitle>ypxfr</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>ypxfr</refname>
+    <refpurpose>transfer NIS database from remote server to local host</refpurpose>
+  </refnamediv>
+
 <refsynopsisdiv id='synopsis'>
 <cmdsynopsis>
-  <command>/usr/lib/yp/ypxfr</command>    
-    <arg choice='opt'>-f </arg>
-    <arg choice='opt'>-c </arg>
-    <arg choice='opt'><arg choice='plain'>-d </arg><arg choice='plain'><replaceable>target</replaceable></arg><arg choice='plain'><replaceable>domain</replaceable></arg></arg>
-    <arg choice='opt'><arg choice='plain'>-h </arg><arg choice='plain'><replaceable>source</replaceable></arg><arg choice='plain'><replaceable>host</replaceable></arg></arg>
-    <arg choice='opt'><arg choice='plain'>-s </arg><arg choice='plain'><replaceable>source</replaceable></arg><arg choice='plain'><replaceable>domain</replaceable></arg></arg>
-    <arg choice='opt'><arg choice='plain'>-C </arg><arg choice='plain'><replaceable>taskid</replaceable></arg><arg choice='plain'><replaceable>program-number</replaceable></arg><arg choice='plain'><replaceable>ipaddr</replaceable></arg><arg choice='plain'><replaceable>port</replaceable></arg></arg>
-    <arg choice='opt'><arg choice='plain'>-p </arg><arg choice='plain'><replaceable>yp_path</replaceable></arg></arg>
+  <command>/usr/lib/yp/ypxfr</command>
+    <arg choice='opt'>-f</arg>
+    <arg choice='opt'>-c</arg>
+    <arg choice='opt'>-d <replaceable>target</replaceable> <replaceable>domain</replaceable></arg>
+    <arg choice='opt'>-h <replaceable>source</replaceable> <replaceable>host</replaceable></arg>
+    <arg choice='opt'>-s <replaceable>source</replaceable> <replaceable>domain</replaceable></arg>
+    <arg choice='opt'>-C <replaceable>taskid</replaceable> <replaceable>program-number</replaceable> <replaceable>ipaddr</replaceable> <replaceable>port</replaceable></arg>
+    <arg choice='opt'>-p <replaceable>yp_path</replaceable></arg>
     <arg choice='plain' rep='repeat'><replaceable>mapname</replaceable></arg>
-    
+
     <sbr/>
 </cmdsynopsis>
 </refsynopsisdiv>
@@ -220,7 +220,6 @@ is <filename>/var/yp/[domainname]</filename>.</para>
 </refsect1>
 
 <refsect1 id='author'><title>AUTHOR</title>
-<para>Thorsten Kukuk &lt;kukuk@suse.de&gt;</para>
+<para>Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;</para>
 </refsect1>
 </refentry>
-

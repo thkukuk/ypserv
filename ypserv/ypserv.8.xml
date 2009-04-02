@@ -1,26 +1,26 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-<!-- lifted from troff+man by doclifter -->
-<refentry id='ypserv8'>
-<!--  \-*\- nroff \-*\- -->
-<refmeta>
-<refentrytitle>YPSERV</refentrytitle>
-<manvolnum>8</manvolnum>
-<refmiscinfo class='source'>August 2001</refmiscinfo>
-<refmiscinfo class='manual'>YP Server</refmiscinfo>
-</refmeta>
-<refnamediv id='name'>
-<refname>ypserv</refname>
-<refpurpose>NIS server</refpurpose>
-</refnamediv>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='makedbm'>
+
+  <refmeta>
+    <refentrytitle>ypserv</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>ypserv</refname>
+    <refpurpose>NIS Server</refpurpose>
+  </refnamediv>
+
 <!-- body begins here -->
 <refsynopsisdiv id='synopsis'>
 <cmdsynopsis>
-  <command>/usr/sbin/ypserv</command>    
-    <arg choice='opt'><arg choice='plain'>-d </arg><arg choice='opt'><replaceable>path</replaceable></arg></arg>
+  <command>/usr/sbin/ypserv</command>
+    <arg choice='opt'>-d <arg choice='opt'><replaceable>path</replaceable></arg></arg>
     <arg choice='opt'>-p <replaceable>port</replaceable></arg>
-    <sbr/>
 </cmdsynopsis>
 </refsynopsisdiv>
 
@@ -68,7 +68,7 @@ parses the file
 <refsect1 id='options'><title>OPTIONS</title>
 <variablelist remap='TP'>
   <varlistentry>
-  <term><option>-d --debug [path]</option></term>
+  <term><option>-d</option>, <option>--debug </option>[<replaceable>path</replaceable>]</term>
   <listitem>
 <para>Causes the server to run in debugging mode. Normally,
 <emphasis remap='B'>ypserv</emphasis>
@@ -83,7 +83,7 @@ is using this directory instead of /var/yp</para>
   </listitem>
   </varlistentry>
   <varlistentry>
-  <term><option>-p --port port</option></term>
+  <term><option>-p</option>, <option>--port</option> <replaceable>port</replaceable></term>
   <listitem>
 <para><emphasis remap='B'>ypserv</emphasis>
 will bind itself to this port.
@@ -93,7 +93,7 @@ hosts on the Internet can be restricted.</para>
   </listitem>
   </varlistentry>
   <varlistentry>
-  <term><option>-v --version</option></term>
+  <term><option>-v</option>, <option>--version</option></term>
   <listitem>
 <para>Prints the version number</para>
   </listitem>
@@ -123,25 +123,20 @@ Lines starting with &ldquo;#&rdquo; are considered to be comments.</para>
   <term>A sample securenets file might look like this:</term>
   <listitem>
 
-<para># allow connections from local host -- necessary
-<!-- .br -->
+<para>
+<programlisting>
+# allow connections from local host -- necessary
 host 127.0.0.1
-<!-- .br -->
 # same as 255.255.255.255 127.0.0.1
-<!-- .br -->
 #
-<!-- .br -->
 # allow connections from any host
-<!-- .br -->
 # on the 131.234.223.0 network
-<!-- .br -->
 255.255.255.0   131.234.223.0
-<!-- .br -->
 # allow connections from any host
-<!-- .br -->
 # between 131.234.214.0 and 131.234.215.255
-<!-- .br -->
-255.255.254.0   131.234.214.0</para>
+255.255.254.0   131.234.214.0
+</programlisting>
+</para>
   </listitem>
   </varlistentry>
 </variablelist>
@@ -171,8 +166,16 @@ for a map.</para>
 </refsect1>
 
 <refsect1 id='files'><title>FILES</title>
-<para>/etc/ypserv.conf
-/var/yp/securenets</para>
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><filename>/etc/ypserv.conf</filename></term>
+  <term><filename>/var/yp/securenets</filename></term>
+  <listitem>
+<!-- .PD -->
+<para></para> <!-- FIXME: blank list item -->
+  </listitem>
+  </varlistentry>
+</variablelist>
 </refsect1>
 
 <refsect1 id='see_also'><title>SEE ALSO</title>
@@ -205,8 +208,7 @@ and may not be used without permission.</para>
 <refsect1 id='author'><title>AUTHOR</title>
 <para><emphasis remap='B'>ypserv</emphasis>
 was written by Peter Eriksson &lt;pen@lysator.liu.se&gt;.
-Thorsten Kukuk &lt;kukuk@suse.de&gt; added support for master/slave
+Thorsten Kukuk &lt;kukuk@linux-nis.org&gt; added support for master/slave
 server and is the new Maintainer.</para>
 </refsect1>
 </refentry>
-

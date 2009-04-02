@@ -1,2 +1,5 @@
 .deps
+Makefile
+Makefile.am
+revnetgroup
 revnetgroup.8

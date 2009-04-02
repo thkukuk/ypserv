@@ -16,3 +16,5 @@ ltmain.sh
 compile
 missing
 mkinstalldirs
+ypserv-*.tar.gz
+ypserv-*.tar.bz2
