@@ -1,3 +1,21 @@
+2009-04-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.8.xml: New file.
+	* yppush/yppush.8: Regenerated from xml source.
+	* yppush/Makefile.am: Add rules for xml.
+
+	* lib/yp_db.c: Add some sanity checks.
+
+	* rpc.ypxfrd/ypxfrd_server.c (ypxfrd_getmap_1_svc): Fix debug message.
+
+	* lib/access.c (is_valid): New return value if map does	not exist.
+	* ypserv/server.c: handle new return value of is_valid().
+
+2008-04-15  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Only warn about
+	missing SLP support if it is enabled in ypserv.conf.
+
 2007-10-01  Thorsten Kukuk  <kukuk@suse.de>
 
 	* rpc.ypxfrd/rpc.ypxfrd.8.xml: New file.

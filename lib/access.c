@@ -1,4 +1,4 @@
-/* Copyright (C) 1997, 1998, 1999, 2000, 2002, 2003 Thorsten Kukuk
+/* Copyright (C) 1997, 1998, 1999, 2000, 2002, 2003, 2009 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -125,7 +125,8 @@ is_valid_domain (const char *domain)
    return  0, if securenets does not allow access from this host
    return -1, if request comes from an unauthorized host
    return -2, if the map name is not valid
-   return -3, if the domain is not valid */
+   return -3, if the domain is not valid
+   return -4, if the map does not exist */
 
 int
 is_valid (struct svc_req *rqstp, const char *map, const char *domain)
@@ -189,6 +190,8 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 		  status = -1;
 	      ypdb_close (dbp);
 	    }
+          else
+              status = -4;
 	}
     }
 

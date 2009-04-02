@@ -1,4 +1,4 @@
-/* Copyright (c)  2000, 2001, 2002, 2003, 2004 Thorsten Kukuk
+/* Copyright (c)  2000, 2001, 2002, 2003, 2004, 2009 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <sys/param.h>
 
 #include "ypserv_conf.h"
@@ -199,7 +200,9 @@ ypdb_close_all (void)
 			 fast_open_files[i].domain,
 			 fast_open_files[i].map, i);
 	      free (fast_open_files[i].domain);
+	      fast_open_files[i].domain = NULL;
 	      free (fast_open_files[i].map);
+	      fast_open_files[i].map = NULL;
 	      _db_close (fast_open_files[i].dbp);
 	      fast_open_files[i].dbp = NULL;
 	      fast_open_files[i].flag = 0;
@@ -233,7 +236,9 @@ ypdb_close (DB_FILE file)
 				 fast_open_files[i].domain,
 				 fast_open_files[i].map, i);
 		      free (fast_open_files[i].domain);
+		      fast_open_files[i].domain = NULL;
 		      free (fast_open_files[i].map);
+		      fast_open_files[i].map = NULL;
 		      _db_close (fast_open_files[i].dbp);
 		      fast_open_files[i].dbp = NULL;
 		      fast_open_files[i].flag = 0;
@@ -335,7 +340,11 @@ ypdb_open (const char *domain, const char *map)
 
 	      if ((fast_open_files[i].dbp = _db_open (domain, map)) == NULL)
 		return NULL;
+	      /* since .dbp is NULL, .domain must be NULL, too */
+	      assert (fast_open_files[i].domain == NULL);
 	      fast_open_files[i].domain = strdup (domain);
+	      /* since .dbp is NULL, .map must be NULL, too */
+	      assert (fast_open_files[i].map == NULL);
 	      fast_open_files[i].map = strdup (map);
 	      fast_open_files[i].flag |= F_OPEN_FLAG;
 

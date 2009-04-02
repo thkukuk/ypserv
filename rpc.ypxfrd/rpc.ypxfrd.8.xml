@@ -2,7 +2,7 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
                    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 
-<refentry id='revnetgroup'>
+<refentry id='rpc.ypxfrd'>
   <refmeta>
     <refentrytitle>rpc.ypxfrd</refentrytitle>
     <manvolnum>8</manvolnum>
@@ -130,12 +130,12 @@
       uses the original ndbm package for its map databases whereas the
       other implementation uses GNU DBM or Berkeley DB. These packages
       uses vastly different file formats. Furthermore, ndbm and gdbm are
-      byte-order sensitive and not very smart about it, meaning that a
-      gdbm or ndbm database created on a big endian system cannot be read
-      on a little endian system. The FreeBSD
-      <command>ypxfrd</command> protocol checks, if both, master and
-      slave, uses the same database packages and, if necessary, the byte
-      order of the system.
+      byte-order and word width sensitive and not very smart about it,
+      meaning that a gdbm or ndbm database created on a big endian or
+      64bit system cannot be read on a little endian or 32bit system.
+      The FreeBSD <command>ypxfrd</command> protocol checks, if both,
+      master and slave, uses the same database packages and, if necessary,
+      the byte order of the system.
     </para>
   </refsect1>
 

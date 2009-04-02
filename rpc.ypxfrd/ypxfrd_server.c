@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2009 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -125,7 +125,7 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
       else
 	{
 	  if (debug_flag)
-	    log_msg ("\t-> Ignored (not a valid domain)");
+	    log_msg ("\t-> Ignored (not a valid domain/map)");
 	}
       ypdb_close_all ();
 

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='makedbm'>
+
+  <refmeta>
+    <refentrytitle>yppush</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>yppush</refname>
+    <refpurpose>force propagation of changed NIS databases</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+<refsynopsisdiv id='synopsis'>
+<cmdsynopsis>
+  <command>/usr/sbin/yppush</command>
+    <arg choice='opt'>-d <replaceable>domain</replaceable></arg>
+    <arg choice='opt'>-t <replaceable>timeout</replaceable></arg>
+    <group choice='opt'>
+       <arg choice='plain'>--parallel <replaceable>#</replaceable></arg>
+       <arg choice='plain'>--port <replaceable>port</replaceable></arg>
+    </group>
+    <arg choice='opt'>-h <replaceable>host</replaceable></arg>
+    <arg choice='opt'>-v</arg>
+    <arg choice='plain' rep='repeat'><replaceable>mapname</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+
+
+<refsect1 id='description'><title>DESCRIPTION</title>
+<para><emphasis remap='B'>yppush</emphasis>
+copies updated NIS databases (or maps) from the master NIS server to
+the slave servers within a NIS domain. It is normally run only on
+the NIS master by
+<emphasis remap='I'>/var/yp/Makefile</emphasis>
+after the master databases are changed.
+<emphasis remap='I'>/var/yp/Makefile</emphasis>
+does not invoke
+<emphasis remap='B'>yppush</emphasis>
+by default, the
+<emphasis remap='B'>NOPUSH=true</emphasis>
+line must be commented out.
+<!-- .br -->
+<emphasis remap='B'>yppush</emphasis>
+first constructs a list of NIS slave servers by reading the NIS map
+<emphasis remap='B'>ypservers</emphasis>
+within the
+<emphasis remap='I'>domain.</emphasis>
+A destination host (or a list of hosts with multiple -h commands)
+can also be specified on the command line.
+A "transfer map" request is sent to the NIS serger at each slave, along
+with the information needed by the transfer agent ypxfr(8) to callback
+to yppush, which may be printed the result to stderr. Messages are
+also printed when a transfer is not possible; for instance when the request
+message is undeliverable.</para>
+</refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><option>-d </option><emphasis remap='I'>domain</emphasis></term>
+  <listitem>
+<para>Specify a particular domain. The NIS domain of the local host system is
+used by default. If the local host's domain name is not set, the domain
+name must be specified with this flag.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-t </option><emphasis remap='I'>timeout</emphasis></term>
+  <listitem>
+<para>The timeout flag is used to specify a timeout value in seconds. This timeout
+controls how long
+<emphasis remap='B'>yppush</emphasis>
+will wait for a response from a slave server before sending a
+map transfer request to the next slave server in the list.
+By default,
+<emphasis remap='B'>yppush</emphasis>
+will wait 90 seconds. For big maps, this is not long enough.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>--parallel</option><replaceable> #</replaceable>,<option> -p </option><replaceable>#</replaceable></term>
+  <listitem>
+<para><emphasis remap='B'>yppush</emphasis>
+normally performs transfers serially, meaning that it will
+send a map transfer request to one slave server and then wait for
+it to respond before sending the next map transfer request to the
+next slave server. In environments with many slaves, it is more
+efficient to initiate several map transfers at once so that the
+transfers can take place in parallel.
+It is not possible to run in parallel and assign a fixed port with
+the
+<option>--port</option>
+flag</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>--port </option><emphasis remap='I'>port</emphasis></term>
+  <listitem>
+<para>specify a port for
+<emphasis remap='B'>yppush</emphasis>
+to  listen  on.   By default,
+<emphasis remap='B'>yppush</emphasis>
+will ask
+<emphasis remap='B'>portmap(8)</emphasis>
+to assign it a random port number.
+It is not possible to assign a port with this option and run in parallel with
+the
+<option>--parallel</option>
+or
+<option>-p</option>
+flag</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-h </option><emphasis remap='I'>host</emphasis></term>
+  <listitem>
+<para>The host flag can be used to transfer a map to a user-specified machine or
+group of machines instead of the list of servers contained in
+the
+<emphasis remap='B'>ypservers</emphasis>
+map. A list of hosts can be specified by using multiple
+instances of the
+<option>-h</option>
+flag.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-v</option></term>
+  <listitem>
+<para>Verbose mode: causes
+<emphasis remap='B'>yppush</emphasis>
+to print debugging messages as it runs. Note specifying this flag twice
+makes
+<emphasis remap='B'>yppush</emphasis>
+even more verbose.</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+
+</refsect1>
+
+<refsect1 id='see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>domainname</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>ypxfr</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+
+</refsect1>
+
+<refsect1 id='bugs'><title>BUGS</title>
+<para>The mechanism for transferring NIS maps in NIS v1 is different
+that that in NIS version 2. This version of
+<emphasis remap='B'>yppush</emphasis>
+has support for transferring maps to NIS v2 systems only.</para>
+
+</refsect1>
+
+<refsect1 id='author'><title>AUTHOR</title>
+<para>Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;</para>
+</refsect1>
+</refentry>

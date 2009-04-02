@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='ypinit'>
+  <refmeta>
+    <refentrytitle>ypinit</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>ypinit</refname>
+    <refpurpose>NIS database install and build program</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+
+  <refsynopsisdiv id='synopsis'>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/ypinit</command>
+      <arg choice='opt'>-m </arg>
+      <arg choice='opt'><arg choice='plain'>-s</arg> <arg choice='plain'><replaceable>master_name</replaceable></arg></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1 id='description'>
+    <title>DESCRIPTION</title>
+    <para>
+      <command>ypinit</command> builds the domain subdirectory of
+      <filename>/var/yp</filename> for the current default domain.
+      After building the domain subdirectory,
+      <command>ypinit</command> builds a complete set of administrative
+      maps for your system and places them in this directory. The first
+      map created by <userinput>ypinit -m</userinput> is the ypservers
+      map. You should run it as root on the hosts, which should be the
+      master ypserver.You should have only one master server per NIS domain.
+    </para>
+
+    <para>
+      All databases are built from scratch, either from information
+      available to the program at runtime, or from the <acronym>ASCII</acronym>
+      data base files in <filename>/etc</filename>. These files are
+      listed below under <acronym>FILES</acronym>.
+    </para>
+
+    <para>
+      An <acronym>NIS</acronym> database on a slave server is set up
+      by copying an existing database from a running server.  The
+      <userinput>master_name</userinput> argument should be the
+      hostname of an <acronym>NIS</acronym> server (either the
+      master server for all the maps, or a server on which the data
+      base is up-to-date and stable).
+    </para>
+  </refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><option>-m</option></term>
+  <listitem>
+<para>If the local host is the
+<acronym>NIS</acronym>
+master.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-s</option></term>
+  <listitem>
+<para>Set up a slave server with the database from
+<emphasis remap='I'>master_name</emphasis></para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='files'><title>FILES</title>
+<!-- .PD 0 -->
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><filename>/etc/passwd</filename></term>
+  <term><filename>/etc/group</filename></term>
+  <term><filename>/etc/hosts</filename></term>
+  <term><filename>/etc/networks</filename></term>
+  <term><filename>/etc/services</filename></term>
+  <term><filename>/etc/protocols</filename></term>
+  <term><filename>/etc/netgroup</filename></term>
+  <term><filename>/etc/rpc</filename></term>
+  <listitem>
+<!-- .PD -->
+<para></para> <!-- FIXME: blank list item -->
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>makedbm</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>revnetgroup</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>yppush</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>ypxfr</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+</refsect1>
+
+  <refsect1 id='bugs'>
+    <title>BUGS</title>
+    <para>There is no good error handling at the moment.</para>
+  </refsect1>
+
+  <refsect1 id='author'>
+    <title>AUTHOR</title>
+    <para>Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;</para>
+  </refsect1>
+
+</refentry>
