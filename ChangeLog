@@ -1,5 +1,7 @@
 2009-04-02  Thorsten Kukuk  <kukuk@suse.de>
 
+	* release version 2.20
+
 	* ypserv/ypserv.8.xml: New file.
 	* ypserv/ypserv.8: Regenerated from xml source.
 	* ypserv/Makefile.am: Add rules for xml.
