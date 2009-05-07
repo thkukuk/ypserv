@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2006 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2009 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -36,6 +36,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
 #if defined(HAVE_RPC_SVC_SOC_H)
@@ -189,6 +190,15 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
   memset ((char *) &argument, 0, sizeof (argument));
   if (!svc_getargs (transp, _xdr_argument, (caddr_t) &argument))
     {
+      const struct sockaddr_in *sin =
+	svc_getcaller (rqstp->rq_xprt);
+
+      log_msg ("ERROR: Cannot decode arguments for %d from %s:",
+	       rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+      /* try to free already allocated memory during decoding.
+	 bnc#471924 */
+      svc_freeargs (transp, _xdr_argument, (caddr_t) &argument);
+
       svcerr_decode (transp);
       return;
     }
@@ -199,12 +209,12 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
 
   if (!svc_freeargs (transp, _xdr_argument, (caddr_t) &argument))
     {
-      log_msg ("unable to free arguments");
-      exit (1);
+      log_msg ("ERROR: Unable to free arguments");
+      return; /* don't abort */
     }
 
   if (!ypprog_2_freeresult (transp, _xdr_result, (caddr_t) &result))
-    log_msg ("unable to free results");
+    log_msg ("ERROR: Unable to free results");
 
   return;
 }

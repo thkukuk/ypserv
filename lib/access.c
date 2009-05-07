@@ -202,8 +202,8 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
     }
   else
     {
-      if (status < 1 && ((sin->sin_addr.s_addr != oldaddr)
-			 || (status != oldstatus)))
+      if ((status < 1 && status != -4) &&
+	  ((sin->sin_addr.s_addr != oldaddr) || (status != oldstatus)))
 	syslog (LOG_WARNING,
 		"refused connect from %s:%d to procedure %s (%s,%s;%d)\n",
 		inet_ntoa (sin->sin_addr), ntohs (sin->sin_port),

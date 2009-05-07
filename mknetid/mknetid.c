@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1999, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1996, 1999, 2001, 2002, 2009 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -38,7 +38,7 @@
 
 static int quiet_flag = 0;
 
-static char *
+char *
 xstrtok (char *cp, int delim)
 {
   static char *str = NULL;
@@ -171,14 +171,34 @@ main (int argc, char *argv[])
 	{
 
 	  char *ptr, *key, *uid, *gid;
+	  char *err_line = strdup (line);
 
 	  key = xstrtok (line, ':');
 	  ptr = xstrtok (NULL, ':');
 	  uid = xstrtok (NULL, ':');
 	  gid = xstrtok (NULL, ':');
+
+	  if (key == NULL || ptr == NULL ||
+	      uid == NULL || gid == NULL)
+	    {
+	      int n = strlen (err_line);
+
+	      if (err_line[n - 1] == '\n')
+		err_line[n - 1] = '\0';
+
+	      if (strlen (err_line) > 0)
+		fprintf (stderr, "WARNING: bad netid entry: '%s'\n",
+			 err_line);
+	      free (err_line);
+	      continue;
+	    }
+
+	  free (err_line);
+
 	  if (insert_user (key, domain, uid, gid) < 0)
 	    if (!quiet_flag)
-	      fprintf (stderr, "WARNING: unix.%s@%s multiply defined, ignore new one\n",
+	      fprintf (stderr,
+		       "WARNING: unix.%s@%s multiply defined, ignore new one\n",
 		       uid, domain);
 	}
     }
@@ -273,8 +293,17 @@ main (int argc, char *argv[])
 
 	  if (line[0] != '#')
 	    {
+	      int n = strlen (line);
+
+	      if (line[n - 1] == '\n')
+		line[n - 1] = '\0';
 	      if (strpbrk (line, " \t") == NULL)
-		fprintf (stderr, "WARNING: bad netid entry: '%s'", line);
+		{
+		  if (strlen (line) > 0)
+		    fprintf (stderr,
+			     "WARNING: bad netid entry: '%s'\n",
+			     line);
+		}
 	      else
 		printf ("%s\n", line);
 	    }

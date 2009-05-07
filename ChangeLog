@@ -1,3 +1,21 @@
+2009-05-07  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/access.c (is_valid): Don't print message for non-existing
+	maps.
+
+	* mknetid/mknetid.c (main): Check for NULL pointers before
+	calling insert_user().
+	Reported by Mark Brown <broonie@sirena.org.uk>
+
+	* mknetid/netid_hash.c: Remove second xstrtok implementation.
+
+	* mknetid/mknetid.h: Add xstrtok prototype.
+
+2009-04-15  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c (ypprog_2): If decoding fails, try
+	to free the already allocated memory.
+
 2009-04-02  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.20
