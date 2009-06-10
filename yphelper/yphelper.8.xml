@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id='yphelper8'>
+  <refmeta>
+    <refentrytitle>yphelper</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='manual'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>yphelper</refname>
+    <refpurpose>helper application for internal use</refpurpose>
+  </refnamediv>
+
+
+<!-- body begins here -->
+<refsect1 id='description'><title>DESCRIPTION</title>
+<para><emphasis remap='B'>yphelper</emphasis>
+is a internal helper application for ypserv and should not be
+used by the normal user or system administrator.</para>
+</refsect1>
+
+  <refsect1 id='author'>
+    <title>AUTHOR</title>
+    <para>
+      <command>makedbm</command> was written by
+      Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;.
+    </para>
+  </refsect1>
+</refentry>

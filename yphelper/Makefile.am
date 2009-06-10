@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001, 2002, 2003, 2007 Thorsten Kukuk <kukuk@linux-nis.org>
+# Copyright (c) 2001, 2002, 2003, 2007, 2009 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 AUTOMAKE_OPTIONS = 1.7 gnits
 
@@ -13,8 +13,9 @@ DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 
 CLEANFILES = *~
 
-EXTRA_DIST = ${MANS}
+EXTRA_DIST = ${MANS} ${XMLS}
 
+XMLS = yphelper.8.xml
 man_MANS = yphelper.8
 
 libexec_PROGRAMS = yphelper
@@ -22,3 +23,9 @@ libexec_PROGRAMS = yphelper
 yphelper_SOURCES = yphelper.c
 
 yphelper_LDADD = $(top_builddir)/lib/libyp.a @LIBDBM@
+
+if ENABLE_REGENERATE_MAN
+%.8: %.8.xml
+	$(XMLLINT) --nonet --xinclude --postvalid --noout $<
+	$(XSLTPROC) -o $(srcdir)/$@ --path $(srcdir) --xinclude --nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
+endif

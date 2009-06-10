@@ -190,8 +190,7 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
   memset ((char *) &argument, 0, sizeof (argument));
   if (!svc_getargs (transp, _xdr_argument, (caddr_t) &argument))
     {
-      const struct sockaddr_in *sin =
-	svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
 
       log_msg ("ERROR: Cannot decode arguments for %d from %s:",
 	       rqstp->rq_proc, inet_ntoa (sin->sin_addr));
@@ -413,7 +412,7 @@ Usage (int exitcode)
 int
 main (int argc, char **argv)
 {
-  SVCXPRT *transp;
+  SVCXPRT *transp_udp, *transp_tcp;
   int my_port = -1, my_socket, result;
   struct sockaddr_in s_in;
 
@@ -580,21 +579,22 @@ main (int argc, char **argv)
   else
     my_socket = RPC_ANYSOCK;
 
-  transp = svcudp_create (my_socket);
-  if (transp == NULL)
+  transp_udp = svcudp_create (my_socket);
+  if (transp_udp == NULL)
     {
       log_msg ("cannot create udp service.");
       exit (1);
     }
 
-  if (!svc_register (transp, YPPROG, YPVERS, ypprog_2, IPPROTO_UDP))
+  if (!svc_register (transp_udp, YPPROG, YPVERS, ypprog_2, IPPROTO_UDP))
     {
       log_msg ("unable to register (YPPROG, YPVERS, udp).");
+      svc_destroy (transp_udp);
       exit (1);
     }
 
   /* XXX ypprog_2 should be ypprog_1 */
-  if (!svc_register (transp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_UDP))
+  if (!svc_register (transp_udp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_UDP))
     {
       log_msg ("unable to register (YPPROG, YPOLDVERS, udp).");
       exit (1);
@@ -625,23 +625,28 @@ main (int argc, char **argv)
   else
     my_socket = RPC_ANYSOCK;
 
-  transp = svctcp_create (my_socket, 0, 0);
-  if (transp == NULL)
+  transp_tcp = svctcp_create (my_socket, 0, 0);
+  if (transp_tcp == NULL)
     {
       log_msg ("ypserv: cannot create tcp service\n");
+      svc_destroy (transp_udp);
       exit (1);
     }
 
-  if (!svc_register (transp, YPPROG, YPVERS, ypprog_2, IPPROTO_TCP))
+  if (!svc_register (transp_tcp, YPPROG, YPVERS, ypprog_2, IPPROTO_TCP))
     {
       log_msg ("ypserv: unable to register (YPPROG, YPVERS, tcp)\n");
+      svc_destroy (transp_udp);
+      svc_destroy (transp_tcp);
       exit (1);
     }
 
   /* XXX ypprog_2 should be ypprog_1 */
-  if (!svc_register (transp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_TCP))
+  if (!svc_register (transp_tcp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_TCP))
     {
       log_msg ("ypserv: unable to register (YPPROG, YPOLDVERS, tcp)\n");
+      svc_destroy (transp_udp);
+      svc_destroy (transp_tcp);
       exit (1);
     }
 
@@ -661,6 +666,8 @@ main (int argc, char **argv)
   if (slp_flag)
     deregister_slp ();
 #endif
+  svc_destroy (transp_udp);
+  svc_destroy (transp_tcp);
   exit (1);
   /* NOTREACHED */
 }

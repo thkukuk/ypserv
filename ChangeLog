@@ -1,3 +1,13 @@
+2009-05-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c (main): Free transp (fix memory leak)
+
+2009-05-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yphelper/yphelper.8.xml: New.
+	* yphelper/yphelper.8: Regenerated from xml source.
+	* yphelper/Makefile.am: Add rules for xml.
+
 2009-05-07  Thorsten Kukuk  <kukuk@suse.de>
 
 	* lib/access.c (is_valid): Don't print message for non-existing
