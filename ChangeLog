@@ -1,3 +1,7 @@
+2009-06-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.21
+
 2009-05-19  Thorsten Kukuk  <kukuk@suse.de>
 
 	* ypserv/ypserv.c (main): Free transp (fix memory leak)

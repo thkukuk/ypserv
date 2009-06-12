@@ -5,7 +5,7 @@ Copyright (C) 1998-2009 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
 
-Version 2.20.1
+Version 2.21
 * Better handling of RPC decoding errors
 
 Version 2.20

@@ -1,5 +1,5 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2009 Thorsten Kukuk
-   Author: Thorsten Kukuk <kukuk@suse.de>
+/* Copyright (c) 1996-2009 Thorsten Kukuk
+   Author: Thorsten Kukuk <kukuk@thkukuk.de>
 
    The YP Server is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -192,7 +192,7 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
     {
       const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
 
-      log_msg ("ERROR: Cannot decode arguments for %d from %s:",
+      log_msg ("ERROR: Cannot decode arguments for %d from %s",
 	       rqstp->rq_proc, inet_ntoa (sin->sin_addr));
       /* try to free already allocated memory during decoding.
 	 bnc#471924 */

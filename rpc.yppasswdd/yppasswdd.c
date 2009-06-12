@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996, 1997, 1998, 1999, 2001, 2005, 2006 Thorsten Kukuk, <kukuk@suse.de>
+   Copyright (c) 1996-2006 Thorsten Kukuk, <kukuk@thkukuk.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
