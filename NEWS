@@ -5,6 +5,10 @@ Copyright (C) 1998-2009 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
 
+Version 2.22
+* Update ypserv.8 manual page
+* Fix possible memory corruption bug
+
 Version 2.21
 * Better handling of RPC decoding errors
 

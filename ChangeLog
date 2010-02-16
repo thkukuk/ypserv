@@ -1,3 +1,12 @@
+2010-01-27  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.22
+
+	* ypserv/ypserv.8.xml: Code cleanup, document problems with SIGHUP.
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Remove wrong ypdb_close
+	call. Reported by Karel Klic <kklic@redhat.com>.
+
 2009-06-12  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.21

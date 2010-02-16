@@ -605,7 +605,6 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	    log_msg ("refuse to transfer %s from %s, no trusted master",
 		     argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
 
-	  ypdb_close (dbp);
 	  result->xfrstat = YPXFR_NODOM;
 	  return TRUE;
 	}

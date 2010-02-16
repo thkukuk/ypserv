@@ -58,7 +58,7 @@ client processes;
 <emphasis remap='B'>ypserv</emphasis>
 may or may not be running on the same node,
 but must be running somewhere
-on the network. On startup or when receiving the signal SIGHUP,
+on the network. On startup
 <emphasis remap='B'>ypserv</emphasis>
 parses the file
 <filename>/etc/ypserv.conf.</filename></para>
@@ -110,8 +110,7 @@ domain name. To prevent such unauthorized transactions,
 supports a feature called
 <emphasis remap='B'>securenets</emphasis>
 which can be used to restrict access to a given set of hosts.
-At startup or when arriving the SIGHUP Signal,
-<emphasis remap='B'>ypserv</emphasis>
+At startup <emphasis remap='B'>ypserv</emphasis>
 will attempt to load the securenets information from a file
 called
 <filename>/var/yp/securenets .</filename>
@@ -165,14 +164,23 @@ you have to reinstall the slave servers if you change the master server
 for a map.</para>
 </refsect1>
 
+<refsect1 id='bugs'><title>BUGS</title>
+<para>Sending the signal <emphasis remap='B'>SIGHUP</emphasis> to the server can lead to
+a deadlock or crash.</para>
+</refsect1>
+
 <refsect1 id='files'><title>FILES</title>
 <variablelist remap='TP'>
   <varlistentry>
   <term><filename>/etc/ypserv.conf</filename></term>
+  <listitem>
+<para>configuration file.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
   <term><filename>/var/yp/securenets</filename></term>
   <listitem>
-<!-- .PD -->
-<para></para> <!-- FIXME: blank list item -->
+<para>which hosts are allowed to contact <command>ypserv</command>.</para>
   </listitem>
   </varlistentry>
 </variablelist>
