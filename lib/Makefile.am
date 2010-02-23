@@ -9,7 +9,7 @@ rpcsvcdir = ${prefix}/include/rpcsvc
 
 noinst_LIBRARIES = libyp.a
 noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h \
-		compat.h
+		compat.h pidfile.h
 
 rpcsvc_HEADERS = ypxfrd.x
 
@@ -18,6 +18,7 @@ INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 AM_CFLAGS = @PIE_CFLAGS@
 
 libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
-		ypproc_match_2.c securenets.c access.c yp_db.c compat.c
+		ypproc_match_2.c securenets.c access.c yp_db.c \
+		compat.c pidfile.c
 
 CLEANFILES = *~

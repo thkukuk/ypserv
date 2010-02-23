@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996-2006 Thorsten Kukuk, <kukuk@thkukuk.de>
+   Copyright (c) 1996-2006, 2010 Thorsten Kukuk, <kukuk@thkukuk.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
@@ -48,13 +48,8 @@
 
 #include "log_msg.h"
 #include "compat.h"
+#include "pidfile.h"
 
-#ifdef HAVE_PATHS_H
-#include <paths.h>
-#endif
-#ifndef _PATH_VARRUN
-#define _PATH_VARRUN "/etc/"
-#endif
 #define _YPPASSWDD_PIDFILE _PATH_VARRUN"yppasswdd.pid"
 
 int use_shadow = 0;
@@ -111,70 +106,6 @@ yppasswdprog_1 (struct svc_req *rqstp, SVCXPRT * transp)
       exit (1);
     }
 }
-
-/* Create a pidfile on startup */
-static void
-create_pidfile (void)
-{
-  int fd, left, written;
-  pid_t pid;
-  char pbuf[50], *ptr;
-  struct flock lock;
-
-  fd = open (_YPPASSWDD_PIDFILE, O_CREAT | O_RDWR,
-	     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  if (fd < 0)
-    {
-      log_msg ("cannot create pidfile %s", _YPPASSWDD_PIDFILE);
-      if (debug_flag)
-	log_msg ("\n");
-    }
-
-  lock.l_type = F_WRLCK;
-  lock.l_start = 0;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
-
-  /* Is the pidfile locked by another ypserv ? */
-  if (fcntl (fd, F_GETLK, &lock) < 0)
-    {
-      log_msg ("fcntl error");
-      if (debug_flag)
-	log_msg ("\n");
-    }
-  if (lock.l_type == F_UNLCK)
-    pid = 0;	        /* false, region is not locked by another proc */
-  else
-    pid = lock.l_pid;	/* true, return pid of lock owner */
-
-  if (0 != pid)
-    {
-      log_msg ("rpc.yppasswdd already running (pid %d) - exiting", pid);
-      if (debug_flag)
-	log_msg ("\n");
-      exit (1);
-    }
-
-  /* write lock */
-  lock.l_type = F_WRLCK;
-  lock.l_start = 0;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
-  if (0 != fcntl (fd, F_SETLK, &lock))
-    log_msg ("cannot lock pidfile");
-  sprintf (pbuf, "%ld\n", (long) getpid ());
-  left = strlen (pbuf);
-  ptr = pbuf;
-  while (left > 0)
-    {
-      if ((written = write (fd, ptr, left)) <= 0)
-	return;			/* error */
-      left -= written;
-      ptr += written;
-    }
-  return;
-}
-
 
 static void
 usage (FILE * fp, int n)
@@ -455,7 +386,7 @@ main (int argc, char **argv)
 	}
     }
 
-  create_pidfile ();
+  create_pidfile (_YPPASSWDD_PIDFILE, "rpc.yppasswdd");
 
   /* Register a signal handler to reap children after they terminated */
   install_sighandler ();

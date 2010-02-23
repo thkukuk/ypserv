@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2003, 2005, 2006 Thorsten Kukuk
+/* Copyright (c) 1996-1999, 2001-2003, 2005, 2006, 2010 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -58,6 +58,9 @@
 
 #include "log_msg.h"
 #include "compat.h"
+#include "pidfile.h"
+
+#define _YPXFRD_PIDFILE _PATH_VARRUN"ypxfrd.pid"
 
 extern void ypxfrd_freebsd_prog_1(struct svc_req *, SVCXPRT *);
 
@@ -118,6 +121,7 @@ static void
 sig_quit (int sig UNUSED)
 {
   pmap_unset (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS);
+  unlink (_YPXFRD_PIDFILE);
   exit (0);
 }
 
@@ -134,7 +138,7 @@ sig_hup (int sig UNUSED)
 }
 
 static void
-Usage (int exitcode)
+usage (int exitcode)
 {
   fputs ("usage: rpc.ypxfrd [--debug] [-d path] [-p port]\n", stderr);
   fputs ("       rpc.ypxfrd --version\n", stderr);
@@ -204,10 +208,10 @@ main (int argc, char **argv)
 	  break;
 	case 'u':
         case 'h':
-          Usage(0);
+          usage(0);
           break;
         case '?':
-          Usage(1);
+          usage(1);
           break;
         }
     }
@@ -265,6 +269,8 @@ main (int argc, char **argv)
 	    exit (err);
 	  }
       }
+
+  create_pidfile (_YPXFRD_PIDFILE, "rpc.ypxfrd");
 
   /* Change current directory to database location */
   if (chdir(path_ypdb) < 0)
@@ -442,6 +448,7 @@ main (int argc, char **argv)
 
   svc_run();
   log_msg("svc_run returned");
+  unlink (_YPXFRD_PIDFILE);
   exit(1);
   /* NOTREACHED */
 }

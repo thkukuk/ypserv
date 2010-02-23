@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2009 Thorsten Kukuk
+/* Copyright (c) 1996-2010 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@thkukuk.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -48,16 +48,11 @@
 #include "log_msg.h"
 #include "ypserv_conf.h"
 #include "compat.h"
+#include "pidfile.h"
 #if USE_SLP
 #include "reg_slp.h"
 #endif
 
-#ifdef HAVE_PATHS_H
-#include <paths.h>
-#endif
-#ifndef _PATH_VARRUN
-#define _PATH_VARRUN "/etc/"
-#endif
 #define _YPSERV_PIDFILE _PATH_VARRUN"ypserv.pid"
 
 #ifndef YPOLDVERS
@@ -254,87 +249,6 @@ mysvc_run (void)
 }
 #endif
 
-/* Create a pidfile on startup */
-static void
-create_pidfile (void)
-{
-  int fd, left, written, flags;
-  pid_t pid;
-  char pbuf[10], *ptr;
-  struct flock lock;
-
-  fd = open (_YPSERV_PIDFILE, O_CREAT | O_RDWR,
-	     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  if (fd < 0)
-    {
-      log_msg ("cannot create pidfile %s", _YPSERV_PIDFILE);
-      if (debug_flag)
-	log_msg ("\n");
-      return;
-    }
-
-  /* Make sure file gets correctly closed when process finished.  */
-  flags = fcntl (fd, F_GETFD, 0);
-  if (flags == -1)
-    {
-      /* Cannot get file flags.  */
-      close (fd);
-      return;
-    }
-  flags |= FD_CLOEXEC;		/* Close on exit.  */
-  if (fcntl (fd, F_SETFD, flags) < 0)
-    {
-      /* Cannot set new flags.  */
-      close (fd);
-      return;
-    }
-
-  lock.l_type = F_WRLCK;
-  lock.l_start = 0;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
-
-  /* Is the pidfile locked by another ypserv ? */
-  if (fcntl (fd, F_GETLK, &lock) < 0)
-    {
-      log_msg ("fcntl error");
-      if (debug_flag)
-	log_msg ("\n");
-    }
-  if (lock.l_type == F_UNLCK)
-    pid = 0;			/* false, not locked by another proc */
-  else
-    pid = lock.l_pid;		/* true, return pid of lock owner */
-
-  if (0 != pid)
-    {
-      log_msg ("ypserv already running (pid %d) - exiting", pid);
-      if (debug_flag)
-	log_msg ("\n");
-      exit (1);
-    }
-
-  /* write lock */
-  lock.l_type = F_WRLCK;
-  lock.l_start = 0;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
-  if (0 != fcntl (fd, F_SETLK, &lock))
-    log_msg ("cannot lock pidfile");
-  sprintf (pbuf, "%ld\n", (long) getpid ());
-  left = strlen (pbuf);
-  ptr = pbuf;
-  while (left > 0)
-    {
-      if ((written = write (fd, ptr, left)) <= 0)
-	return;			/* error */
-      left -= written;
-      ptr += written;
-    }
-
-  return;
-}
-
 extern FILE *debug_output;
 /* SIGUSR1: enable/disable debug output.  */
 static void
@@ -522,7 +436,7 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  create_pidfile ();
+  create_pidfile (_YPSERV_PIDFILE, "ypserv");
 
   load_securenets ();
   load_config ();

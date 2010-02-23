@@ -1,9 +1,12 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2009 Thorsten Kukuk
+Copyright (C) 1998-2010 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
+
+Version 2.23
+* rpc.ypxfrd creates now a pid file
 
 Version 2.22
 * Update ypserv.8 manual page
