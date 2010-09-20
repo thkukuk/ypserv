@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2005, 2006 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -80,7 +80,7 @@ char *path_shadow_old = NULL;
 char *external_update_program = NULL;
 
 static int external_update_env (yppasswd *yppw);
-static int external_update_pipe (yppasswd *yppw);
+static int external_update_pipe (yppasswd *yppw, char *logbuf);
 static int update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 			 int *passwd_changed, int *chfn, int *chsh);
 
@@ -271,7 +271,7 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 
       if (x_flag)
         {
-          res = external_update_pipe (yppw);
+          res = external_update_pipe (yppw, logbuf);
           return &res;
         }
       else
@@ -742,10 +742,9 @@ external_update_env (yppasswd *yppw)
  *===============================================================*/
 
 static int
-external_update_pipe (yppasswd *yppw)
+external_update_pipe (yppasswd *yppw, char *logbuf)
 {
   struct xpasswd *newpw;       /* passwd struct passed by the client */
-  char *logbuf;
   int res, pid, tochildpipe[2], toparentpipe[2];
   FILE *fp;
   char childresponse[1024];
@@ -761,12 +760,7 @@ external_update_pipe (yppasswd *yppw)
 
   newpw = &yppw->newpw;
   res = 1;
-  logbuf = alloca (60 + strlen (yppw->newpw.pw_name));
-  if (logbuf == NULL)
-    {
-      log_msg ("rpc.yppasswdd: out of memory");
-      return res;
-    }
+
   /*
    * determine what information we have to change
    */
@@ -876,7 +870,7 @@ external_update_pipe (yppasswd *yppw)
       return res;
     }
 
-  strcat (parentmsg, yppw->newpw.pw_name);
+  strcpy (parentmsg, yppw->newpw.pw_name);
   strcat (parentmsg, " o:");
   strcat (parentmsg, yppw->oldpass);
   strcat (parentmsg, " ");
@@ -908,7 +902,6 @@ external_update_pipe (yppasswd *yppw)
   fp = fdopen(tochildpipe[1], "w");
   fprintf(fp, "%s\n", parentmsg);
   fclose(fp);
-  free (parentmsg);
 
   /*
    * get output from the child
@@ -926,11 +919,13 @@ external_update_pipe (yppasswd *yppw)
     {
       log_msg ("%s failed.  Change request: %s", logbuf, parentmsg);
       log_msg ("Response was %s", childresponse);
+      free (parentmsg);
       return res;
     }
 
   log_msg ("%s successful. Change request: %s", logbuf, parentmsg);
 
+  free (parentmsg);
   res = 0;
 
   return res;

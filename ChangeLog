@@ -1,3 +1,9 @@
+2010-09-20  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.yppasswdd/update.c (external_update_pipe): Make logbuf
+	a new parameter, fix usage of parentmsg.
+	Bugs reported by Mark Riley.
+
 2010-02-23  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.23
