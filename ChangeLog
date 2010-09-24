@@ -1,3 +1,10 @@
+2010-09-24  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.24
+
+	* rpc.yppasswdd/update.c (external_update_pipe): Use correct
+	gecos variable. Reported by Mark Riley.
+
 2010-09-20  Thorsten Kukuk  <kukuk@suse.de>
 
 	* rpc.yppasswdd/update.c (external_update_pipe): Make logbuf

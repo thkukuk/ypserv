@@ -772,7 +772,7 @@ external_update_pipe (yppasswd *yppw, char *logbuf)
     shell = newpw->pw_shell;
 
   if (allow_chfn && newpw->pw_gecos && *(newpw->pw_gecos))
-    gcos = newpw->pw_shell;
+    gcos = newpw->pw_gecos;
 
   if (!password && !shell && !gcos)
     {

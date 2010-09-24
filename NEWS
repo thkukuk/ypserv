@@ -5,6 +5,9 @@ Copyright (C) 1998-2010 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
 
+Version 2.24
+* rpc.yppasswdd: Fix -x option
+
 Version 2.23
 * rpc.ypxfrd creates now a pid file
 
