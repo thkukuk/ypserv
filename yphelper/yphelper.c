@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1999, 2001, 2002, 2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -539,7 +539,7 @@ is_master (char *map, char *domain, char *host)
 #if USE_FQDN
   struct hostent *hp = NULL;
 #endif
-  char *hostname, *domainname;
+  char *hostname, *domainname, *val;
   int ret;
 
   if (domain != NULL)
@@ -580,7 +580,7 @@ is_master (char *map, char *domain, char *host)
 #endif
 
   if (strcasecmp (hostname,
-		  get_dbm_entry ("YP_MASTER_NAME", map, domainname)) == 0)
+	  (val = get_dbm_entry ("YP_MASTER_NAME", map, domainname))) == 0)
     ret = 0;
   else
     ret = 1;

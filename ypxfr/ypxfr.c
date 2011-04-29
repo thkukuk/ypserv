@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001, 2002, 2003, 2004, 2005  Thorsten Kukuk
+/* Copyright (c) 2000-2005, 2011  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -836,7 +836,11 @@ main (int argc, char **argv)
 
   if (target_domain == NULL)
     {
-      yp_get_default_domain (&target_domain);
+      if (yp_get_default_domain (&target_domain) != 0)
+	{
+	  log_msg ("Cannot get default domain");
+	  exit (1);
+	}
 
       if (target_domain == NULL)
 	{

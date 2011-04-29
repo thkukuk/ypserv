@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2010 Thorsten Kukuk
+/* Copyright (c) 1996-2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@thkukuk.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -411,6 +411,12 @@ main (int argc, char **argv)
 
       umask (0);
       i = open ("/dev/null", O_RDWR);
+      if (i == -1)
+	{
+	  log_msg ("opening /dev/null failed: %s\n", strerror (errno));
+	  exit (1);
+	}
+      /* two dups: stdin, stdout, stderr */
       if (dup (i) == -1)
 	{
 	  log_msg ("dup failed: %s\n", strerror (errno));

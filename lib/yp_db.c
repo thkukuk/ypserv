@@ -1,4 +1,4 @@
-/* Copyright (c)  2000, 2001, 2002, 2003, 2004, 2009 Thorsten Kukuk
+/* Copyright (c)  2000, 2001, 2002, 2003, 2004, 2009, 2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -56,6 +56,7 @@ _db_open (const char *domain, const char *map)
 
       dbp = gdbm_open (buf, 0, GDBM_READER, 0, NULL);
 
+      /* XXX dead code, gdbm_cache_value isn't implemented yet */
       if (dbp && gdbm_cache_value >= 0)
 	gdbm_setopt(dbp, GDBM_CACHESIZE, &gdbm_cache_value, sizeof(int));
 

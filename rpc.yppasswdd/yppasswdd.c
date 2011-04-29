@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996-2006, 2010 Thorsten Kukuk, <kukuk@thkukuk.de>
+   Copyright (c) 1996-2006, 2010, 2011 Thorsten Kukuk, <kukuk@thkukuk.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
@@ -372,12 +372,22 @@ main (int argc, char **argv)
 	}
       umask(0);
       i = open("/dev/null", O_RDWR);
+      if (i == -1)
+	{
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: open /dev/null failed: %s\n",
+		   strerror (err));
+	  exit (err);
+	}
+
+      /* two dups, we have stdin, stdout, stderr */
       if (dup(i) == -1)
 	{
 	  int err = errno;
 	  log_msg ("rpc.yppasswdd: dup failed: %s\n", strerror (err));
 	  exit (err);
 	}
+
       if (dup(i) == -1)
 	{
 	  int err = errno;

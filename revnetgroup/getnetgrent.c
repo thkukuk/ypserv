@@ -243,6 +243,8 @@ rev_parse_entry (char *start, char *end, struct netgrlist *list)
       list->list = malloc (10 * sizeof (struct netgrentry));
       if (NULL != list->list)
 	list->maxmembers = 10;
+      else
+	return;
     }
 
   if (list->members == list->maxmembers)

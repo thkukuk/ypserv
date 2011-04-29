@@ -1,3 +1,27 @@
+2011-04-29  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yphelper/yphelper.c (is_master): Fix memory leak.
+
+	* rpc.yppasswdd/yppasswdd.c (main): Check if we could open
+	/dev/null.
+	* ypserv/ypserv.c (main): Likewise.
+
+	* rpc.yppasswdd/update.c (update_files): Close all files.
+
+	* revnetgroup/getnetgrent.c: Return if malloc fails.
+
+	* makedbm/makedbm.c (create_file): Close file if not stdin.
+
+	* lib/yp_db.c (_db_open): Document not implemented cache size.
+
+	* lib/pidfile.c (create_pidfile): Exit if we cannot create
+	pid file.
+
+2010-10-29  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.yppasswdd/update.c (remove_password): Remove password
+	for logging.
+
 2010-09-24  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.24

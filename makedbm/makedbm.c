@@ -1,4 +1,4 @@
-/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002, 2003, 2005, 2006 Thorsten Kukuk
+/* Copyright (c) 1996-2006, 2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -458,6 +458,9 @@ create_file (char *fileName, char *dbmName, char *masterName,
   rename (filename, dbmName);
 #endif
   free (filename);
+
+  if (strcmp (fileName, "-") != 0)
+    fclose (input);
 }
 
 static void

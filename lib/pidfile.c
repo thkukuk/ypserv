@@ -1,4 +1,4 @@
-/* Copyright (c) 2009 Thorsten Kukuk
+/* Copyright (c) 2009, 2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -40,6 +40,7 @@ create_pidfile (const char *filename, const char *daemonname)
       log_msg ("cannot create pidfile %s", filename);
       if (debug_flag)
 	log_msg ("\n");
+      exit (1);
     }
 
   lock.l_type = F_WRLCK;
@@ -53,6 +54,7 @@ create_pidfile (const char *filename, const char *daemonname)
       log_msg ("fcntl error");
       if (debug_flag)
 	log_msg ("\n");
+      exit (1);
     }
   if (lock.l_type == F_UNLCK)
     pid = 0;	        /* false, region is not locked by another proc */

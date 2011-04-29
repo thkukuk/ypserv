@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2006, 2008 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2006, 2008, 2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -64,7 +64,7 @@ getipnr (char *n, char *network, char *netmask)
 
   m = strtok (n, "/");
 
-  sscanf (m, "%s", buf);
+  sscanf (m, "%19s", buf);
 
   for (i = 0; i < strlen (buf); i++)
     if ((buf[i] < '0' || buf[i] > '9') && buf[i] != '.')
@@ -172,7 +172,7 @@ load_ypserv_conf (const char *path)
 {
   FILE *in;
   char c, *cp;
-  char buf1[1025], buf2[1025], buf3[1025];
+  char buf1[1025], buf2[1025] = "", buf3[1025];
   long line = 0;
   conffile_t *ptr = NULL, *work = NULL;
   char *filename = alloca (strlen (path) + sizeof ("/ypserv.conf") + 1);

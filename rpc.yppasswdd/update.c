@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -433,6 +433,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	  log_msg ("%s failed", logbuf);
 	  log_msg ("Can't stat %s: %m", path_shadow);
 	  fclose (oldpf);
+	  fclose (newpf);
 	  fclose (oldsf);
 	  return 1;
 	}
@@ -741,6 +742,29 @@ external_update_env (yppasswd *yppw)
  *
  *===============================================================*/
 
+static char *
+remove_password (char *str)
+{
+  char *ptr = strstr (str, " o:");
+
+  if (ptr != NULL)
+    {
+      ptr+=3;
+      while (*ptr && *ptr != ' ')
+	*ptr++ = 'X';
+    }
+
+  ptr = strstr (str, " p:");
+  if (ptr != NULL)
+    {
+      ptr+=3;
+      while (*ptr && *ptr != ' ')
+	*ptr++ = 'X';
+    }
+
+  return ptr;
+}
+
 static int
 external_update_pipe (yppasswd *yppw, char *logbuf)
 {
@@ -914,6 +938,9 @@ external_update_pipe (yppasswd *yppw, char *logbuf)
       log_msg ("fgets() call failed.");
     }
   fclose(fp);
+
+  if (!debug_flag)
+    parentmsg = remove_password (parentmsg);
 
   if (strspn(childresponse, "OK") < 2)
     {
