@@ -228,20 +228,30 @@ main (int argc, char *argv[])
 	    line[strlen (line) - 1] = '\0';
 
 	  grpname = xstrtok (line, ':');
+	  length = length - strlen(grpname) - 1;
 	  ptr = xstrtok (NULL, ':');
+	  length = length - strlen(ptr) - 1;
 	  gid = xstrtok (NULL, ':');
-	  while ((user = xstrtok (NULL, ',')) != NULL)
+	  length = length - strlen(gid) - 1;
+	  user = xstrtok (NULL, ',');
+	  while (user != NULL) {
+	    length = length - strlen(user) - 1;
 	    if (add_group (user, gid) < 0)
 	      if (!quiet_flag)
 		fprintf (stderr, "WARNING: unknown user \"%s\" in group \"%s\".\n",
 			 user, grpname);
+	    if (length > 0)
+	      user = xstrtok (user + strlen(user) + 1, ',');
+	    else
+	      user = NULL;
+	  }
 	}
     }
   fclose (file);
 
   if ((file = fopen (hostname, "r")) == NULL)
     {
-      fprintf (stderr, "ERROR: Can't open %s\n", grpname);
+      fprintf (stderr, "ERROR: Can't open %s\n", hostname);
       exit (1);
     }
 

@@ -1,4 +1,11 @@
+2011-06-16  Thorsten Kukuk  <kukuk@suse.de>
+
+	* mknetid/mknetid.c (main): Fix group parsing [bnc#700248].
+	Patch from Anders Johansson.
+
 2011-04-29  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.25
 
 	* yphelper/yphelper.c (is_master): Fix memory leak.
 	* rpc.yppasswdd/yppasswdd.c (main): Check if we could open
