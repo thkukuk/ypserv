@@ -1,9 +1,13 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2010 Thorsten Kukuk
+Copyright (C) 1998-2011 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
+
+Version 2.26
+* ypserv: Fix trusted_master option
+* mknetid: Fix group parsing
 
 Version 2.25
 * Lot of small bug fixes/improved error handling

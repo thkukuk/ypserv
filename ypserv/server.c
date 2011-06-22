@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001, 2002, 2003, 2005, 2006, 2009  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002, 2003, 2005, 2006, 2009, 2011  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -486,7 +486,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
   result->transid = argp->transid;
 
   valid = is_valid (rqstp, argp->map_parms.map, argp->map_parms.domain);
-  if (valid < 1)
+  if (valid < 1 && valid != -4) /* Map does not exist has a special meaning */
     {
       switch (valid)
 	{
@@ -521,9 +521,6 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	    log_msg ("refuse to transfer map from %s, no valid domain",
 		     inet_ntoa (rqhost->sin_addr));
 	  result->xfrstat = YPXFR_NODOM;
-	  break;
-	case -4:
-	  /* Map does not exist local, ignored, will be handled below */
 	  break;
 	}
       return TRUE;
@@ -608,6 +605,15 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	  result->xfrstat = YPXFR_NODOM;
 	  return TRUE;
 	}
+      else
+	{
+	  if (debug_flag)
+	    log_msg ("\t->New map %s from %s (is a trusted master!)",
+		     argp->map_parms.map, argp->map_parms.peer);
+	  else
+	    log_msg ("New map %s from trusted master %s",
+		     argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
+	}
     }
   /* If you wish to allow the transfer of new maps, change the next
      #if 1 statement to #if 0 */
@@ -616,9 +622,10 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     {
       /* We doesn't have the map, refuse the transfer */
       if (debug_flag)
-        log_msg ("\t->Ignored (I don't have this map)");
+        log_msg ("\t->Ignored (transfer %s from %s, map doesn't exist local)",
+		 argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
       else
-        log_msg ("refuse to transfer %s from %s, map doesn't exist",
+        log_msg ("refuse to transfer %s from %s, map doesn't exist local",
 		 argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
 
       result->xfrstat = YPXFR_REFUSED;

@@ -1,3 +1,10 @@
+2011-06-22  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.26
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Ignore -4 as error,
+	create better (debug) logs.
+
 2011-06-16  Thorsten Kukuk  <kukuk@suse.de>
 
 	* mknetid/mknetid.c (main): Fix group parsing [bnc#700248].
