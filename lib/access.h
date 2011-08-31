@@ -1,4 +1,4 @@
-/* Copyright (c) 2009 Thorsten Kukuk
+/* Copyright (c) 2000 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -16,21 +16,23 @@
    not, write to the Free Software Foundation, Inc., 51 Franklin Street,
    Suite 500, Boston, MA 02110-1335, USA. */
 
-#ifndef __PIDFILE_H
-#define __PIDFILE_H
+#ifndef __ACCESS_H__
+#define __ACCESS_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#ifdef HAVE_PATHS_H
-#include <paths.h>
-#endif
-#ifndef _PATH_VARRUN
-#define _PATH_VARRUN "/etc/"
-#endif
+#include <rpc/rpc.h>
 
-/* Creates a pidfile on daemon startup. */
-extern void create_pidfile (const char *filename, const char *daemonname);
+/* access.c */
+extern void load_config (void);
+extern int is_valid_domain (const char *domain);
+extern int is_valid (struct svc_req *rqstp, const char *map,
+		     const char *domain);
 
-#endif /* __PIDFILE_H */
+/* securenets.c */
+extern void load_securenets (void);
+extern int securenet_host (const struct in_addr sin_addr);
+
+#endif

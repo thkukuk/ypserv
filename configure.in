@@ -1,8 +1,8 @@
 #
-# Copyright (C) 1999-2009 Thorsten Kukuk <kukuk@linux-nis.org>
+# Copyright (C) 1999-2011 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ypserv, 2.25, kukuk@linux-nis.org)
+AC_INIT(ypserv, 2.26, kukuk@linux-nis.org)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AM_CONFIG_HEADER(config.h)
