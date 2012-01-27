@@ -58,6 +58,10 @@ with the information needed by the transfer agent ypxfr(8) to callback
 to yppush, which may be printed the result to stderr. Messages are
 also printed when a transfer is not possible; for instance when the request
 message is undeliverable.</para>
+<para>
+To specify a port number or use any other
+<emphasis remap='B'>yppush</emphasis> options you can edit
+<emphasis remap='I'>/var/yp/Makefile</emphasis> directly.</para>
 </refsect1>
 
 <refsect1 id='options'><title>OPTIONS</title>

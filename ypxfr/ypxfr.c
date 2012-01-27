@@ -51,8 +51,12 @@
 #endif /* HAVE_RPC_CLNT_SOC_H */
 #include "compat.h"
 
+#if defined(HAVE_COMPAT_LIBGDBM)
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
+#endif
 
 #define ypdb_store gdbm_store
 #define YPDB_REPLACE GDBM_REPLACE
@@ -223,7 +227,7 @@ ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
   req.xfrmap = map;
   req.xfrdomain = domain;
   req.xfrmap_filename = map;
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
 #if SIZEOF_LONG == 8
   req.xfr_db_type = XFR_DB_GNU_GDBM64;
 #else
@@ -500,7 +504,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       time_t localOrderNum = 0;
       datum inKey, inVal;
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
       dbm = gdbm_open (dbName_orig, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
       dbm = dbm_open (dbName_orig, O_CREAT|O_RDWR, 0600);
@@ -562,7 +566,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       char orderNum[255];
       CLIENT *clnt_tcp;
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
       dbm = gdbm_open (dbName_temp, 0, GDBM_NEWDB, 0600, NULL);
 #elif defined(HAVE_NDBM)
       dbm = dbm_open (dbName_temp, O_CREAT|O_RDWR, 0600);

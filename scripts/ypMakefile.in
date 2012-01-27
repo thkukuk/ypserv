@@ -22,6 +22,14 @@ B=
 # /var/yp/ypservers.
 NOPUSH=true
 
+# yppush copies updated NIS databases (or maps) from the master NIS server 
+# to the slave servers within a NIS domain and listens for their answer. 
+# yppush will ask portmap to assign it a random port number to listen on 
+# by default. To specify a fixed port number or any aditional options, 
+# edit variable YPPUSH_ARGS.
+# e.g. YPPUSH_ARGS = --port 836
+YPPUSH_ARGS = 
+
 # We do not put password entries with lower UIDs (the root and system
 # entries) in the NIS password database, for security. MINUID is the
 # lowest uid that will be included in the password maps. If you
@@ -115,7 +123,7 @@ all:  passwd group hosts rpc services netid protocols netgrp mail \
 
 DBLOAD = $(YPBINDIR)/makedbm -c -m `$(YPBINDIR)/yphelper --hostname`
 MKNETID = $(YPBINDIR)/mknetid
-YPPUSH = $(YPSBINDIR)/yppush
+YPPUSH = $(YPSBINDIR)/yppush $(YPPUSH_ARGS)
 MERGER = $(YPBINDIR)/yphelper
 DOMAIN = `basename \`pwd\``
 LOCALDOMAIN = `/bin/domainname`

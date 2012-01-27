@@ -36,11 +36,13 @@
 
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
 #elif defined(HAVE_NDBM)
 #include <ndbm.h>
 #endif
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
 
 /* Open a GDBM database */
 static GDBM_FILE

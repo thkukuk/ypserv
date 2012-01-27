@@ -47,9 +47,13 @@ int callrpc (char *host, u_long prognum, u_long versnum, u_long procnum,
 #include <sys/param.h>
 #include <sys/time.h>
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
 
+#if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
+#endif
 
 #define ypdb_store gdbm_store
 #define YPDB_REPLACE GDBM_REPLACE
@@ -122,7 +126,7 @@ create_file (char *fileName, char *dbmName, char *masterName,
 
   filename = calloc (1, strlen (dbmName) + 3);
   sprintf (filename, "%s~", dbmName);
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (filename, 0, GDBM_NEWDB | GDBM_FAST, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (filename, O_CREAT | O_RDWR, 0600);
@@ -467,7 +471,7 @@ static void
 dump_file (char *dbmName)
 {
   datum key, data;
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (dbmName, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (dbmName, O_RDONLY, 0600);
@@ -477,7 +481,7 @@ dump_file (char *dbmName)
       fprintf (stderr, "makedbm: Cannot open %s\n", dbmName);
       exit (1);
     }
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   for (key = gdbm_firstkey (dbm); key.dptr; key = gdbm_nextkey (dbm, key))
     {
       data = gdbm_fetch (dbm, key);

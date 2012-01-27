@@ -647,7 +647,12 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       if (link (path_shadow, path_shadow_old) == -1)
 	log_msg ("Cannot create backup file %s: %s",
 		 path_shadow_old, strerror (errno));
-      rename (path_shadow_tmp, path_shadow);
+      if (rename (path_shadow_tmp, path_shadow) == -1) 
+        {
+          log_msg ("Cannot move temporary file %s to %s: %s",
+                 path_shadow_tmp, path_shadow, strerror (errno));
+          *shadow_changed = 0;
+        }
     }
   else
     unlink (path_shadow_tmp);
@@ -659,7 +664,12 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       if (link (path_passwd, path_passwd_old) == -1)
 	log_msg ("Cannot create backup file %s: %s",
 		 path_passwd_old, strerror (errno));
-      rename (path_passwd_tmp, path_passwd);
+      if (rename (path_passwd_tmp, path_passwd) == -1)
+        {
+          log_msg ("Cannot move temporary file %s to %s: %s",
+                 path_passwd_tmp, path_passwd, strerror (errno));
+          *passwd_changed = 0;
+        }
     }
   else
     unlink (path_passwd_tmp);
@@ -742,7 +752,7 @@ external_update_env (yppasswd *yppw)
  *
  *===============================================================*/
 
-static char *
+static void
 remove_password (char *str)
 {
   char *ptr = strstr (str, " o:");
@@ -761,8 +771,6 @@ remove_password (char *str)
       while (*ptr && *ptr != ' ')
 	*ptr++ = 'X';
     }
-
-  return ptr;
 }
 
 static int
@@ -940,7 +948,7 @@ external_update_pipe (yppasswd *yppw, char *logbuf)
   fclose(fp);
 
   if (!debug_flag)
-    parentmsg = remove_password (parentmsg);
+    remove_password (parentmsg);
 
   if (strspn(childresponse, "OK") < 2)
     {

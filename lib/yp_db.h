@@ -8,8 +8,12 @@
 #define F_ALL   0x01
 #define F_NEXT  0x02
 
+#if defined(HAVE_COMPAT_LIBGDBM)
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
+#endif
 
 #define DB_FILE GDBM_FILE
 #define ypdb_fetch(a,b)  gdbm_fetch(a,b)

@@ -133,7 +133,7 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
     }
   ypdb_close_all ();
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
 #if SIZEOF_LONG == 8
   if ((argp->xfr_db_type != XFR_DB_GNU_GDBM64) &&
       (argp->xfr_db_type != XFR_DB_ANY))

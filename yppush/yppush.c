@@ -45,6 +45,8 @@
 #include <memory.h>
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
 #elif defined(HAVE_NDBM)
 #include <ndbm.h>
 #include <fcntl.h>
@@ -260,7 +262,7 @@ get_dbm_entry (char *key)
   static char mappath[MAXPATHLEN + 2];
   char *val;
   datum dkey, dval;
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   GDBM_FILE dbm;
 #elif defined (HAVE_NDBM)
   DBM *dbm;
@@ -274,7 +276,7 @@ get_dbm_entry (char *key)
       exit (1);
     }
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
@@ -287,7 +289,7 @@ get_dbm_entry (char *key)
 
   dkey.dptr = key;
   dkey.dsize = strlen (dkey.dptr);
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dval = gdbm_fetch (dbm, dkey);
 #elif defined(HAVE_NDBM)
   dval = dbm_fetch (dbm, dkey);
@@ -300,7 +302,7 @@ get_dbm_entry (char *key)
       strncpy (val, dval.dptr, dval.dsize);
       val[dval.dsize] = 0;
     }
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   gdbm_close (dbm);
 #elif defined(HAVE_NDBM)
   dbm_close (dbm);
