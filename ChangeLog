@@ -1,5 +1,7 @@
 2012-01-27  Thorsten Kukuk  <kukuk@suse.de>
 
+	* release version 2.27
+
 	* configure.in: Check for qdbm.
 	* conf_post.h: New file.
 	* lib/yp_db.c: Include header for qdbm.
