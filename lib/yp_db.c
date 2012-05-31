@@ -40,6 +40,8 @@
 #include <hovel.h>
 #elif defined(HAVE_NDBM)
 #include <ndbm.h>
+#elif defined(HAVE_LIBTC)
+#include <tcbdb.h>
 #endif
 
 #if defined(HAVE_COMPAT_LIBGDBM)
@@ -150,6 +152,112 @@ ypdb_nextkey (DB_FILE file, datum key)
   tkey = dbm_nextkey (file);
 
   return tkey;
+}
+
+#elif defined(HAVE_LIBTC)
+
+/*****************************************************
+  The following stuff is for Tokyo Cabinet suport !
+******************************************************/
+
+/* Open a Tokyo Cabinet B+ Tree database */
+static DB_FILE
+_db_open (const char *domain, const char *map)
+{
+  DB_FILE dbp;
+  char buf[MAXPATHLEN + 2];
+  int isok;
+
+  if (strlen (domain) + strlen (map) < MAXPATHLEN)
+    {
+      sprintf (buf, "%s/%s", domain, map);
+
+      dbp = tcbdbnew ();
+      isok = tcbdbopen (dbp, buf, BDBOREADER);
+
+      if (debug_flag && !isok)
+      	log_msg ("tcbdbopen: Tokyo Cabinet Error: %s", 
+                 tcbdberrmsg (tcbdbecode (dbp)));
+      else if (debug_flag)
+	log_msg ("\t\t->Returning OK!");
+    }
+  else
+    {
+      dbp = NULL;
+      log_msg ("Path too long: %s/%s", domain, map);
+    }
+
+  return dbp;
+}
+
+static inline int
+_db_close (DB_FILE dbp)
+{
+  tcbdbclose (dbp);
+  tcbdbdel (dbp);
+  dbp = NULL;
+  return 0;
+}
+
+datum
+ypdb_firstkey (DB_FILE dbp)
+{
+  datum tkey;
+  BDBCUR *cur;
+  
+  /* In case of error, we return original key */
+  if (!(cur = tcbdbcurnew (dbp)) || !tcbdbcurfirst (cur)
+      || (tkey.dptr = tcbdbcurkey (cur, &tkey.dsize)) == NULL)
+    {
+      tkey.dptr = NULL;
+      tkey.dsize = 0;
+    }
+
+  if (cur)
+    tcbdbcurdel (cur);
+
+  return tkey;
+}
+
+int
+ypdb_exists (DB_FILE dbp, datum key)
+{
+  return tcbdbvnum (dbp, key.dptr, key.dsize) > 0;
+}
+
+datum
+ypdb_nextkey (DB_FILE dbp, datum key)
+{
+  datum tkey;
+  BDBCUR *cur;
+  
+  tkey.dptr = NULL;
+  tkey.dsize = 0;
+  
+  /* In case of error, we return empty key */
+  if (!(cur = tcbdbcurnew (dbp)))
+    return tkey;
+
+  /* We try to jump to key and get next, or we move to the first */
+  if (tcbdbcurjump (cur, key.dptr, key.dsize) && tcbdbcurnext (cur))
+    {
+      if ((tkey.dptr = tcbdbcurkey (cur, &tkey.dsize)) == NULL)
+        tkey.dsize = 0;
+    }
+    
+  tcbdbcurdel (cur);
+  return tkey;
+}
+
+datum
+ypdb_fetch (DB_FILE bdb, datum key)
+{
+  datum res;
+  
+  if ((res.dptr = tcbdbget (bdb, key.dptr, key.dsize, &res.dsize)) == NULL)
+      res.dsize = 0;
+  
+  return res;
 }
 
 #else

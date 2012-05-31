@@ -50,6 +50,8 @@
 #elif defined(HAVE_NDBM)
 #include <ndbm.h>
 #include <fcntl.h>
+#elif defined(HAVE_LIBTC)
+#include <tcbdb.h>
 #endif
 #if defined(HAVE_GETOPT_H)
 #include <getopt.h>
@@ -266,6 +268,8 @@ get_dbm_entry (char *key)
   GDBM_FILE dbm;
 #elif defined (HAVE_NDBM)
   DBM *dbm;
+#elif defined (HAVE_LIBTC)
+  TCBDB *dbm;
 #endif
 
   if (strlen (YPMAPDIR) + strlen (DomainName) + strlen (current_map) + 3 < MAXPATHLEN)
@@ -280,6 +284,13 @@ get_dbm_entry (char *key)
   dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
+#elif defined(HAVE_LIBTC)
+  dbm = tcbdbnew();
+  if (!tcbdbopen(dbm, mappath, BDBOWRITER | BDBOCREAT))
+    {
+      tcbdbdel(dbm);
+      dbm = NULL;
+    }
 #endif
   if (dbm == NULL)
     {
@@ -293,6 +304,8 @@ get_dbm_entry (char *key)
   dval = gdbm_fetch (dbm, dkey);
 #elif defined(HAVE_NDBM)
   dval = dbm_fetch (dbm, dkey);
+#elif defined(HAVE_LIBTC)
+  dval.dptr = tcbdbget (dbm, dkey.dptr, dkey.dsize, &dval.dsize);
 #endif
   if (dval.dptr == NULL)
     val = NULL;
@@ -306,6 +319,9 @@ get_dbm_entry (char *key)
   gdbm_close (dbm);
 #elif defined(HAVE_NDBM)
   dbm_close (dbm);
+#elif defined(HAVE_LIBTC)
+  tcbdbclose (dbm);
+  tcbdbdel (dbm);
 #endif
   return val;
 }
@@ -651,6 +667,12 @@ main (int argc, char **argv)
 	      log_msg ("yppush cannot run in parallel with a fixed port");
 	      return 1;
 	    }
+	  if (my_port <= 0 || my_port > 0xffff) {
+	    /* Invalid port number */
+	    fprintf (stdout, "Warning: yppush: Invalid port %d (0x%x)\n", 
+			my_port, my_port);
+	    my_port = -1;
+	  }
 	  break;
 	default:
 	  Usage (1);

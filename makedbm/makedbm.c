@@ -69,6 +69,30 @@ static GDBM_FILE dbm;
 #define ypdb_close dbm_close
 static DBM *dbm;
 
+#elif defined (HAVE_LIBTC)
+
+#include <tcbdb.h>
+
+#define YPDB_REPLACE 1
+
+static TCBDB *dbm;
+
+static inline int
+ypdb_store(TCBDB *dbm, datum key, datum data, int mode)
+{
+  if (mode != YPDB_REPLACE)
+    return 1;
+
+  return !tcbdbput(dbm, key.dptr, key.dsize, data.dptr, data.dsize);
+}
+
+static inline void
+ypdb_close (TCBDB *dbm)
+{
+  tcbdbclose (dbm);
+  tcbdbdel (dbm);
+}
+
 #else
 
 #error "No database found or selected!"
@@ -130,6 +154,13 @@ create_file (char *fileName, char *dbmName, char *masterName,
   dbm = gdbm_open (filename, 0, GDBM_NEWDB | GDBM_FAST, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (filename, O_CREAT | O_RDWR, 0600);
+#elif defined(HAVE_LIBTC)
+  dbm = tcbdbnew();
+  if (!tcbdbopen(dbm, filename, BDBOWRITER | BDBOCREAT))
+  {
+    tcbdbdel(dbm);
+    dbm = NULL;
+  }
 #endif
   if (dbm == NULL)
     {
@@ -475,6 +506,13 @@ dump_file (char *dbmName)
   dbm = gdbm_open (dbmName, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (dbmName, O_RDONLY, 0600);
+#elif defined(HAVE_LIBTC)
+  dbm = tcbdbnew();
+  if (!tcbdbopen (dbm, dbmName, BDBOREADER))
+  {
+    tcbdbdel(dbm);
+    dbm = NULL;
+  }
 #endif
   if (dbm == NULL)
     {
@@ -512,6 +550,32 @@ dump_file (char *dbmName)
 	      data.dsize, data.dptr);
       key = dbm_nextkey (dbm);
     }
+#elif defined(HAVE_LIBTC)
+  {
+    BDBCUR *cur;
+    cur = tcbdbcurnew (dbm);
+    if (tcbdbcurfirst (cur))
+      {
+        while ((key.dptr = tcbdbcurkey (cur, &key.dsize)) != NULL)
+          {
+            data.dptr = tcbdbcurval (cur, &data.dsize);
+            if (!data.dptr)
+	      {
+	        fprintf (stderr, "Error:\n");
+	        perror (dbmName);
+	        exit (1);
+              }
+            
+            printf ("%.*s\t%.*s\n",
+                  key.dsize, key.dptr,
+                  data.dsize, data.dptr);
+	  
+            if (!tcbdbcurnext (cur))
+              break;
+          }
+      }
+    tcbdbcurdel (cur);
+  }
 #endif
   ypdb_close (dbm);
 }

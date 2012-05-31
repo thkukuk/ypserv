@@ -46,6 +46,8 @@
 #include <hovel.h>
 #elif defined(HAVE_NDBM)
 #include <ndbm.h>
+#elif defined(HAVE_LIBTC)
+#include <tcbdb.h>
 #endif
 #include "yp.h"
 #include "compat.h"
@@ -490,6 +492,8 @@ get_dbm_entry (char *key, char *map, char *domainname)
   GDBM_FILE dbm;
 #elif defined (HAVE_NDBM)
   DBM *dbm;
+#elif defined (HAVE_LIBTC)
+  TCBDB *dbm;
 #endif
 
   if (strlen (YPMAPDIR) + strlen (domainname) + strlen (map) + 3 < MAXPATHLEN)
@@ -504,6 +508,13 @@ get_dbm_entry (char *key, char *map, char *domainname)
   dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
+#elif defined(HAVE_LIBTC)
+  dbm = tcbdbnew();
+  if (!tcbdbopen(dbm, mappath, BDBOWRITER | BDBOCREAT))
+    {
+      tcbdbdel(dbm);
+      dbm = NULL;
+    }
 #endif
   if (dbm == NULL)
     {
@@ -517,6 +528,8 @@ get_dbm_entry (char *key, char *map, char *domainname)
   dval = gdbm_fetch (dbm, dkey);
 #elif defined(HAVE_NDBM)
   dval = dbm_fetch (dbm, dkey);
+#elif defined(HAVE_LIBTC)
+  dval.dptr = tcbdbget (dbm, dkey.dptr, dkey.dsize, &dval.dsize);
 #endif
   if (dval.dptr == NULL)
     val = NULL;
@@ -530,6 +543,9 @@ get_dbm_entry (char *key, char *map, char *domainname)
   gdbm_close (dbm);
 #elif defined(HAVE_NDBM)
   dbm_close (dbm);
+#elif defined(HAVE_LIBTC)
+  tcbdbclose (dbm);
+  tcbdbdel (dbm);
 #endif
   return val;
 }

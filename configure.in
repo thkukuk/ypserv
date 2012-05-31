@@ -2,7 +2,7 @@
 # Copyright (C) 1999-2012 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ypserv, 2.27, kukuk@linux-nis.org)
+AC_INIT(ypserv, 2.28, kukuk@linux-nis.org)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AM_CONFIG_HEADER(config.h)
@@ -172,10 +172,10 @@ AC_ARG_ENABLE([checkroot],AS_HELP_STRING([--disable-checkroot],
 AC_SUBST(CHECKROOT)
 
 # Check for --with-dbmliborder
-dbmliborder="gdbm ndbm qdbm"
+dbmliborder="gdbm ndbm qdbm tokyocabinet"
 AC_MSG_CHECKING(for --with-dbmliborder)
 AC_ARG_WITH(dbmliborder,
-            AS_HELP_STRING([--with-dbmliborder=db1:db2:...], [order to check db backends for dbm. Valid value is a colon separated string with the backend names `ndbm', `gdbm' and `qdbm'.]),
+            AS_HELP_STRING([--with-dbmliborder=db1:db2:...], [order to check db backends for dbm. Valid value is a colon separated string with the backend names `ndbm', `gdbm', `qdbm' and `tokyocabinet'.]),
 [
 if test x$with_dbmliborder = xyes
 then
@@ -183,7 +183,7 @@ then
 else
   dbmliborder=`echo $with_dbmliborder | sed 's/:/ /g'`
   for db in $dbmliborder; do
-    if test x$db != xndbm && test x$db != xgdbm && test x$db != xqdbm
+    if test x$db != xndbm && test x$db != xgdbm && test x$db != xqdbm && test x$db != xtokyocabinet
     then
       AC_MSG_ERROR([proper usage is --with-dbmliborder=db1:db2:...])
     fi
@@ -211,6 +211,15 @@ for db in $dbmliborder; do
       libdb_parameter=yes
       break
     fi
+  elif test x$db = xtokyocabinet
+  then
+    AC_CHECK_LIB(tokyocabinet,tcbdbopen,LIBDBM="-ltokyocabinet",LIBDBM="")
+    if test x"" != x"${LIBDBM}"
+    then
+      AC_DEFINE(HAVE_LIBTC, 1, [Use tokyocabinet library as database])
+      libdb_parameter=yes
+      break
+    fi
   elif test x$db = xndbm 
   then
     AC_CHECK_FUNCS(dbm_open)
@@ -228,7 +237,7 @@ if test x$libdb_parameter != xyes
 then
   echo "
 
- You need the GNU GDBM, QDBM or the Solaris NDBM functions for this package !"
+ You need the GNU GDBM, QDBM, Tokyo Cabinet or the Solaris NDBM functions for this package !"
   echo ""
   echo ""
   exit
@@ -331,11 +340,10 @@ JH_CHECK_XML_CATALOG([http://docbook.sourceforge.net/release/xsl/current/manpage
                 [DocBook XSL Stylesheets], [], enable_man=no)
 AM_CONDITIONAL(ENABLE_REGENERATE_MAN, test x$enable_man != xno)
 
-
 AC_OUTPUT(Makefile
 	lib/Makefile etc/Makefile ypserv/Makefile
 	ypxfr/Makefile yppush/Makefile makedbm/Makefile mknetid/Makefile
-        revnetgroup/Makefile rpc.yppasswdd/Makefile rpc.ypxfrd/Makefile
+	revnetgroup/Makefile rpc.yppasswdd/Makefile rpc.ypxfrd/Makefile
 	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
 	scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate
 	scripts/create_printcap scripts/match_printcap

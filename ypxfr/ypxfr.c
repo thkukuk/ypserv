@@ -71,6 +71,45 @@ static GDBM_FILE dbm;
 #define ypdb_close dbm_close
 #define ypdb_fetch dbm_fetch
 static DBM *dbm;
+#elif defined(HAVE_LIBTC)
+#include <tcbdb.h>
+
+#define YPDB_REPLACE 1
+
+static inline int
+ypdb_close (TCBDB *dbp)
+{
+  tcbdbclose (dbp);
+  tcbdbdel (dbp);
+  dbp = NULL;
+  return 0;
+}
+
+static int
+ypdb_store (TCBDB *dbm, datum key, datum data, int mode)
+{
+  if (mode != YPDB_REPLACE)
+    return 1;
+
+  return !tcbdbput(dbm, key.dptr, key.dsize, data.dptr, data.dsize);
+}
+
+static datum
+ypdb_fetch (TCBDB *bdb, datum key)
+{
+  datum res;
+  
+  if (!(res.dptr = tcbdbget(bdb, key.dptr, key.dsize, &res.dsize)))
+    {
+      res.dptr = NULL;
+      res.dsize = 0;
+    }
+  
+  return res;
+}
+
+static TCBDB *dbm;
+
 #endif
 
 #ifndef YPMAPDIR
@@ -227,7 +266,7 @@ ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
   req.xfrmap = map;
   req.xfrdomain = domain;
   req.xfrmap_filename = map;
-#if defined(HAVE_COMPAT_LIBGDBM)
+#if defined(HAVE_LIBGDBM)
 #if SIZEOF_LONG == 8
   req.xfr_db_type = XFR_DB_GNU_GDBM64;
 #else
@@ -250,6 +289,16 @@ ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
   req.xfr_db_type = XFR_DB_BSD_NDBM;
   req.xfr_byte_order = XFR_ENDIAN_ANY;
 #endif
+#elif defined (HAVE_LIBQDBM)
+  req.xfr_db_type = XFR_DB_QDBM;
+#if defined(WORDS_BIGENDIAN)
+  req.xfr_byte_order = XFR_ENDIAN_BIG;
+#else
+  req.xfr_byte_order = XFR_ENDIAN_LITTLE;
+#endif
+#elif defined (HAVE_LIBTC)
+  req.xfr_db_type = XFR_DB_TC;
+  req.xfr_byte_order = XFR_ENDIAN_ANY;
 #endif
   memset (&resp, 0, sizeof (resp));
 
@@ -508,6 +557,13 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       dbm = gdbm_open (dbName_orig, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
       dbm = dbm_open (dbName_orig, O_CREAT|O_RDWR, 0600);
+#elif defined(HAVE_LIBTC)
+      dbm = tcbdbnew ();
+      if (!tcbdbopen (dbm, dbName_orig, BDBOWRITER | BDBOCREAT))
+        {
+          tcbdbdel (dbm);
+          dbm = NULL;
+        }
 #endif
       if (dbm == NULL)
         {
@@ -570,6 +626,13 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       dbm = gdbm_open (dbName_temp, 0, GDBM_NEWDB, 0600, NULL);
 #elif defined(HAVE_NDBM)
       dbm = dbm_open (dbName_temp, O_CREAT|O_RDWR, 0600);
+#elif defined(HAVE_LIBTC)
+      dbm = tcbdbnew ();
+      if (!tcbdbopen (dbm, dbName_orig, BDBOWRITER | BDBOCREAT))
+        {
+          tcbdbdel (dbm);
+          dbm = NULL;
+        }
 #endif
       if (dbm == NULL)
         {

@@ -133,7 +133,7 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
     }
   ypdb_close_all ();
 
-#if defined(HAVE_COMPAT_LIBGDBM)
+#if defined(HAVE_LIBGDBM)
 #if SIZEOF_LONG == 8
   if ((argp->xfr_db_type != XFR_DB_GNU_GDBM64) &&
       (argp->xfr_db_type != XFR_DB_ANY))
@@ -149,6 +149,12 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
     if ((argp->xfr_db_type != XFR_DB_BSD_NDBM) &&
 	(argp->xfr_db_type != XFR_DB_ANY))
 #endif /* sun */
+#elif defined (HAVE_LIBQDBM)
+    if ((argp->xfr_db_type != XFR_DB_QDBM) &&
+	(argp->xfr_db_type != XFR_DB_ANY))
+#elif defined (HAVE_LIBTC)
+    if ((argp->xfr_db_type != XFR_DB_TC) &&
+	(argp->xfr_db_type != XFR_DB_ANY))
 #else
   if (argp->xfr_db_type != XFR_DB_ANY)
 #endif

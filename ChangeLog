@@ -1,3 +1,35 @@
+2012-05-30  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.28
+
+	* mknetid/mknetid.c (main): Handle empty group lines and broken
+	group entries more graceful.
+	Patch from Stefan Sydow <stsydow@cs.tu-berlin.de>.
+
+	* configure.in: Add support for tokyocabinet.
+	* lib/yp.h: Likewise.
+	* lib/yp_db.c: Likewise.
+	* lib/yp_db.h: Likewise.
+	* lib/ypxfrd.h: Likewise.
+	* lib/ypxfrd.x: Likewise.
+	* makedbm/makedbm.c: Likewise.
+	* rpc.ypxfrd/ypxfrd_server.c: Likewise.
+	* yphelper/yphelper.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+
+	* rpc.yppasswdd/update.c: check crypt() ret value for
+	NULL pointer, add support for passwd.adjunct.
+
+	* rpc.yppasswdd/yppasswdd.c: check port value.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypserv/ypserv.: Likewise.
+
+	* scripts/ypinit.in: check for empty domainname.
+
+	Based on patches from Honza Horak <hhorak@redhat.com>.
+
 2012-01-27  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.27
@@ -16,7 +48,7 @@
 	check for correct return values.
 
 	* scripts/ypMakefile.in: Add YPPUSH_ARGS variable.
-	* yppush/yppush.8.xml: Document to edit /var/yp/Makefile.	
+	* yppush/yppush.8.xml: Document to edit /var/yp/Makefile.
 
 	Based on patches from Honza Horak <hhorak@redhat.com>.
 

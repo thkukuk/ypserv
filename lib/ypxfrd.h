@@ -49,7 +49,9 @@ enum xfr_db_type {
   XFR_DB_OPAQUE = 10,
   XFR_DB_ANY = 11,
   XFR_DB_UNKNOWN = 12,
-  XFR_DB_GNU_GDBM64 = 13
+  XFR_DB_GNU_GDBM64 = 13,
+  XFR_DB_QDBM = 14,
+  XFR_DB_TC = 15
 };
 typedef enum xfr_db_type xfr_db_type;
 

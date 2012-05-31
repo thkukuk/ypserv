@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011, 2012 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -79,6 +79,8 @@ char *path_shadow_old = NULL;
 /* Will be set by the main function */
 char *external_update_program = NULL;
 
+static bool_t adjuct_used = FALSE;
+
 static int external_update_env (yppasswd *yppw);
 static int external_update_pipe (yppasswd *yppw, char *logbuf);
 static int update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
@@ -142,16 +144,99 @@ shell_ok (char *shell)
   return 0;
 }
 
+/* Read shadow file manually, to handle different colons count.
+   When we use passwd.adjunct, shadow file contains 6 colons, but if
+   we don't use passwd.adjunct, shadow file contains 8 colons.
+   This function can handle both counts, but fgetspent doesn't */
+static struct spwd *
+fgetspent_adjunct(FILE *fp)
+{
+  static char line_buffer[1024];
+  char *buffer_mark;
+  struct spwd* result;
+  int i, colons = 0;
+
+  /* Reserve two bytes for theoretic colons */
+  while (fgets(line_buffer, sizeof(line_buffer) - 2, fp) != NULL)
+    {
+      /* We don't need a new line character in the end */
+      if ((buffer_mark = strchr(line_buffer, '\n')) != NULL)
+          buffer_mark[0] = '\0';
+
+      /* Skip commented or empty lines */
+      if (line_buffer[0] == '\0' || line_buffer[0] == '#')
+        continue;
+
+      /* Count number of colons in the line */
+      for (i = 0; line_buffer[i] != '\0'; ++i)
+          if (line_buffer[i] == ':')
+            ++colons;
+
+      /* When we use passwd.adjunct, shadow file contains 6 colons,
+         but we need 8 colons to properly parse the line, so we
+         just add two colons to the end of the line */
+      if (colons == 6)
+        {
+          strcat(line_buffer, "::");
+          adjuct_used = TRUE;
+        }
+
+      /* Try to parse the line, if not success, read the next line */
+      if ((result = sgetspent(line_buffer)) != NULL)
+        return result;
+
+    }
+  return NULL;
+}
+
+/* Write an entry to the given stream.
+   When we use passwd.adjunct, shadow file contains 6 colons, but if
+   we don't use passwd.adjunct, shadow file contains 8 colons.
+   This function can handle both counts, but putspent doesn't  */
+static int
+putspent_adjunct (const struct spwd *p, FILE *stream)
+{
+  int errors = 0;
+
+  if (!adjuct_used)
+    return putspent(p, stream);
+
+  flockfile (stream);
+
+  if (fprintf (stream, "%s:%s:::::", p->sp_namp, p->sp_pwdp ? p->sp_pwdp : "") < 0)
+    ++errors;
+
+  if (putc_unlocked ('\n', stream) == EOF)
+    ++errors;
+
+  funlockfile (stream);
+
+  return errors ? -1 : 0;
+}
+
 /* Check if the password the user supplied matches the old one */
 static int
-password_ok (char *plain, char *crypted, char *root)
+password_ok (char *plain, char *crypted, char *root, char *logbuf)
 {
+  char *crypted_new;
   if (crypted[0] == '\0')
     return 1;
-  if (strcmp (crypt (plain, crypted), crypted) == 0)
+  crypted_new = crypt (plain, crypted);
+  if (crypted_new == NULL)
+    {
+      log_msg ("crypt() call failed.", logbuf);
+      return 0;
+    }
+  if (strcmp (crypted_new, crypted) == 0)
     return 1;
 #if CHECKROOT
-  if (strcmp (crypt (plain, root), root) == 0)
+  crypted_new = crypt (plain, root);
+  if (crypted_new == NULL)
+    {
+      log_msg ("crypt() call failed.", logbuf);
+      return 0;
+    }
+  if (strcmp (crypted_new, root) == 0)
     return 1;
 #endif
 
@@ -476,15 +561,16 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 
 	  /* Check the password. At first check for a shadow password. */
 	  if (oldsf != NULL &&
-	      pw->pw_passwd[0] == 'x' && pw->pw_passwd[1] == '\0')
+	      ((pw->pw_passwd[0] == 'x' && pw->pw_passwd[1] == '\0') ||
+              (pw->pw_passwd[0] == '#' && pw->pw_passwd[1] == '#')))
 	    {
 #ifdef HAVE_GETSPNAM /* shadow password */
 	      /* Search for the shadow entry of this user */
-	      while ((spw = fgetspent (oldsf)) != NULL)
+	      while ((spw = fgetspent_adjunct (oldsf)) != NULL)
 		{
 		  if (strcmp (yppw->newpw.pw_name, spw->sp_namp) == 0)
 		    {
-		      if (!password_ok (yppw->oldpass, spw->sp_pwdp, rootpass))
+		      if (!password_ok (yppw->oldpass, spw->sp_pwdp, rootpass, logbuf))
 			{
 			  log_msg ("%s rejected", logbuf);
 			  log_msg ("Invalid password.");
@@ -493,7 +579,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		      /* Password is ok, leave while loop */
 		      break;
 		    }
-		  else if (putspent (spw, newsf) < 0)
+		  else if (putspent_adjunct (spw, newsf) < 0)
 		    {
 		      log_msg ("%s failed", logbuf);
 		      log_msg ("Error while writing new shadow file: %m");
@@ -506,7 +592,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	  /* We don't have a shadow password file or we don't find the
 	     user in it. */
 	  if (spw == NULL &&
-	      !password_ok (yppw->oldpass, pw->pw_passwd, rootpass))
+	      !password_ok (yppw->oldpass, pw->pw_passwd, rootpass, logbuf))
 	    {
 	      log_msg ("%s rejected", logbuf);
 	      log_msg ("Invalid password.");
@@ -545,7 +631,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 			  goto error;
 			}
 		    }
-		  if (putspent (spw, newsf) < 0)
+		  if (putspent_adjunct (spw, newsf) < 0)
 		    {
 		      log_msg ("%s failed", logbuf);
 		      log_msg ("Error while writing new shadow file: %m");
@@ -554,8 +640,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		    }
 
 		  /* Copy all missing entries */
-		  while ((spw = fgetspent (oldsf)) != NULL)
-		    if (putspent (spw, newsf) < 0)
+		  while ((spw = fgetspent_adjunct (oldsf)) != NULL)
+		    if (putspent_adjunct (spw, newsf) < 0)
 		      {
 			log_msg ("%s failed", logbuf);
 			log_msg ("Error while writing new shadow file: %m");
@@ -647,7 +733,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       if (link (path_shadow, path_shadow_old) == -1)
 	log_msg ("Cannot create backup file %s: %s",
 		 path_shadow_old, strerror (errno));
-      if (rename (path_shadow_tmp, path_shadow) == -1) 
+      if (rename (path_shadow_tmp, path_shadow) == -1)
         {
           log_msg ("Cannot move temporary file %s to %s: %s",
                  path_shadow_tmp, path_shadow, strerror (errno));
@@ -943,7 +1029,7 @@ external_update_pipe (yppasswd *yppw, char *logbuf)
   if (!fgets(childresponse, 1024, fp))
     {
       childresponse[0] = '\0';
-      log_msg ("fgets() call failed.");
+      log_msg ("fgets() call failed or EOF.");
     }
   fclose(fp);
 
@@ -953,7 +1039,7 @@ external_update_pipe (yppasswd *yppw, char *logbuf)
   if (strspn(childresponse, "OK") < 2)
     {
       log_msg ("%s failed.  Change request: %s", logbuf, parentmsg);
-      log_msg ("Response was %s", childresponse);
+      log_msg ("Response was '%s'", childresponse);
       free (parentmsg);
       return res;
     }

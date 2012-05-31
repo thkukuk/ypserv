@@ -9,7 +9,7 @@ SUBDIRS = etc lib ypserv ypxfr yppush makedbm revnetgroup rpc.ypxfrd \
 CLEANFILES = *~
 
 M4_FILES = $(shell ls $(srcdir)/m4/*.m4)
-EXTRA_DIST = $(M4_FILES)
+EXTRA_DIST = $(M4_FILES) conf_post.h
 
 ACLOCAL_AMFLAGS = -I m4
 

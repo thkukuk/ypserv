@@ -359,6 +359,12 @@ main (int argc, char **argv)
 	  break;
 	case 'p':
 	  my_port = atoi (optarg);
+	  if (my_port <= 0 || my_port > 0xffff) {
+	    /* Invalid port number */
+	    fprintf (stdout, "Warning: ypserv: Invalid port %d (0x%x)\n", 
+			my_port, my_port);
+	    my_port = -1;
+	  }
 	  if (debug_flag)
 	    log_msg ("Using port %d\n", my_port);
 	  break;

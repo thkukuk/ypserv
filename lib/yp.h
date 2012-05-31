@@ -68,6 +68,15 @@ typedef struct {
 	char *valdat_val;
 } valdat;
 
+#if defined(HAVE_LIBTC)
+
+typedef struct {
+	char *dptr;
+	int dsize;
+} datum;
+
+#endif
+
 struct ypmap_parms {
 	domainname domain;
 	mapname map;

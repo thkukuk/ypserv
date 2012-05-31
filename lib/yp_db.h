@@ -5,6 +5,8 @@
 #include "config.h"
 #endif
 
+#include "yp.h"
+
 #define F_ALL   0x01
 #define F_NEXT  0x02
 
@@ -35,6 +37,19 @@ extern int ypdb_exists (DB_FILE file, datum key);
 #define ypdb_firstkey(a) dbm_firstkey(a)
 extern datum ypdb_nextkey (DB_FILE file, datum key);
 extern datum ypdb_fetch (DB_FILE file, datum key);
+
+#elif defined(HAVE_LIBTC)
+
+#include <tcbdb.h>
+
+#define DB_FILE TCBDB *
+
+#define ypdb_free(a) free(a)
+
+extern int ypdb_exists (DB_FILE file, datum key);
+extern datum ypdb_firstkey (DB_FILE file);
+extern datum ypdb_nextkey (DB_FILE file, datum key);
+extern datum ypdb_fetch (DB_FILE bdb, datum key);
 
 #else
 

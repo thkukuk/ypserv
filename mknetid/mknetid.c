@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1999, 2001, 2002, 2009 Thorsten Kukuk
+/* Copyright (c) 1996, 1999, 2001, 2002, 2009, 2012 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -220,19 +220,28 @@ main (int argc, char *argv[])
       if (n < 1)
 	break;
 
+      if (line[n - 1] == '\n')
+        {
+          if(n < 2)
+            continue; /* empty line */
+	  line[n - 1] = '\0';
+        }
+
       if (line[0] != '+' && line[0] != '-')
 	{
 	  char *grpname, *ptr, *gid, *user;
 
-	  if (line[strlen (line) - 1] == '\n')
-	    line[strlen (line) - 1] = '\0';
-
 	  grpname = xstrtok (line, ':');
-	  length = length - strlen(grpname) - 1;
 	  ptr = xstrtok (NULL, ':');
-	  length = length - strlen(ptr) - 1;
 	  gid = xstrtok (NULL, ':');
-	  length = length - strlen(gid) - 1;
+	  if(grpname && ptr && gid)
+	    length -= gid - line;
+	  else
+	    {
+	      fprintf (stderr, "ERROR: bad format of group \"%s\".\n",
+		       grpname);
+	      exit (1);
+	    }
 	  user = xstrtok (NULL, ',');
 	  while (user != NULL) {
 	    length = length - strlen(user) - 1;

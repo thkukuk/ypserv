@@ -5,6 +5,10 @@ Copyright (C) 1998-2012 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
 
+Version 2.28
+* Add support for tokyocabinet (gdbm replacement)
+* Lot of small bug fixes
+
 Version 2.27
 * qdbm support was added
 * Lot of small bug fixes
