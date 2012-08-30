@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996-2006, 2010, 2011 Thorsten Kukuk, <kukuk@thkukuk.de>
+   Copyright (c) 1996-2006, 2010, 2011, 2012 Thorsten Kukuk, <kukuk@thkukuk.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <arpa/inet.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
 #if defined(HAVE_RPC_SVC_SOC_H)
@@ -91,6 +92,13 @@ yppasswdprog_1 (struct svc_req *rqstp, SVCXPRT * transp)
   memset ((char *) &argument, 0, sizeof (argument));
   if (!svc_getargs (transp, xdr_argument, (caddr_t) &argument))
     {
+      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+
+      log_msg ("cannot decode arguments for %d from %s",
+              rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+      /* try to free already allocated memory during decoding */
+      svc_freeargs (transp, xdr_argument, (caddr_t) &argument);
+
       svcerr_decode (transp);
       return;
     }
@@ -266,7 +274,7 @@ main (int argc, char **argv)
           my_port = atoi (optarg);
 	  if (my_port <= 0 || my_port > 0xffff) {
 		/* Invalid port number */
-	    fprintf (stdout, "Warning: rpc.yppasswdd: Invalid port %d (0x%x)\n", 
+	    fprintf (stdout, "Warning: rpc.yppasswdd: Invalid port %d (0x%x)\n",
 			my_port, my_port);
 		my_port = -1;
 	  }

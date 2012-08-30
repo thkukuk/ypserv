@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2004 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2004, 2012 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -36,6 +36,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <syslog.h>
+#include <arpa/inet.h>
 #include "ypxfrd.h"
 #include "log_msg.h"
 
@@ -90,6 +91,13 @@ ypxfrd_freebsd_prog_1 (struct svc_req *rqstp, SVCXPRT *transp)
   memset(&argument, 0, sizeof (argument));
   if (!svc_getargs(transp, xdr_argument, (caddr_t) &argument))
     {
+      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+
+      log_msg ("cannot decode arguments for %d from %s",
+              rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+      /* try to free already allocated memory during decoding */
+      svc_freeargs (transp, xdr_argument, (caddr_t) &argument);
+
       svcerr_decode(transp);
       _rpcsvcdirty = 0;
       return;

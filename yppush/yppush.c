@@ -200,6 +200,13 @@ yppush_xfrrespprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
   memset ((char *)&argument, 0, sizeof (argument));
   if (!svc_getargs (transp, _xdr_argument, (caddr_t) &argument))
     {
+      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+
+      log_msg ("cannot decode arguments for %d from %s",
+              rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+      /* try to free already allocated memory during decoding */
+      svc_freeargs (transp, _xdr_argument, (caddr_t) &argument);
+
       svcerr_decode (transp);
       return;
     }
