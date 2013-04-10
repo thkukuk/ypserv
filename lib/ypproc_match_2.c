@@ -19,8 +19,6 @@
 #include "config.h"
 #endif
 
-#define _GNU_SOURCE
-
 #include "yp.h"
 
 /* Default timeout can be changed using clnt_control() */

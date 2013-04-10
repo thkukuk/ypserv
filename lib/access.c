@@ -30,6 +30,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#if defined(HAVE_SYSTEMD_SD_DAEMON_H)
+#include <systemd/sd-daemon.h>
+#endif
 
 #include "log_msg.h"
 #include "ypserv_conf.h"
@@ -214,4 +217,26 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
   oldstatus = status;
 
   return status;
+}
+
+/* Send a messages to systemd daemon, that inicialization of daemon
+   is finished and daemon is ready to accept connections.
+   It is a nop if we don't use systemd. */
+void
+announce_ready()
+{
+#if USE_SD_NOTIFY
+  int result;
+
+  result = sd_notifyf(0, "READY=1\n"
+                         "STATUS=Processing requests...\n"
+                         "MAINPID=%lu", (unsigned long) getpid());
+
+  /* Return code from sd_notifyf can be ignored, as per sd_notifyf(3).
+     However, if we use systemd's native unit file, we need to send 
+     this message to let systemd know that daemon is ready.
+     Thus, we want to know that the call had some issues. */
+  if (result < 0)
+    log_msg ("sd_notifyf failed: %s\n", strerror(-result));
+#endif
 }

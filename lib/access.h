@@ -35,4 +35,7 @@ extern int is_valid (struct svc_req *rqstp, const char *map,
 extern void load_securenets (void);
 extern int securenet_host (const struct in_addr sin_addr);
 
+/* systemd */
+extern void announce_ready (void);
+
 #endif

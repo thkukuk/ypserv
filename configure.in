@@ -1,11 +1,11 @@
 #
-# Copyright (C) 1999-2012 Thorsten Kukuk <kukuk@linux-nis.org>
+# Copyright (C) 1999-2013 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(ypserv, 2.29, kukuk@linux-nis.org)
+AC_INIT([ypserv],[2.30],[kukuk@linux-nis.org])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 AC_PREFIX_DEFAULT(/usr)
 AH_BOTTOM([#include <conf_post.h>])
 
@@ -65,12 +65,13 @@ AC_SUBST(SBINDIR)
 
 dnl Checks for programs.
 AC_PROG_CC
-AC_ISC_POSIX
+AC_SEARCH_LIBS([strerror],[cposix])
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AM_PROG_CC_C_O
+AC_USE_SYSTEM_EXTENSIONS
 
 if eval "test x$GCC = xyes"; then
   for flag in \
@@ -269,6 +270,19 @@ if test "$ac_cv_func_getrpcport" = no; then
 	             [ac_cv_func_getrpcport=yes; LIBS="-lrpcsvc $LIBS"])
 fi
 
+USE_SD_NOTIFY=0
+AC_SUBST(USE_SD_NOTIFY)
+AC_CHECK_LIB(systemd-daemon,sd_notify,LIBSYSTEMD_DAEMON="-lsystemd-daemon",
+	LIBSYSTEMD_DAEMON="")
+if test -n "$LIBSYSTEMD_DAEMON" ; then
+	AC_CHECK_HEADERS(systemd/sd-daemon.h)
+	if test "$ac_cv_header_systemd_sd_daemon_h" = yes; then
+          USE_SD_NOTIFY=1
+        fi
+fi
+AC_SUBST(USE_SD_NOTIFY)
+AC_SUBST(LIBSYSTEMD_DAEMON)
+
 AC_CHECK_LIB(nsl,gethostbyname)
 AC_CHECK_LIB(socket,socket)
 AC_CHECK_LIB(resolv, res_gethostbyname, RESOLV="-lresolv", RESOLV="")
@@ -340,14 +354,15 @@ JH_CHECK_XML_CATALOG([http://docbook.sourceforge.net/release/xsl/current/manpage
                 [DocBook XSL Stylesheets], [], enable_man=no)
 AM_CONDITIONAL(ENABLE_REGENERATE_MAN, test x$enable_man != xno)
 
-AC_OUTPUT(Makefile
+AC_CONFIG_FILES([Makefile
 	lib/Makefile etc/Makefile ypserv/Makefile
 	ypxfr/Makefile yppush/Makefile makedbm/Makefile mknetid/Makefile
 	revnetgroup/Makefile rpc.yppasswdd/Makefile rpc.ypxfrd/Makefile
 	yphelper/Makefile scripts/Makefile scripts/ypxfr_1perhour
 	scripts/ypxfr_1perday scripts/ypxfr_2perday scripts/pwupdate
 	scripts/create_printcap scripts/match_printcap
-	scripts/ypinit scripts/ypMakefile)
+	scripts/ypinit scripts/ypMakefile])
+AC_OUTPUT
 
 echo "
 Configuration:
@@ -357,7 +372,7 @@ Configuration:
   Compiler flags:         ${CFLAGS}
   Preprocessor:		  ${CPP}
   Preprocessor flags:     ${CPPFLAGS}
-  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT}
+  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT} ${LIBSYSTEMD_DAEMON}
   Awk:                    ${AWK}
   Shell:		  ${BASH}
   NIS map dir:            ${YPMAPDIR}
@@ -370,4 +385,5 @@ else
 fi
   echo "  Allow root password:     ${CHECKROOT}"
   echo "  Use FQDN as master name: ${USE_FQDN}"
+  echo "  Notify systemd:	   ${USE_SD_NOTIFY}"
 echo ""

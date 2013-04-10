@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001, 2002, 2003, 2005, 2006, 2009, 2011  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002, 2003, 2005, 2006, 2009, 2011, 2013  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -18,8 +18,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#define _GNU_SOURCE
 
 #include <string.h>
 #include <sys/types.h>
@@ -835,6 +833,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid domain)");
 	  result->ypresp_all_u.val.stat = YP_NODOM;
+	  break;
 	case -4:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (map does not exist)");

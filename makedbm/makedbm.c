@@ -15,8 +15,6 @@
    not, write to the Free Software Foundation, Inc., 51 Franklin Street,
    Suite 500, Boston, MA 02110-1335, USA. */
 
-#define _GNU_SOURCE
-
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
@@ -490,6 +488,9 @@ create_file (char *fileName, char *dbmName, char *masterName,
 #endif
 #else
   unlink (dbmName);
+#if defined(HAVE_LIBTC)
+	  chmod(filename, S_IRUSR|S_IWUSR);
+#endif
   rename (filename, dbmName);
 #endif
   free (filename);
@@ -508,7 +509,7 @@ dump_file (char *dbmName)
   dbm = dbm_open (dbmName, O_RDONLY, 0600);
 #elif defined(HAVE_LIBTC)
   dbm = tcbdbnew();
-  if (!tcbdbopen (dbm, dbmName, BDBOREADER))
+  if (!tcbdbopen (dbm, dbmName, BDBOREADER | BDBONOLCK))
   {
     tcbdbdel(dbm);
     dbm = NULL;
@@ -517,6 +518,7 @@ dump_file (char *dbmName)
   if (dbm == NULL)
     {
       fprintf (stderr, "makedbm: Cannot open %s\n", dbmName);
+      fprintf (stderr, "makedbm: Consider rebuilding maps using ypinit\n");
       exit (1);
     }
 #if defined(HAVE_COMPAT_LIBGDBM)

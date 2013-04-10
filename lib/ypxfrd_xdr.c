@@ -19,8 +19,6 @@
 #include "config.h"
 #endif
 
-#define _GNU_SOURCE
-
 #include "ypxfrd.h"
 
 bool_t

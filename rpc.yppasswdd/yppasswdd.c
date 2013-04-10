@@ -59,6 +59,8 @@ int allow_chfn = 0;
 int solaris_mode = -1;
 int x_flag = -1;
 
+static int foreground_flag = 0;
+
 #define xprt_addr(xprt)	(svc_getcaller(xprt)->sin_addr)
 #define xprt_port(xprt)	ntohs(svc_getcaller(xprt)->sin_port)
 void yppasswdprog_1 (struct svc_req *rqstp, SVCXPRT * transp);
@@ -118,9 +120,9 @@ yppasswdprog_1 (struct svc_req *rqstp, SVCXPRT * transp)
 static void
 usage (FILE * fp, int n)
 {
-  fputs ("Usage: rpc.yppasswdd [--debug] [-s shadowfile] [-p passwdfile] [-e chsh|chfn]\n", fp);
-  fputs ("       rpc.yppasswdd [--debug] [-D directory] [-e chsh|chfn]\n", fp);
-  fputs ("       rpc.yppasswdd [--debug] [-x program |-E program] [-e chsh|chfn]\n", fp);
+  fputs ("Usage: rpc.yppasswdd [--debug] [-s shadowfile] [-p passwdfile] [-e chsh|chfn] [-f|--foreground]\n", fp);
+  fputs ("       rpc.yppasswdd [--debug] [-D directory] [-e chsh|chfn] [-f|--foreground]\n", fp);
+  fputs ("       rpc.yppasswdd [--debug] [-x program |-E program] [-e chsh|chfn] [-f|--foreground]\n", fp);
   fputs ("       rpc.yppasswdd --port number\n", fp);
   fputs ("       rpc.yppasswdd --version\n", fp);
   exit (n);
@@ -208,12 +210,13 @@ main (int argc, char **argv)
 	{"usage", no_argument, NULL, 'h'},
 	{"help", no_argument, NULL, 'h'},
 	{"execute", required_argument, NULL, 'x'},
+	{"foreground", no_argument, NULL, 'f'},
 	{"debug", no_argument, NULL, '\254'},
 	{"port", required_argument, NULL, '\253'},
 	{NULL, 0, NULL, '\0'}
       };
 
-      c=getopt_long (argc, argv, "e:p:s:uhvD:E:x:m", long_options,
+      c=getopt_long (argc, argv, "e:p:s:fuhvD:E:x:m", long_options,
 		     &option_index);
       if (c == EOF)
 	break;
@@ -232,6 +235,9 @@ main (int argc, char **argv)
 	    usage (stderr, 1);
 	  solaris_mode = 0;
 	  path_passwd = optarg;
+	  break;
+	case 'f':
+	  foreground_flag = 1;
 	  break;
 	case 's':
 	  if (solaris_mode == 1)
@@ -344,7 +350,7 @@ main (int argc, char **argv)
       log_msg ("rpc.yppasswdd - NYS YP server version %s\n", VERSION);
 #endif /* CHECKROOT */
     }
-  else
+  else if (!foreground_flag)
     {
       int i;
 
@@ -458,6 +464,13 @@ main (int argc, char **argv)
       log_msg ("unable to register yppaswdd udp service.\n");
       exit (1);
     }
+
+  /* If we use systemd as an init system, we may want to give it 
+     a message, that this daemon is ready to accept connections.
+     At this time, sockets for receiving connections are already 
+     created, so we can say we're ready now. It is a nop if we 
+     don't use systemd. */
+  announce_ready();
 
   /* Run the server */
   svc_run ();

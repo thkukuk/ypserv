@@ -22,7 +22,7 @@ sbin_PROGRAMS = ypserv
 
 ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c reg_slp.c
 
-ypserv_LDADD =  @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@ @LIBSLP@
+ypserv_LDADD =  @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@ @LIBSLP@ $(LIBSYSTEMD_DAEMON)
 ypserv_CFLAGS = @PIE_CFLAGS@
 
 if ENABLE_REGENERATE_MAN

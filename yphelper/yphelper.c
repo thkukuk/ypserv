@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2001, 2002, 2011 Thorsten Kukuk
+/* Copyright (c) 1999, 2001, 2002, 2011, 2013 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -14,8 +14,6 @@
    License along with the YP Server; see the file COPYING. If
    not, write to the Free Software Foundation, Inc., 51 Franklin Street,
    Suite 500, Boston, MA 02110-1335, USA. */
-
-#define _GNU_SOURCE
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
@@ -507,10 +505,10 @@ get_dbm_entry (char *key, char *map, char *domainname)
 #if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
-  dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
+  dbm = dbm_open (mappath, O_RDONLY, 0600);
 #elif defined(HAVE_LIBTC)
   dbm = tcbdbnew();
-  if (!tcbdbopen(dbm, mappath, BDBOWRITER | BDBOCREAT))
+  if (!tcbdbopen(dbm, mappath, BDBOREADER | BDBONOLCK))
     {
       tcbdbdel(dbm);
       dbm = NULL;
@@ -519,6 +517,7 @@ get_dbm_entry (char *key, char *map, char *domainname)
   if (dbm == NULL)
     {
       fprintf (stderr, "yphelper: cannot open %s\n", mappath);
+      fprintf (stderr, "yphelper: consider rebuilding maps using ypinit\n");
       exit (1);
     }
 

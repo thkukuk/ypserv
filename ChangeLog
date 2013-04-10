@@ -1,3 +1,28 @@
+2013-04-09  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.30
+
+	* lib/yp_db.c: fixes for Tokyo Cabinet.
+	* makedbm/makedbm.c: Likewise.
+	* yphelper/yphelper.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+	* lib/pidfile.c: Close pidfile file descriptor on exit.
+	* configure.in: Add AC_USE_SYSTEM_EXTENSIONS.
+
+2013-04-09  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: check for systemd header/library.
+	* lib/access.c: implement systemd notification.
+	* lib/access.h: Likewise.
+	* lib/Makefile.am: Likewise.
+	* rpc.yppasswdd/Makefile.am: Likewise.
+	* rpc.yppasswdd/yppasswdd.c: Likewise.
+	* rpc.ypxfrd/Makefile.am: Likewise.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+	* ypserv/Makefile.am: Likewise.
+	* ypserv/ypserv.c: Likewise.
+
 2012-08-30  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.29

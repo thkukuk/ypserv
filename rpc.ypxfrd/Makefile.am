@@ -22,7 +22,7 @@ sbin_PROGRAMS = rpc.ypxfrd
 
 rpc_ypxfrd_SOURCES = ypxfrd.c ypxfrd_server.c ypxfrd_svc.c
 
-rpc_ypxfrd_LDADD = @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@
+rpc_ypxfrd_LDADD = @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@ $(LIBSYSTEMD_DAEMON)
 rpc_ypxfrd_CFLAGS = @PIE_CFLAGS@
 
 if ENABLE_REGENERATE_MAN

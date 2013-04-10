@@ -15,8 +15,6 @@
    not, write to the Free Software Foundation, Inc., 51 Franklin Street,
    Suite 500, Boston, MA 02110-1335, USA. */
 
-#define _GNU_SOURCE
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

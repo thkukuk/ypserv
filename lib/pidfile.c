@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <fcntl.h>
 
 void
 create_pidfile (const char *filename, const char *daemonname)
@@ -33,7 +34,7 @@ create_pidfile (const char *filename, const char *daemonname)
   char pbuf[50], *ptr;
   struct flock lock;
 
-  fd = open (filename, O_CREAT | O_RDWR,
+  fd = open (filename, O_CREAT | O_RDWR | O_CLOEXEC,
 	     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   if (fd < 0)
     {

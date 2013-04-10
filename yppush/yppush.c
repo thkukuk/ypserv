@@ -19,8 +19,6 @@
 #include "config.h"
 #endif
 
-#define _GNU_SOURCE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -290,10 +288,10 @@ get_dbm_entry (char *key)
 #if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
-  dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
+  dbm = dbm_open (mappath, O_RDONLY, 0600);
 #elif defined(HAVE_LIBTC)
   dbm = tcbdbnew();
-  if (!tcbdbopen(dbm, mappath, BDBOWRITER | BDBOCREAT))
+  if (!tcbdbopen(dbm, mappath, BDBOREADER | BDBONOLCK))
     {
       tcbdbdel(dbm);
       dbm = NULL;
@@ -302,6 +300,7 @@ get_dbm_entry (char *key)
   if (dbm == NULL)
     {
       log_msg ("YPPUSH: Cannot open %s", mappath);
+      log_msg ("YPPUSH: consider rebuilding maps using ypinit");
       exit (1);
     }
 

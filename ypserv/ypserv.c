@@ -15,8 +15,6 @@
    not, write to the Free Software Foundation, Inc., 51 Franklin Street,
    Suite 500, Boston, MA 02110-1335, USA. */
 
-#define _GNU_SOURCE
-
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
@@ -60,6 +58,7 @@
 #endif
 
 static char *path_ypdb = YPMAPDIR;
+static int foreground_flag = 0;
 
 static void
 ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
@@ -317,7 +316,7 @@ sig_child (int sig UNUSED)
 static void
 Usage (int exitcode)
 {
-  fputs ("usage: ypserv [-d [path]] [-p port]\n", stderr);
+  fputs ("usage: ypserv [-d] [-p port] [-f|--foreground]\n", stderr);
   fputs ("       ypserv --version\n", stderr);
 
   exit (exitcode);
@@ -342,10 +341,11 @@ main (int argc, char **argv)
 	{"port", required_argument, NULL, 'p'},
 	{"usage", no_argument, NULL, 'u'},
 	{"help", no_argument, NULL, 'h'},
+	{"foreground", no_argument, NULL, 'f'},
 	{NULL, 0, NULL, '\0'}
       };
 
-      c = getopt_long (argc, argv, "vdp:buh", long_options, &option_index);
+      c = getopt_long (argc, argv, "vdp:fbuh", long_options, &option_index);
       if (c == -1)
 	break;
       switch (c)
@@ -368,6 +368,9 @@ main (int argc, char **argv)
 	  if (debug_flag)
 	    log_msg ("Using port %d\n", my_port);
 	  break;
+	case 'f':
+	  foreground_flag = 1;
+	  break;
 	case 'u':
 	case 'h':
 	  Usage (0);
@@ -383,7 +386,7 @@ main (int argc, char **argv)
 
   if (debug_flag)
     log_msg ("[ypserv (%s) %s]\n", PACKAGE, VERSION);
-  else
+  else if (! foreground_flag)
     {
       int i;
 
@@ -580,6 +583,13 @@ main (int argc, char **argv)
   if (slp_flag)
     register_slp ();
 #endif
+
+  /* If we use systemd as an init system, we may want to give it 
+     a message, that this daemon is ready to accept connections.
+     At this time, sockets for receiving connections are already 
+     created, so we can say we're ready now. It is a nop if we 
+     don't use systemd. */
+  announce_ready();
 
 #if 0
   mysvc_run ();

@@ -19,8 +19,6 @@
 #include "config.h"
 #endif
 
-#define _GNU_SOURCE
-
 #include <time.h>
 #include <string.h>
 #include <memory.h>

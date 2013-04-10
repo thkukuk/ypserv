@@ -13,7 +13,8 @@ noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h \
 
 rpcsvc_HEADERS = ypxfrd.x
 
-DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\" -DUSE_SLP=@USE_SLP@
+DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\" -DUSE_SLP=@USE_SLP@ \
+	-DUSE_SD_NOTIFY=@USE_SD_NOTIFY@
 INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 AM_CFLAGS = @PIE_CFLAGS@
 

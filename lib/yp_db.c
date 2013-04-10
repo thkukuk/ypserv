@@ -19,8 +19,6 @@
 #include "config.h"
 #endif
 
-#define _GNU_SOURCE
-
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
@@ -173,11 +171,14 @@ _db_open (const char *domain, const char *map)
       sprintf (buf, "%s/%s", domain, map);
 
       dbp = tcbdbnew ();
-      isok = tcbdbopen (dbp, buf, BDBOREADER);
+      isok = tcbdbopen (dbp, buf, BDBOREADER | BDBONOLCK);
 
       if (debug_flag && !isok)
-      	log_msg ("tcbdbopen: Tokyo Cabinet Error: %s", 
-                 tcbdberrmsg (tcbdbecode (dbp)));
+        {
+      	  log_msg ("tcbdbopen: Tokyo Cabinet Error: %s", 
+                   tcbdberrmsg (tcbdbecode (dbp)));
+      	  log_msg ("tcbdbopen: consider rebuilding maps using ypinit");
+      	}
       else if (debug_flag)
 	log_msg ("\t\t->Returning OK!");
     }

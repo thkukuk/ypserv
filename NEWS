@@ -1,9 +1,12 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2012 Thorsten Kukuk
+Copyright (C) 1998-2013 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
+
+Version 2.30
+* Add systemd support
 
 Version 2.29
 * Fix memory leaks in error case in rpc.yppasswdd and rpc.ypxfrd

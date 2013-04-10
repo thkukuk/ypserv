@@ -17,8 +17,6 @@
 
 /* ypxfrd - ypxfrd main routines.  */
 
-#define _GNU_SOURCE
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -78,6 +76,8 @@ int _rpcsvcdirty = 0;
 char *path_ypdb = YPMAPDIR;
 
 char *progname;
+
+static int foreground_flag = 0;
 
 /*
 ** Needed, if we start rpc.ypxfrd from inetd
@@ -140,7 +140,7 @@ sig_hup (int sig UNUSED)
 static void
 usage (int exitcode)
 {
-  fputs ("usage: rpc.ypxfrd [--debug] [-d path] [-p port]\n", stderr);
+  fputs ("usage: rpc.ypxfrd [--debug] [-d path] [-p port] [-f|--foreground]\n", stderr);
   fputs ("       rpc.ypxfrd --version\n", stderr);
 
   exit (exitcode);
@@ -180,12 +180,13 @@ main (int argc, char **argv)
         {"port", required_argument, NULL, 'p'},
 	{"path", required_argument, NULL, 'd'},
 	{"dir", required_argument, NULL, 'd'},
+        {"foreground", no_argument, NULL, 'f'},
         {"usage", no_argument, NULL, 'u'},
 	{"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, '\0'}
       };
 
-      c=getopt_long(argc, argv, "p:d:uh",long_options, &option_index);
+      c=getopt_long(argc, argv, "p:d:fuh",long_options, &option_index);
       if (c==EOF) break;
       switch (c)
         {
@@ -212,6 +213,9 @@ main (int argc, char **argv)
 	  if (debug_flag)
 	    log_msg("Using port %d\n", my_port);
 	  break;
+	case 'f':
+	  foreground_flag = 1;
+	  break;
 	case 'u':
         case 'h':
           usage(0);
@@ -227,8 +231,8 @@ main (int argc, char **argv)
 
   if (debug_flag)
     log_msg("[Welcome to the rpc.ypxfrd Daemon, version %s]\n", VERSION);
-  else
-    if(!_rpcpmstart)
+  else 
+    if (!_rpcpmstart && !foreground_flag)
       {
 	int i;
 
@@ -451,6 +455,13 @@ main (int argc, char **argv)
       signal (SIGALRM, closedown);
       alarm (_RPCSVC_CLOSEDOWN);
     }
+
+  /* If we use systemd as an init system, we may want to give it 
+     a message, that this daemon is ready to accept connections.
+     At this time, sockets for receiving connections are already 
+     created, so we can say we're ready now. It is a nop if we 
+     don't use systemd. */
+  announce_ready();
 
   svc_run();
   log_msg("svc_run returned");

@@ -19,8 +19,6 @@
 #include "config.h"
 #endif
 
-#define _GNU_SOURCE
-
 #include <unistd.h>
 #include <syslog.h>
 #if defined(HAVE_GETOPT_H)
@@ -556,10 +554,10 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 #if defined(HAVE_COMPAT_LIBGDBM)
       dbm = gdbm_open (dbName_orig, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
-      dbm = dbm_open (dbName_orig, O_CREAT|O_RDWR, 0600);
+      dbm = dbm_open (dbName_orig, O_RDONLY, 0600);
 #elif defined(HAVE_LIBTC)
       dbm = tcbdbnew ();
-      if (!tcbdbopen (dbm, dbName_orig, BDBOWRITER | BDBOCREAT))
+      if (!tcbdbopen (dbm, dbName_orig, BDBOREADER | BDBONOLCK))
         {
           tcbdbdel (dbm);
           dbm = NULL;
@@ -628,7 +626,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       dbm = dbm_open (dbName_temp, O_CREAT|O_RDWR, 0600);
 #elif defined(HAVE_LIBTC)
       dbm = tcbdbnew ();
-      if (!tcbdbopen (dbm, dbName_orig, BDBOWRITER | BDBOCREAT))
+      if (!tcbdbopen (dbm, dbName_orig, BDBOWRITER | BDBOCREAT | BDBOTRUNC))
         {
           tcbdbdel (dbm);
           dbm = NULL;
@@ -781,7 +779,12 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
     }
 
   if (result == 0)
-    rename (dbName_temp, dbName_orig);
+    {
+#if defined(HAVE_LIBTC)
+      chmod(dbName_temp, S_IRUSR|S_IWUSR);
+#endif
+      rename (dbName_temp, dbName_orig);
+    }
   else
     unlink(dbName_temp);
 
