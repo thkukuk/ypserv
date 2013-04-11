@@ -1,4 +1,10 @@
-2013-04-09  Thorsten Kukuk  <kukuk@suse.de>
+2013-04-11  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.31
+
+	* rpc.yppasswdd/Makefile.am: Fix link order.
+
+2013-04-10  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.30
 

@@ -5,6 +5,9 @@ Copyright (C) 1998-2013 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
 
+Version 2.31
+* Fix build failures
+
 Version 2.30
 * Add systemd support
 

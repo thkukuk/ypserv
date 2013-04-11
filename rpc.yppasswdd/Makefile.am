@@ -24,7 +24,7 @@ sbin_PROGRAMS = rpc.yppasswdd
 
 rpc_yppasswdd_SOURCES = update.c yppasswd_xdr.c yppasswdd.c
 
-rpc_yppasswdd_LDADD =  @PIE_LDFLAGS@ $(LIBDBM) $(LIBCRYPT) $(LIBSYSTEMD_DAEMON) $(top_builddir)/lib/libyp.a
+rpc_yppasswdd_LDADD =  @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a $(LIBDBM) $(LIBCRYPT) $(LIBSYSTEMD_DAEMON)
 rpc_yppasswdd_CFLAGS = @PIE_CFLAGS@
 
 if ENABLE_REGENERATE_MAN

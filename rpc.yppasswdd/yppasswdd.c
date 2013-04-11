@@ -50,6 +50,7 @@
 #include "log_msg.h"
 #include "compat.h"
 #include "pidfile.h"
+#include "access.h"
 
 #define _YPPASSWDD_PIDFILE _PATH_VARRUN"yppasswdd.pid"
 
