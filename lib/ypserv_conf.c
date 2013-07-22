@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2006, 2008, 2011 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2006, 2008, 2011, 2013 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -169,7 +169,8 @@ conffile_t *
 load_ypserv_conf (const char *path)
 {
   FILE *in;
-  char c, *cp;
+  int c;
+  char *cp;
   char buf1[1025], buf2[1025] = "", buf3[1025];
   long line = 0;
   conffile_t *ptr = NULL, *work = NULL;
@@ -184,7 +185,7 @@ load_ypserv_conf (const char *path)
       return NULL;
     }
 
-  while ((c = fgetc (in)) != (char) EOF)
+  while ((c = fgetc (in)) != EOF)
     {				/*while */
       line++;
       switch (tolower (c))
