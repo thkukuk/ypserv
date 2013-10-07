@@ -53,7 +53,7 @@ within the
 <emphasis remap='I'>domain.</emphasis>
 A destination host (or a list of hosts with multiple -h commands)
 can also be specified on the command line.
-A "transfer map" request is sent to the NIS serger at each slave, along
+A "transfer map" request is sent to the NIS server at each slave, along
 with the information needed by the transfer agent ypxfr(8) to callback
 to yppush, which may be printed the result to stderr. Messages are
 also printed when a transfer is not possible; for instance when the request

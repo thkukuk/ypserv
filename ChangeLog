@@ -1,3 +1,8 @@
+2013-10-07  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.8.xml: Fix typo (reported by
+        Masatake YAMATO <yamato@redhat.com>).
+
 2013-07-22  Thorsten Kukuk  <kukuk@suse.de>
 
 	* lib/ypserv_conf.c (load_ypserv_conf): Use int instead
