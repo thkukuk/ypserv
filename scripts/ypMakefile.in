@@ -37,8 +37,8 @@ YPPUSH_ARGS =
 # the passwd file. If no entry is found, this shadow entry is
 # ignored.
 # MINGID is the lowest gid that will be included in the group maps.
-MINUID=500
-MINGID=500
+MINUID=$(shell TMP=`egrep '^UID_MIN\s+[0-9]+' /etc/login.defs|sed -e 's/^UID_MIN//'` ; [ -n "$$TMP" ] && echo "$$TMP" || echo 1000)
+MINGID=$(shell TMP=`egrep '^GID_MIN\s+[0-9]+' /etc/login.defs|sed -e 's/^GID_MIN//'` ; [ -n "$$TMP" ] && echo "$$TMP" || echo 1000)
 
 # Should we merge the passwd file with the shadow file ?
 # MERGE_PASSWD=true|false

@@ -286,22 +286,6 @@ sig_quit (int sig UNUSED)
   exit (0);
 }
 
-/* Reload securenets and config file */
-static void
-sig_hup (int sig UNUSED)
-{
-  int save_errno = errno;
-  int old_cached_filehandles = cached_filehandles;
-
-  load_securenets ();
-  load_config ();
-  /* Don't allow to decrease the number of max. cached files with
-     SIGHUP.  */
-  if (cached_filehandles < old_cached_filehandles)
-    cached_filehandles = old_cached_filehandles;
-  errno = save_errno;
-}
-
 /* Clean up after child processes signal their termination. */
 static void
 sig_child (int sig UNUSED)
@@ -467,9 +451,9 @@ main (int argc, char **argv)
   signal (SIGTERM, sig_quit);
   signal (SIGINT, sig_quit);
   /*
-   * If we get a SIGHUP, reload the securenets and config file.
+   * Ignore SIGHUP, it's not safe and we cannot reload all variables
    */
-  signal (SIGHUP, sig_hup);
+  signal (SIGHUP, SIG_IGN);
   /*
    * If we get a SIGUSR1, enable/disable debuging.
    */

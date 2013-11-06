@@ -181,6 +181,12 @@ _db_open (const char *domain, const char *map)
       	}
       else if (debug_flag)
 	log_msg ("\t\t->Returning OK!");
+      if ( !isok )
+	{
+	  /* DB not successful opened. Close database object and set return value to NULL. */
+	  tcbdbdel (dbp);
+	  dbp = NULL;
+	}
     }
   else
     {

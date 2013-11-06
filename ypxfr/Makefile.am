@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = 1.7 gnits
 localedir = $(datadir)/locale
 
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPMAPDIR=\"@YPMAPDIR@\"
-INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
+AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
 

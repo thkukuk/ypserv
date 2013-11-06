@@ -7,7 +7,7 @@ localedir = $(datadir)/locale
 
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DYPMAPDIR=\"@YPMAPDIR@\" -DUSE_FQDN=@USE_FQDN@ -DUSE_SLP=@USE_SLP@
-INCLUDES = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
+AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
 

@@ -1,3 +1,15 @@
+2013-11-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.32
+
+	* ypserv/ypserv.c: Remove sig_hup, ignore SIG_HUP.
+	* ypserv/ypserv.8.xml: Remove SIG HUP section.
+	* lib/yp_db.c: fix return value for tcbdbopen in error case.
+	Patch by Edgar Hoch, RHBZ#1004110
+
+	* scripts/ypMakefile.in: Read MINUID/MINGID from /etc/login.defs
+	Patch by Honza Horak, RHBZ#1004090
+
 2013-10-07  Thorsten Kukuk  <kukuk@suse.de>
 
 	* yppush/yppush.8.xml: Fix typo (reported by

@@ -164,11 +164,6 @@ you have to reinstall the slave servers if you change the master server
 for a map.</para>
 </refsect1>
 
-<refsect1 id='bugs'><title>BUGS</title>
-<para>Sending the signal <emphasis remap='B'>SIGHUP</emphasis> to the server can lead to
-a deadlock or crash.</para>
-</refsect1>
-
 <refsect1 id='files'><title>FILES</title>
 <variablelist remap='TP'>
   <varlistentry>
