@@ -665,7 +665,7 @@ main (int argc, char *argv[])
 	  merge_grp = 1;
 	  break;
 	case 'v':
-	  printf ("revnetgroup (%s) %s", PACKAGE, VERSION);
+	  printf ("yphelper (%s) %s", PACKAGE, VERSION);
 	  exit (0);
 	case 'i':
 	  map = optarg;
