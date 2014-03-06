@@ -1,3 +1,9 @@
+2014-03-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.32.1
+
+	* configure.ac: Adjust sd_notify check for systemd >= 209.
+
 2014-01-04  Thorsten Kukuk  <kukuk@suse.de>
 
 	* yphelper/yphelper.c: fix command name.

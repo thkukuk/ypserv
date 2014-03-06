@@ -1,8 +1,8 @@
 #
-# Copyright (C) 1999-2013 Thorsten Kukuk <kukuk@linux-nis.org>
+# Copyright (C) 1999-2014 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([ypserv],[2.32],[kukuk@linux-nis.org])
+AC_INIT([ypserv],[2.32.1],[kukuk@linux-nis.org])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AC_CONFIG_HEADERS([config.h])
@@ -221,7 +221,7 @@ for db in $dbmliborder; do
       libdb_parameter=yes
       break
     fi
-  elif test x$db = xndbm 
+  elif test x$db = xndbm
   then
     AC_CHECK_FUNCS(dbm_open)
     if test x$ac_cv_func_dbm_open = xyes
@@ -274,6 +274,10 @@ USE_SD_NOTIFY=0
 AC_SUBST(USE_SD_NOTIFY)
 AC_CHECK_LIB(systemd-daemon,sd_notify,LIBSYSTEMD_DAEMON="-lsystemd-daemon",
 	LIBSYSTEMD_DAEMON="")
+if test -z "$LIBSYSTEMD_DAEMON" ; then
+	AC_CHECK_LIB(systemd,sd_notify,LIBSYSTEMD_DAEMON="-lsystemd",
+	LIBSYSTEMD_DAEMON="")
+fi
 if test -n "$LIBSYSTEMD_DAEMON" ; then
 	AC_CHECK_HEADERS(systemd/sd-daemon.h)
 	if test "$ac_cv_header_systemd_sd_daemon_h" = yes; then

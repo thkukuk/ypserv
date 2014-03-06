@@ -5,6 +5,9 @@ Copyright (C) 1998-2013 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
 
+Version 2.32.1
+* Adjust for systemd >= 209
+
 Version 2.32
 * Update autoconf/automake
 * ypserv: remove broken SIGHUP support.
