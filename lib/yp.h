@@ -8,8 +8,6 @@
 
 #include <rpc/rpc.h>
 
-#include <pthread.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,7 +28,7 @@ enum ypstat {
 	YP_BADDB = -5,
 	YP_YPERR = -6,
 	YP_BADARGS = -7,
-	YP_VERS = -8,
+	YP_VERS = -8
 };
 typedef enum ypstat ypstat;
 
@@ -50,7 +48,7 @@ enum ypxfrstat {
 	YPXFR_CLEAR = -11,
 	YPXFR_FORCE = -12,
 	YPXFR_XFRERR = -13,
-	YPXFR_REFUSED = -14,
+	YPXFR_REFUSED = -14
 };
 typedef enum ypxfrstat ypxfrstat;
 
@@ -69,6 +67,15 @@ typedef struct {
 	u_int valdat_len;
 	char *valdat_val;
 } valdat;
+
+#if defined(HAVE_LIBTC)
+
+typedef struct {
+	char *dptr;
+	int dsize;
+} datum;
+
+#endif
 
 struct ypmap_parms {
 	domainname domain;
@@ -176,7 +183,7 @@ enum yppush_status {
 	YPPUSH_CLEAR = -11,
 	YPPUSH_FORCE = -12,
 	YPPUSH_XFRERR = -13,
-	YPPUSH_REFUSED = -14,
+	YPPUSH_REFUSED = -14
 };
 typedef enum yppush_status yppush_status;
 
@@ -188,7 +195,7 @@ typedef struct yppushresp_xfr yppushresp_xfr;
 
 enum ypbind_resptype {
 	YPBIND_SUCC_VAL = 1,
-	YPBIND_FAIL_VAL = 2,
+	YPBIND_FAIL_VAL = 2
 };
 typedef enum ypbind_resptype ypbind_resptype;
 
@@ -349,9 +356,6 @@ extern  bool_t ypbindproc_setdom_2_svc();
 extern int ypbindprog_2_freeresult ();
 #endif /* K&R C */
 
-/* the xdr functions */
-
-#if defined(__STDC__) || defined(__cplusplus)
 extern  bool_t xdr_ypstat (XDR *, ypstat*);
 extern  bool_t xdr_ypxfrstat (XDR *, ypxfrstat*);
 extern  bool_t xdr_domainname (XDR *, domainname*);
@@ -378,34 +382,7 @@ extern  bool_t xdr_ypbind_binding (XDR *, ypbind_binding*);
 extern  bool_t xdr_ypbind_resp (XDR *, ypbind_resp*);
 extern  bool_t xdr_ypbind_setdom (XDR *, ypbind_setdom*);
 
-#else /* K&R C */
-extern bool_t xdr_ypstat ();
-extern bool_t xdr_ypxfrstat ();
-extern bool_t xdr_domainname ();
-extern bool_t xdr_mapname ();
-extern bool_t xdr_peername ();
-extern bool_t xdr_keydat ();
-extern bool_t xdr_valdat ();
-extern bool_t xdr_ypmap_parms ();
-extern bool_t xdr_ypreq_key ();
-extern bool_t xdr_ypreq_nokey ();
-extern bool_t xdr_ypreq_xfr ();
-extern bool_t xdr_ypresp_val ();
-extern bool_t xdr_ypresp_key_val ();
-extern bool_t xdr_ypresp_master ();
-extern bool_t xdr_ypresp_order ();
-extern bool_t xdr_ypresp_all ();
-extern bool_t xdr_ypresp_xfr ();
-extern bool_t xdr_ypmaplist ();
-extern bool_t xdr_ypresp_maplist ();
-extern bool_t xdr_yppush_status ();
-extern bool_t xdr_yppushresp_xfr ();
-extern bool_t xdr_ypbind_resptype ();
-extern bool_t xdr_ypbind_binding ();
-extern bool_t xdr_ypbind_resp ();
-extern bool_t xdr_ypbind_setdom ();
-
-#endif /* K&R C */
+extern  bool_t ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp);
 
 #ifdef __cplusplus
 }

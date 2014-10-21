@@ -5,10 +5,9 @@
 **
 ** This file is part of the NYS YP Server.
 **
-** The NYS YP Server is free software; you can redistribute it and/or
-** modify it under the terms of the GNU General Public License as
-** published by the Free Software Foundation; either version 2 of the
-** License, or (at your option) any later version.
+** The YP Server is free software; you can redistribute it and/or
+** modify it under the terms of the GNU General Public License
+** version 2 as published by the Free Software Foundation.
 **
 ** The NYS YP Server is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,8 +16,8 @@
 **
 ** You should have received a copy of the GNU General Public
 ** License along with the NYS YP Server; see the file COPYING.  If
-** not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-** Cambridge, MA 02139, USA.
+** not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+** Suite 500, Boston, MA 02110-1335, USA.
 **
 ** Author: Thorsten Kukuk <kukuk@suse.de>
 */
@@ -32,12 +31,9 @@
 #include <string.h>
 #include "hash.h"
 #include <assert.h>
+#include "compat.h"
 
 #define TABLESIZE 997		/*Should be a prime */
-
-#ifndef HAVE_STRDUP
-#include "compat/strdup.c"
-#endif
 
 /*
  * hash_malloc(void)
@@ -143,7 +139,7 @@ hash_insert (hash_t **table, const char *key, const char *val)
  *
  */
 int
-hash_free (hash_t **table __attribute__ ((unused)))
+hash_free (hash_t **table UNUSED)
 {
   /* XXX Not implementet yet! */
 

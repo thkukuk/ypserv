@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011, 2012 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,10 +12,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
-
-#define _GNU_SOURCE
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
@@ -26,6 +24,10 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
@@ -40,6 +42,7 @@
 #ifdef HAVE_SHADOW_H
 #include <shadow.h>
 #endif
+#include "compat.h"
 
 #ifndef CHECKROOT
 /* Set to 0 if you don't want to check against the root password
@@ -74,8 +77,10 @@ char *path_shadow_old = NULL;
 /* Will be set by the main function */
 char *external_update_program = NULL;
 
+static bool_t adjuct_used = FALSE;
+
 static int external_update_env (yppasswd *yppw);
-static int external_update_pipe (yppasswd *yppw);
+static int external_update_pipe (yppasswd *yppw, char *logbuf);
 static int update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 			 int *passwd_changed, int *chfn, int *chsh);
 
@@ -137,16 +142,99 @@ shell_ok (char *shell)
   return 0;
 }
 
+/* Read shadow file manually, to handle different colons count.
+   When we use passwd.adjunct, shadow file contains 6 colons, but if
+   we don't use passwd.adjunct, shadow file contains 8 colons.
+   This function can handle both counts, but fgetspent doesn't */
+static struct spwd *
+fgetspent_adjunct(FILE *fp)
+{
+  static char line_buffer[1024];
+  char *buffer_mark;
+  struct spwd* result;
+  int i, colons = 0;
+
+  /* Reserve two bytes for theoretic colons */
+  while (fgets(line_buffer, sizeof(line_buffer) - 2, fp) != NULL)
+    {
+      /* We don't need a new line character in the end */
+      if ((buffer_mark = strchr(line_buffer, '\n')) != NULL)
+          buffer_mark[0] = '\0';
+
+      /* Skip commented or empty lines */
+      if (line_buffer[0] == '\0' || line_buffer[0] == '#')
+        continue;
+
+      /* Count number of colons in the line */
+      for (i = 0; line_buffer[i] != '\0'; ++i)
+          if (line_buffer[i] == ':')
+            ++colons;
+
+      /* When we use passwd.adjunct, shadow file contains 6 colons,
+         but we need 8 colons to properly parse the line, so we
+         just add two colons to the end of the line */
+      if (colons == 6)
+        {
+          strcat(line_buffer, "::");
+          adjuct_used = TRUE;
+        }
+
+      /* Try to parse the line, if not success, read the next line */
+      if ((result = sgetspent(line_buffer)) != NULL)
+        return result;
+
+    }
+  return NULL;
+}
+
+/* Write an entry to the given stream.
+   When we use passwd.adjunct, shadow file contains 6 colons, but if
+   we don't use passwd.adjunct, shadow file contains 8 colons.
+   This function can handle both counts, but putspent doesn't  */
+static int
+putspent_adjunct (const struct spwd *p, FILE *stream)
+{
+  int errors = 0;
+
+  if (!adjuct_used)
+    return putspent(p, stream);
+
+  flockfile (stream);
+
+  if (fprintf (stream, "%s:%s:::::", p->sp_namp, p->sp_pwdp ? p->sp_pwdp : "") < 0)
+    ++errors;
+
+  if (putc_unlocked ('\n', stream) == EOF)
+    ++errors;
+
+  funlockfile (stream);
+
+  return errors ? -1 : 0;
+}
+
 /* Check if the password the user supplied matches the old one */
 static int
-password_ok (char *plain, char *crypted, char *root)
+password_ok (char *plain, char *crypted, char *root, char *logbuf)
 {
+  char *crypted_new;
   if (crypted[0] == '\0')
     return 1;
-  if (strcmp (crypt (plain, crypted), crypted) == 0)
+  crypted_new = crypt (plain, crypted);
+  if (crypted_new == NULL)
+    {
+      log_msg ("crypt() call failed.", logbuf);
+      return 0;
+    }
+  if (strcmp (crypted_new, crypted) == 0)
     return 1;
 #if CHECKROOT
-  if (strcmp (crypt (plain, root), root) == 0)
+  crypted_new = crypt (plain, root);
+  if (crypted_new == NULL)
+    {
+      log_msg ("crypt() call failed.", logbuf);
+      return 0;
+    }
+  if (strcmp (crypted_new, root) == 0)
     return 1;
 #endif
 
@@ -187,7 +275,7 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
   int retries;
   static int res;                /* I hate static variables */
   char *logbuf;
-  struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+  const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
 
   /* Be careful here with the debug option. You can see the old
      and new password in clear text !! */
@@ -231,7 +319,11 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
     {
       struct passwd *pw;
 
-      pw = getpwnam (yppw->newpw.pw_name);
+      if ((pw = getpwnam (yppw->newpw.pw_name)) == NULL)
+	{
+	  log_msg ("user %s not found", yppw->newpw.pw_name);
+	  return &res;
+	}
       /* Do we need to update the GECOS information and are we allowed
 	 to do it ? */
       chfn = (strcmp (pw->pw_gecos, yppw->newpw.pw_gecos) != 0);
@@ -262,7 +354,7 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 
       if (x_flag)
         {
-          res = external_update_pipe (yppw);
+          res = external_update_pipe (yppw, logbuf);
           return &res;
         }
       else
@@ -276,6 +368,7 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
     }
   else
     {
+#ifdef HAVE_LCKPWDF
       /* Lock the passwd file. We retry several times. */
       retries = 0;
       while (lckpwdf () && retries < MAX_RETRIES)
@@ -290,11 +383,14 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 	  log_msg ("password file locked");
 	  return &res;
 	}
+#endif /* HAVE_LCKPWDF */
 
       res = update_files (yppw, logbuf, &shadow_changed, &passwd_changed,
 			  &chfn, &chsh);
 
+#ifdef HAVE_LCKPWDF
       ulckpwdf ();
+#endif /* HAVE_LCKPWDF */
     }
 
   /* Fork off process to rebuild NIS passwd.* maps. */
@@ -358,6 +454,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
     {
       if (strcmp (pw->pw_passwd, "x") == 0)
 	{
+#ifdef HAVE_GETSPNAM /* shadow password */
 	  struct spwd *spw;
 
 	  if ((spw = getspnam ("root")) != NULL)
@@ -365,6 +462,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	      rootpass = alloca (strlen (spw->sp_pwdp) + 1);
 	      strcpy (rootpass, spw->sp_pwdp);
 	    }
+#endif /* HAVE_GETSPNAM */
 	}
       else
 	{
@@ -400,8 +498,16 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       return 1;
     }
   chmod (path_passwd_tmp, passwd_stat.st_mode);
-  chown (path_passwd_tmp, passwd_stat.st_uid, passwd_stat.st_gid);
+  if (chown (path_passwd_tmp, passwd_stat.st_uid, passwd_stat.st_gid) == -1)
+    {
+      log_msg ("chown failed: %s", strerror (errno));
+      fclose (oldpf);
+      fclose (newpf);
+      unlink (path_passwd_tmp);
+      return 1;
+    }
 
+#ifdef HAVE_GETSPNAM
   /* Open the shadow file for reading. */
   if ((oldsf = fopen (path_shadow, "r")) != NULL)
     {
@@ -410,22 +516,35 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	  log_msg ("%s failed", logbuf);
 	  log_msg ("Can't stat %s: %m", path_shadow);
 	  fclose (oldpf);
+	  fclose (newpf);
 	  fclose (oldsf);
 	  return 1;
 	}
 
       if ((newsf = fopen (path_shadow_tmp, "w+")) == NULL)
 	{
+	  int err = errno;
 	  log_msg ("%s failed", logbuf);
-	  log_msg ("Can't open %s.tmp: %m", path_passwd);
+	  log_msg ("Can't open %s.tmp: %s",
+		   path_passwd, strerror (err));
 	  fclose (oldsf);
 	  fclose (newpf);
 	  fclose (oldpf);
 	  return 1;
 	}
       chmod (path_shadow_tmp, shadow_stat.st_mode);
-      chown (path_shadow_tmp, shadow_stat.st_uid, shadow_stat.st_gid);
+      if (chown (path_shadow_tmp, shadow_stat.st_uid,
+		 shadow_stat.st_gid) == -1)
+	{
+	  log_msg ("chown failed", strerror (errno));
+	  fclose (newsf);
+	  fclose (oldsf);
+	  fclose (newpf);
+	  fclose (oldpf);
+	  return 1;
+	}
     }
+#endif /* HAVE_GETSPNAM */
 
   /* Loop over all passwd entries */
   while ((pw = fgetpwent (oldpf)) != NULL)
@@ -440,14 +559,16 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 
 	  /* Check the password. At first check for a shadow password. */
 	  if (oldsf != NULL &&
-	      pw->pw_passwd[0] == 'x' && pw->pw_passwd[1] == '\0')
+	      ((pw->pw_passwd[0] == 'x' && pw->pw_passwd[1] == '\0') ||
+              (pw->pw_passwd[0] == '#' && pw->pw_passwd[1] == '#')))
 	    {
+#ifdef HAVE_GETSPNAM /* shadow password */
 	      /* Search for the shadow entry of this user */
-	      while ((spw = fgetspent (oldsf)) != NULL)
+	      while ((spw = fgetspent_adjunct (oldsf)) != NULL)
 		{
 		  if (strcmp (yppw->newpw.pw_name, spw->sp_namp) == 0)
 		    {
-		      if (!password_ok (yppw->oldpass, spw->sp_pwdp, rootpass))
+		      if (!password_ok (yppw->oldpass, spw->sp_pwdp, rootpass, logbuf))
 			{
 			  log_msg ("%s rejected", logbuf);
 			  log_msg ("Invalid password.");
@@ -456,19 +577,20 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		      /* Password is ok, leave while loop */
 		      break;
 		    }
-		  else if (putspent (spw, newsf) < 0)
+		  else if (putspent_adjunct (spw, newsf) < 0)
 		    {
 		      log_msg ("%s failed", logbuf);
 		      log_msg ("Error while writing new shadow file: %m");
 		      goto error;
 		    }
 		}
+#endif /* HAVE_GETSPNAM */
 	    }
 
 	  /* We don't have a shadow password file or we don't find the
 	     user in it. */
 	  if (spw == NULL &&
-	      !password_ok (yppw->oldpass, pw->pw_passwd, rootpass))
+	      !password_ok (yppw->oldpass, pw->pw_passwd, rootpass, logbuf))
 	    {
 	      log_msg ("%s rejected", logbuf);
 	      log_msg ("Invalid password.");
@@ -483,6 +605,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		yppw->newpw.pw_passwd[1] == '\0') &&
 	      yppw->newpw.pw_passwd[0] != '\0')
 	    {
+#ifdef HAVE_GETSPNAM /* shadow password */
 	      if (spw)
 		{
 		  /* test if password is expired */
@@ -506,7 +629,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 			  goto error;
 			}
 		    }
-		  if (putspent (spw, newsf) < 0)
+		  if (putspent_adjunct (spw, newsf) < 0)
 		    {
 		      log_msg ("%s failed", logbuf);
 		      log_msg ("Error while writing new shadow file: %m");
@@ -515,8 +638,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		    }
 
 		  /* Copy all missing entries */
-		  while ((spw = fgetspent (oldsf)) != NULL)
-		    if (putspent (spw, newsf) < 0)
+		  while ((spw = fgetspent_adjunct (oldsf)) != NULL)
+		    if (putspent_adjunct (spw, newsf) < 0)
 		      {
 			log_msg ("%s failed", logbuf);
 			log_msg ("Error while writing new shadow file: %m");
@@ -525,6 +648,7 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		      }
 		}
 	      else /* No shadow entry */
+#endif /* HAVE_GETSPNAM */
 		{
 		  /* set the new passwd */
 		  pw->pw_passwd = yppw->newpw.pw_passwd;
@@ -577,8 +701,10 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       /* write the passwd entry to tmp file */
       if (putpwent (pw, newpf) < 0)
 	{
+	  int err = errno;
 	  log_msg ("%s failed", logbuf);
-	  log_msg ("Error while writing new password file: %m");
+	  log_msg ("Error while writing new password file: %s",
+		   strerror (err));
 	  *passwd_changed = 0;
 	  break;
 	}
@@ -593,23 +719,41 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
   if (pw || spw)
     {
       unlink (path_passwd_tmp);
+#ifdef HAVE_GETSPNAM
       unlink (path_shadow_tmp);
+#endif /* HAVE_GETSPNAM */
       return 1;
     }
+#ifdef HAVE_GETSPNAM
   if (*shadow_changed)
     {
       unlink (path_shadow_old);
-      link (path_shadow, path_shadow_old);
-      rename (path_shadow_tmp, path_shadow);
+      if (link (path_shadow, path_shadow_old) == -1)
+	log_msg ("Cannot create backup file %s: %s",
+		 path_shadow_old, strerror (errno));
+      if (rename (path_shadow_tmp, path_shadow) == -1)
+        {
+          log_msg ("Cannot move temporary file %s to %s: %s",
+                 path_shadow_tmp, path_shadow, strerror (errno));
+          *shadow_changed = 0;
+        }
     }
   else
     unlink (path_shadow_tmp);
+#endif /* HAVE_GETSPNAM */
 
   if (*passwd_changed)
     {
       unlink (path_passwd_old);
-      link (path_passwd, path_passwd_old);
-      rename (path_passwd_tmp, path_passwd);
+      if (link (path_passwd, path_passwd_old) == -1)
+	log_msg ("Cannot create backup file %s: %s",
+		 path_passwd_old, strerror (errno));
+      if (rename (path_passwd_tmp, path_passwd) == -1)
+        {
+          log_msg ("Cannot move temporary file %s to %s: %s",
+                 path_passwd_tmp, path_passwd, strerror (errno));
+          *passwd_changed = 0;
+        }
     }
   else
     unlink (path_passwd_tmp);
@@ -634,29 +778,14 @@ external_update_env (yppasswd *yppw)
     }
   else
     { /* Child - run external update program */
-#if (defined(__sun__) || defined(sun)) && defined(__svr4__)
-      char aenv[5*64], *p;
-      p = aenv;
-      sprintf(p, "YP_PASSWD_OLD=%s", yppw->oldpass);
-      putenv(p);
-      p += strlen(p) + 1;
-      sprintf(p, "YP_PASSWD_NEW=%s", yppw->newpw.pw_passwd);
-      putenv(p);
-      p += strlen(p) + 1;
-      sprintf(p, "YP_USER=%s", yppw->newpw.pw_name);
-      putenv(p);
-      p += strlen(p) + 1;
-      sprintf(p, "YP_GECOS=%s", yppw->newpw.pw_gecos);
-      putenv(p);
-      p += strlen(p) + 1;
-      sprintf(p, "YP_SHELL=%s", yppw->newpw.pw_shell);
-      putenv(p);
-#else
+#if defined(HAVE_SETENV)
       setenv ("YP_PASSWD_OLD", yppw->oldpass, 1);
       setenv ("YP_PASSWD_NEW", yppw->newpw.pw_passwd, 1);
       setenv ("YP_USER", yppw->newpw.pw_name, 1);
       setenv ("YP_GECOS", yppw->newpw.pw_gecos, 1);
       setenv ("YP_SHELL", yppw->newpw.pw_shell, 1);
+#else
+#  error "Missing setenv(). Need porting."
 #endif
       execlp (external_update_program, external_update_program, NULL);
       _exit (1); /* fall-through */
@@ -707,11 +836,31 @@ external_update_env (yppasswd *yppw)
  *
  *===============================================================*/
 
+static void
+remove_password (char *str)
+{
+  char *ptr = strstr (str, " o:");
+
+  if (ptr != NULL)
+    {
+      ptr+=3;
+      while (*ptr && *ptr != ' ')
+	*ptr++ = 'X';
+    }
+
+  ptr = strstr (str, " p:");
+  if (ptr != NULL)
+    {
+      ptr+=3;
+      while (*ptr && *ptr != ' ')
+	*ptr++ = 'X';
+    }
+}
+
 static int
-external_update_pipe (yppasswd *yppw)
+external_update_pipe (yppasswd *yppw, char *logbuf)
 {
   struct xpasswd *newpw;       /* passwd struct passed by the client */
-  char *logbuf;
   int res, pid, tochildpipe[2], toparentpipe[2];
   FILE *fp;
   char childresponse[1024];
@@ -720,18 +869,14 @@ external_update_pipe (yppasswd *yppw)
   char *shell = NULL;
   char *gcos = NULL;
 
-  char parentmsg[1024];
+  char *parentmsg;
+  size_t msglen;
 
   /* - */
 
   newpw = &yppw->newpw;
   res = 1;
-  logbuf = alloca (60 + strlen (yppw->newpw.pw_name));
-  if (logbuf == NULL)
-    {
-      log_msg ("rpc.yppasswdd: out of memory");
-      return res;
-    }
+
   /*
    * determine what information we have to change
    */
@@ -743,7 +888,7 @@ external_update_pipe (yppasswd *yppw)
     shell = newpw->pw_shell;
 
   if (allow_chfn && newpw->pw_gecos && *(newpw->pw_gecos))
-    gcos = newpw->pw_shell;
+    gcos = newpw->pw_gecos;
 
   if (!password && !shell && !gcos)
     {
@@ -827,36 +972,43 @@ external_update_pipe (yppasswd *yppw)
   /*
    * construct our message
    */
+  msglen = strlen (yppw->newpw.pw_name) + strlen (yppw->oldpass) + 10;
+  if (password)
+    msglen += strlen (password) + 3;
+  if (shell)
+    msglen += strlen (shell) + 3;
+  if (gcos)
+    msglen += strlen (gcos) + 3;
 
-  parentmsg[0] = '\0';
+  if ((parentmsg = malloc (msglen)) == NULL)
+    {
+      log_msg ("rpc.yppasswdd: out of memory");
+      return res;
+    }
 
-  strncat (parentmsg, yppw->newpw.pw_name, sizeof parentmsg);
-  strncat (parentmsg, " o:", sizeof parentmsg);
-  strncat (parentmsg, yppw->oldpass, sizeof parentmsg);
-  strncat (parentmsg, " ", sizeof parentmsg);
+  strcpy (parentmsg, yppw->newpw.pw_name);
+  strcat (parentmsg, " o:");
+  strcat (parentmsg, yppw->oldpass);
+  strcat (parentmsg, " ");
 
   if (password)
     {
-      strncat (parentmsg, "p:", sizeof parentmsg);
-      strncat (parentmsg, password, sizeof parentmsg);
+      strcat (parentmsg, "p:");
+      strcat (parentmsg, password);
+      strcat (parentmsg, " ");
     }
 
   if (shell)
     {
-      if (password)
-        strncat (parentmsg, " ", sizeof parentmsg);
-
-      strncat (parentmsg, "s:", sizeof parentmsg);
-      strncat (parentmsg, shell, sizeof parentmsg);
+      strcat (parentmsg, "s:");
+      strcat (parentmsg, shell);
+      strcat (parentmsg, " ");
     }
 
   if (gcos)
     {
-      if (password || shell)
-        strncat(parentmsg, " ", sizeof parentmsg);
-
-      strncat(parentmsg, "g:", sizeof parentmsg);
-      strncat(parentmsg, gcos, sizeof parentmsg);
+      strcat(parentmsg, "g:");
+      strcat(parentmsg, gcos);
     }
 
   /*
@@ -875,19 +1027,24 @@ external_update_pipe (yppasswd *yppw)
   if (!fgets(childresponse, 1024, fp))
     {
       childresponse[0] = '\0';
-      log_msg ("fgets() call failed.");
+      log_msg ("fgets() call failed or EOF.");
     }
   fclose(fp);
+
+  if (!debug_flag)
+    remove_password (parentmsg);
 
   if (strspn(childresponse, "OK") < 2)
     {
       log_msg ("%s failed.  Change request: %s", logbuf, parentmsg);
-      log_msg ("Response was %s", childresponse);
+      log_msg ("Response was '%s'", childresponse);
+      free (parentmsg);
       return res;
     }
 
   log_msg ("%s successful. Change request: %s", logbuf, parentmsg);
 
+  free (parentmsg);
   res = 0;
 
   return res;

@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1999, 2001, 2002, 2011, 2013 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,35 +12,47 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
-
-#define _GNU_SOURCE
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
 
+#include <sys/types.h>
 #include <grp.h>
 #include <pwd.h>
 #include <netdb.h>
 #include <rpc/types.h>
 #include <strings.h>
 #include <sys/socket.h>
+#include <sys/param.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <ctype.h>
-#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
+#include <stdlib.h>
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
 #endif
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
 #elif defined(HAVE_NDBM)
 #include <ndbm.h>
+#elif defined(HAVE_LIBTC)
+#include <tcbdb.h>
 #endif
 #include "yp.h"
+#include "compat.h"
 #include <rpcsvc/ypclnt.h>
+#if defined(HAVE_RPC_CLNT_SOC_H)
+#include <rpc/clnt_soc.h> /* for clntudp_create() */
+#endif /* HAVE_RPC_CLNT_SOC_H */
 #include <arpa/nameser.h>
 #ifdef HAVE_SHADOW_H
 #include <shadow.h>
@@ -178,7 +190,7 @@ print_hostname (char *param)
 	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
     }
   else
-    hp = gethostbyname2 (hostname, AF_INET);
+    hp = gethostbyname (hostname);
 
   if (hp == NULL)
     fputs (hostname, stdout);
@@ -197,7 +209,7 @@ print_maps (char *server, char *domain)
 #if USE_FQDN
   struct hostent *hp = NULL;
 #endif
-  char *master, *domainname;
+  char *master = NULL, *domainname;
   struct ypmaplist *ypmap = NULL, *y, *old;
   int ret;
 
@@ -219,7 +231,7 @@ print_maps (char *server, char *domain)
 	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
     }
   else
-    hp = gethostbyname2 (server, AF_INET);
+    hp = gethostbyname (server);
   if (hp != NULL)
     {
       server = alloca (strlen (hp->h_name) + 1);
@@ -312,6 +324,7 @@ merge_passwd (char *passwd, char *shadow)
 	  (pwd->pw_passwd[0] == 'x' || pwd->pw_passwd[0] == '*'))
 	{
 	  pass = NULL;
+#ifdef HAVE_GETSPNAM /* shadow password */
 	  spd = fgetspent (s_input);
 	  if (spd != NULL)
 	    {
@@ -330,6 +343,7 @@ merge_passwd (char *passwd, char *shadow)
 		    }
 		}
 	    }
+#endif /* HAVE_GETSPNAM */
 	  if (pass == NULL)
 	    pass = pwd->pw_passwd;
 	}
@@ -347,6 +361,7 @@ merge_passwd (char *passwd, char *shadow)
   exit (0);
 }
 
+#ifdef HAVE_GETSPNAM /* shadow password */
 static struct __sgrp *
 fgetsgent (FILE *fp)
 {
@@ -377,6 +392,7 @@ fgetsgent (FILE *fp)
     }
   return 0;
 }
+#endif /* HAVE_GETSPNAM */
 
 static void
 merge_group (char *group, char *gshadow)
@@ -421,6 +437,7 @@ merge_group (char *group, char *gshadow)
 	  (grp->gr_passwd[0] == 'x' || grp->gr_passwd[0] == '*'))
 	{
 	  pass = NULL;
+#ifdef HAVE_GETSPNAM /* shadow password */
 	  spd = fgetsgent (s_input);
 	  if (spd != NULL)
 	    {
@@ -439,6 +456,7 @@ merge_group (char *group, char *gshadow)
 		    }
 		}
 	    }
+#endif /* HAVE_GETSPNAM */
 	  if (pass == NULL)
 	    pass = grp->gr_passwd;
 	}
@@ -468,10 +486,12 @@ get_dbm_entry (char *key, char *map, char *domainname)
   static char mappath[MAXPATHLEN + 2];
   char *val;
   datum dkey, dval;
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   GDBM_FILE dbm;
 #elif defined (HAVE_NDBM)
   DBM *dbm;
+#elif defined (HAVE_LIBTC)
+  TCBDB *dbm;
 #endif
 
   if (strlen (YPMAPDIR) + strlen (domainname) + strlen (map) + 3 < MAXPATHLEN)
@@ -482,23 +502,33 @@ get_dbm_entry (char *key, char *map, char *domainname)
       exit (1);
     }
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
-  dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
+  dbm = dbm_open (mappath, O_RDONLY, 0600);
+#elif defined(HAVE_LIBTC)
+  dbm = tcbdbnew();
+  if (!tcbdbopen(dbm, mappath, BDBOREADER | BDBONOLCK))
+    {
+      tcbdbdel(dbm);
+      dbm = NULL;
+    }
 #endif
   if (dbm == NULL)
     {
       fprintf (stderr, "yphelper: cannot open %s\n", mappath);
+      fprintf (stderr, "yphelper: consider rebuilding maps using ypinit\n");
       exit (1);
     }
 
   dkey.dptr = key;
   dkey.dsize = strlen (dkey.dptr);
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dval = gdbm_fetch (dbm, dkey);
 #elif defined(HAVE_NDBM)
   dval = dbm_fetch (dbm, dkey);
+#elif defined(HAVE_LIBTC)
+  dval.dptr = tcbdbget (dbm, dkey.dptr, dkey.dsize, &dval.dsize);
 #endif
   if (dval.dptr == NULL)
     val = NULL;
@@ -508,10 +538,13 @@ get_dbm_entry (char *key, char *map, char *domainname)
       strncpy (val, dval.dptr, dval.dsize);
       val[dval.dsize] = 0;
     }
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   gdbm_close (dbm);
 #elif defined(HAVE_NDBM)
   dbm_close (dbm);
+#elif defined(HAVE_LIBTC)
+  tcbdbclose (dbm);
+  tcbdbdel (dbm);
 #endif
   return val;
 }
@@ -523,7 +556,7 @@ is_master (char *map, char *domain, char *host)
 #if USE_FQDN
   struct hostent *hp = NULL;
 #endif
-  char *hostname, *domainname;
+  char *hostname, *domainname, *val;
   int ret;
 
   if (domain != NULL)
@@ -557,17 +590,20 @@ is_master (char *map, char *domain, char *host)
 	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
     }
   else
-    hp = gethostbyname2 (hostname, AF_INET);
+    hp = gethostbyname (hostname);
 
   if (hp != NULL)
-    hostname = strdupa (hp->h_name);
+    hostname = strdup (hp->h_name);
 #endif
 
   if (strcasecmp (hostname,
-		  get_dbm_entry ("YP_MASTER_NAME", map, domainname)) == 0)
-    exit (0);
+	  (val = get_dbm_entry ("YP_MASTER_NAME", map, domainname))) == 0)
+    ret = 0;
   else
-    exit (1);
+    ret = 1;
+
+  free(hostname);
+  exit (ret);
 }
 
 static void
@@ -629,7 +665,7 @@ main (int argc, char *argv[])
 	  merge_grp = 1;
 	  break;
 	case 'v':
-	  printf ("revnetgroup (%s) %s", PACKAGE, VERSION);
+	  printf ("yphelper (%s) %s", PACKAGE, VERSION);
 	  exit (0);
 	case 'i':
 	  map = optarg;

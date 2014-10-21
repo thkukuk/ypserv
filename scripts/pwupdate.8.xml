@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!-- lifted from troff+man by doclifter -->
+<refentry id='pwupdate8'>
+<!--  \-*\- nroff \-*\- -->
+<refmeta>
+<refentrytitle>PWUPDATE</refentrytitle>
+<manvolnum>8</manvolnum>
+<refmiscinfo class='source'>Jan 1998</refmiscinfo>
+<refmiscinfo class='manual'>NYS YP Server</refmiscinfo>
+</refmeta>
+<refnamediv id='name'>
+<refname>pwupdate</refname>
+<refpurpose>updates passwd and shadow NIS map</refpurpose>
+</refnamediv>
+<!-- body begins here -->
+<refsynopsisdiv id='synopsis'>
+<cmdsynopsis>
+  <command>/usr/lib/yp/pwupdate</command>    
+    <arg choice='opt'><replaceable>shadow</replaceable></arg>
+</cmdsynopsis>
+</refsynopsisdiv>
+
+
+<refsect1 id='description'><title>DESCRIPTION</title>
+<para><emphasis remap='B'>pwupdate</emphasis>
+is invoked by
+<citerefentry><refentrytitle>rpc.yppasswdd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+after changing the password and it should update the passwd and shadow NIS map.
+Never run it by hand.</para>
+</refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><emphasis remap='B'>shadow</emphasis></term>
+  <listitem>
+<para>Normally, only the passwd map will be updated. With this option,
+<emphasis remap='B'>pwupdate</emphasis>
+will update the shadow map, too.</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='files'><title>FILES</title>
+<!-- .PD 0 -->
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><filename>/etc/passwd</filename></term>
+  <term><filename>/etc/shadow</filename></term>
+  <listitem>
+<!-- .PD -->
+<para></para> <!-- FIXME: blank list item -->
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>rpc.yppasswdd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+</refsect1>
+
+<refsect1 id='author'><title>AUTHOR</title>
+<para>Olaf Kirch &lt;okir@monad.swb.de&gt;,
+<!-- .br -->
+Thorsten Kukuk &lt;kukuk@suse.de&gt;</para>
+</refsect1>
+</refentry>
+

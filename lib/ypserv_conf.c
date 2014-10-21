@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2006, 2008, 2011, 2013 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,14 +12,12 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <ctype.h>
@@ -28,11 +26,18 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
+#include <unistd.h>
 
 #include "log_msg.h"
 #include "ypserv_conf.h"
+#include "compat.h"
 
 int dns_flag = 0;
+int slp_flag = 0;
+unsigned long int slp_timeout = 3600;
 int xfr_check_port = 0;
 char *trusted_master = NULL;
 /* cached_filehandles (how many databases will be cached):
@@ -57,7 +62,7 @@ getipnr (char *n, char *network, char *netmask)
 
   m = strtok (n, "/");
 
-  sscanf (m, "%s", buf);
+  sscanf (m, "%19s", buf);
 
   for (i = 0; i < strlen (buf); i++)
     if ((buf[i] < '0' || buf[i] > '9') && buf[i] != '.')
@@ -164,8 +169,9 @@ conffile_t *
 load_ypserv_conf (const char *path)
 {
   FILE *in;
-  char c, *cp;
-  char buf1[1025], buf2[1025], buf3[1025];
+  int c;
+  char *cp;
+  char buf1[1025], buf2[1025] = "", buf3[1025];
   long line = 0;
   conffile_t *ptr = NULL, *work = NULL;
   char *filename = alloca (strlen (path) + sizeof ("/ypserv.conf") + 1);
@@ -179,17 +185,23 @@ load_ypserv_conf (const char *path)
       return NULL;
     }
 
-  while ((c = fgetc (in)) != (char) EOF)
+  while ((c = fgetc (in)) != EOF)
     {				/*while */
       line++;
       switch (tolower (c))
 	{
+	case 'F':
 	case 'f':
 	  {
 	    size_t i, j;
 	    unsigned long files = 30;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    buf1[sizeof (buf1) - 1] = '\0';
 	    while (c != ':' && i <= strlen (buf1))
@@ -205,7 +217,7 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      ++i;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "files") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "files") == 0))
 	      {
 		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
 		       (i <= strlen (buf1)))
@@ -229,11 +241,17 @@ load_ypserv_conf (const char *path)
 	      log_msg ("ypserv.conf: files: %lu", files);
 	    break;
 	  }
+	case 'D':
 	case 'd':
 	  {
 	    size_t i, j;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    while (c != ':' && i <= strlen (buf1))
 	      {
@@ -248,7 +266,7 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      i++;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "dns") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "dns") == 0))
 	      {
 		if (!dns_flag)	/* Do not overwrite parameter */
 		  {
@@ -261,9 +279,9 @@ load_ypserv_conf (const char *path)
 		    buf3[j] = 0;
 
 		    sscanf (buf3, "%s", buf2);
-		    if (strcmp (buf2, "yes") == 0)
+		    if (strcasecmp (buf2, "yes") == 0)
 		      dns_flag = 1;
-		    else if (strcmp (buf2, "no") == 0)
+		    else if (strcasecmp (buf2, "no") == 0)
 		      dns_flag = 0;
 		    else
 		      log_msg ("Unknown dns option in line %d: => Ignore line",
@@ -277,11 +295,17 @@ load_ypserv_conf (const char *path)
 	      log_msg ("ypserv.conf: dns: %d", dns_flag);
 	    break;
 	  }
+	case 'S':
 	case 's':
-	  {			/* sunos_kludge */
+	  {			/* sunos_kludge / slp */
 	    size_t i;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    while (c != ':' && i <= strlen (buf1))
 	      {
@@ -296,19 +320,77 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      i++;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "sunos_kludge") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "sunos_kludge") == 0))
 	      {
 		log_msg ("sunos_kludge (line %d) is not longer supported.",
 			line);
 	      }
+
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "slp") == 0))
+	      {
+		size_t j;
+
+		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
+		       (i <= strlen (buf1)))
+		  i++;
+		j = 0;
+		while ((buf1[i] != '\0') && (buf1[i] != '\n'))
+		  buf3[j++] = buf1[i++];
+		buf3[j] = 0;
+
+		sscanf (buf3, "%s", buf2);
+		if (strcasecmp (buf2, "yes") == 0)
+		  slp_flag = 1;
+		else if (strcasecmp (buf2, "domain") == 0)
+		  slp_flag = 2;
+		else if (strcasecmp (buf2, "no") == 0)
+		  slp_flag = 0;
+		else
+		  log_msg ("Unknown slp option in line %d: => Ignore line",
+			   line);
+
+		if (debug_flag)
+		  log_msg ("ypserv.conf: slp: %d", slp_flag);
+#if !USE_SLP
+		if (slp_flag != 0)
+		  log_msg ("Support for SLP (line %d) is not compiled in.",
+			   line);
+#endif
+	      }
+	    else if ((buf1[i - 1] == ':') &&
+		     (strcasecmp (buf2, "slp_timeout") == 0))
+	      {
+		size_t j;
+
+		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
+		       (i <= strlen (buf1)))
+		  i++;
+		j = 0;
+		while ((buf1[i] != '\0') && (buf1[i] != '\n'))
+		  buf3[j++] = buf1[i++];
+		buf3[j] = 0;
+
+		sscanf (buf3, "%lu", &slp_timeout);
+
+		if (debug_flag)
+		  log_msg ("ypserv.conf: slp_timeout: %lu", slp_timeout);
+	      }
 	    else
 	      log_msg ("Parse error in line %d: => Ignore line", line);
+
+	    break;
 	  }
+	case 'T':
 	case 't':
 	  {			/* tryresolve / trusted_master */
 	    size_t i, j;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    while (c != ':' && i <= strlen (buf1))
 	      {
@@ -323,14 +405,14 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      i++;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "tryresolve") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "tryresolve") == 0))
 	      {
 		log_msg ("tryresolve (line %d) is not longer supported.",
 			 line);
 		break;
 	      }
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "trusted_master") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "trusted_master") == 0))
 	      {
 		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
 		       (i <= strlen (buf1)))
@@ -350,11 +432,17 @@ load_ypserv_conf (const char *path)
 	      log_msg ("ypserv.conf: trusted_master: %s", trusted_master);
 	    break;
 	  }
+	case 'X':
 	case 'x':
 	  {			/* xfr_check_port */
 	    size_t i, j;
 
-	    fgets (buf1, sizeof (buf1) - 1, in);
+	    if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
+
 	    i = 0;
 	    while (c != ':' && i <= strlen (buf1))
 	      {
@@ -369,7 +457,7 @@ load_ypserv_conf (const char *path)
 	    while ((buf1[i - 1] != ':') && (i <= strlen (buf1)))
 	      i++;
 
-	    if ((buf1[i - 1] == ':') && (strcmp (buf2, "xfr_check_port") == 0))
+	    if ((buf1[i - 1] == ':') && (strcasecmp (buf2, "xfr_check_port") == 0))
 	      {
 		while (((buf1[i] == ' ') || (buf1[i] == '\t')) &&
 		       (i <= strlen (buf1)))
@@ -380,9 +468,9 @@ load_ypserv_conf (const char *path)
 		buf3[j] = 0;
 
 		sscanf (buf3, "%s", buf2);
-		if (strcmp (buf2, "yes") == 0)
+		if (strcasecmp (buf2, "yes") == 0)
 		  xfr_check_port = 1;
-		else if (strcmp (buf2, "no") == 0)
+		else if (strcasecmp (buf2, "no") == 0)
 		  xfr_check_port = 0;
 		else
 		  log_msg ("Unknown xfr_check_port option in line %d: => Ignore line",
@@ -395,21 +483,20 @@ load_ypserv_conf (const char *path)
 	      log_msg ("ypserv.conf: xfr_check_port: %d", xfr_check_port);
 	    break;
 	  }
-#ifdef __GNUC__
-	  /* GCC syntax shows our intent much more clearly */
-	case '1' ... '9':
-#else
 	case '1': case '2': case '3':
 	case '4': case '5': case '6':
 	case '7': case '8': case '9':
-#endif
 	case '*':
 	  {
 	    char *n, *d, *m, *s, *p, *f;
 	    conffile_t *tmp;
 
 	    buf1[0] = c;
-	    fgets (&buf1[1], sizeof (buf1) - 2, in);
+	    if (fgets (&buf1[1], sizeof (buf1) - 2, in) == NULL)
+	      {
+		log_msg ("Read error in line %d => Ignore line", line);
+		break;
+	      }
 
 	    n = strtok (buf1, ":");
 	    if (n == NULL)
@@ -483,11 +570,11 @@ load_ypserv_conf (const char *path)
 
 	    sscanf (s, "%s", buf2);
 
-	    if (strcmp (buf2, "none") == 0)
+	    if (strcasecmp (buf2, "none") == 0)
 	      tmp->security = SEC_NONE;
-	    else if (strcmp (buf2, "deny") == 0)
+	    else if (strcasecmp (buf2, "deny") == 0)
 	      tmp->security = SEC_DENY;
-	    else if (strcmp (buf2, "port") == 0)
+	    else if (strcasecmp (buf2, "port") == 0)
 	      tmp->security = SEC_PORT;
 	    else
 	      {
@@ -531,10 +618,11 @@ load_ypserv_conf (const char *path)
 	case '\n':
 	  break;		/* Ignore newline */
 	case '#':
-	  fgets (buf1, sizeof (buf1) - 1, in);
+	  if (fgets (buf1, sizeof (buf1) - 1, in) == NULL)
+	    log_msg ("Read error in line %d => Ignore line", line);
 	  break;
 	default:
-	  fgets (buf1, sizeof (buf1) - 1, in);
+	  if (fgets (buf1, sizeof (buf1) - 1, in) == NULL) {};
 	  log_msg ("Parse error in line %d: %c%s", line, c, buf1);
 	  break;
 	}

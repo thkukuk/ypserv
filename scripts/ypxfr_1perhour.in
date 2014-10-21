@@ -6,7 +6,9 @@
 
 YPBINDIR=@YPBINDIR@
 
-for map in passwd.byname passwd.byuid shadow.byname publickey.byname
+MAPS_TO_GET="passwd.byname passwd.byuid shadow.byname publickey.byname"
+
+for map in $MAPS_TO_GET
 do
   $YPBINDIR/ypxfr $map
 done

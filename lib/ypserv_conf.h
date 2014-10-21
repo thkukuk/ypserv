@@ -1,4 +1,4 @@
-/* Copyright (c) 2000 Thorsten Kukuk
+/* Copyright (c) 2000, 2003, 2004 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -13,8 +13,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifndef __YPSERV_CONF_H__
 #define __YPSERV_CONF_H__
@@ -33,6 +33,8 @@ typedef struct conffile
 } conffile_t;
 
 extern int dns_flag;
+extern int slp_flag;
+extern unsigned long int slp_timeout;
 extern int cached_filehandles;
 extern int xfr_check_port;
 extern char *trusted_master;

@@ -1,0 +1,6 @@
+Makefile
+Makefile.in
+.deps
+rpc.ypxfrd
+rpc.ypxfrd.8
+ypxfrd.8

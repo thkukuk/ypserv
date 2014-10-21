@@ -22,6 +22,14 @@ B=
 # /var/yp/ypservers.
 NOPUSH=true
 
+# yppush copies updated NIS databases (or maps) from the master NIS server 
+# to the slave servers within a NIS domain and listens for their answer. 
+# yppush will ask portmap to assign it a random port number to listen on 
+# by default. To specify a fixed port number or any aditional options, 
+# edit variable YPPUSH_ARGS.
+# e.g. YPPUSH_ARGS = --port 836
+YPPUSH_ARGS = 
+
 # We do not put password entries with lower UIDs (the root and system
 # entries) in the NIS password database, for security. MINUID is the
 # lowest uid that will be included in the password maps. If you
@@ -29,8 +37,8 @@ NOPUSH=true
 # the passwd file. If no entry is found, this shadow entry is
 # ignored.
 # MINGID is the lowest gid that will be included in the group maps.
-MINUID=500
-MINGID=500
+MINUID=$(shell TMP=`egrep '^UID_MIN\s+[0-9]+' /etc/login.defs|sed -e 's/^UID_MIN//'` ; [ -n "$$TMP" ] && echo "$$TMP" || echo 1000)
+MINGID=$(shell TMP=`egrep '^GID_MIN\s+[0-9]+' /etc/login.defs|sed -e 's/^GID_MIN//'` ; [ -n "$$TMP" ] && echo "$$TMP" || echo 1000)
 
 # Should we merge the passwd file with the shadow file ?
 # MERGE_PASSWD=true|false
@@ -115,7 +123,7 @@ all:  passwd group hosts rpc services netid protocols netgrp mail \
 
 DBLOAD = $(YPBINDIR)/makedbm -c -m `$(YPBINDIR)/yphelper --hostname`
 MKNETID = $(YPBINDIR)/mknetid
-YPPUSH = $(YPSBINDIR)/yppush
+YPPUSH = $(YPSBINDIR)/yppush $(YPPUSH_ARGS)
 MERGER = $(YPBINDIR)/yphelper
 DOMAIN = `basename \`pwd\``
 LOCALDOMAIN = `/bin/domainname`
@@ -269,10 +277,12 @@ services.byname: $(SERVICES) $(YPDIR)/Makefile
 services.byservicename: $(SERVICES) $(YPDIR)/Makefile
 	@echo "Updating $@..."
 	@$(AWK) '{ if ($$1 !~ "#" && $$1 != "") { \
-		TMP = $$2 ; gsub("[0-9]+","",TMP) ; \
+		split($$2,A,"/") ; TMP = "/" A[2] ; \
 		print $$1 TMP"\t"$$0 ; \
+		if (! seen[$$1]) { seen[$$1] = 1 ; print $$1"\t"$$0 ; } \
 		for (N = 3; N <= NF && $$N !~ "#" ; N++) { \
-			if ($$N !~ "#" && $$N != "") print $$N TMP"\t"$$0 \
+			if ($$N !~ "#" && $$N != "") print $$N TMP"\t"$$0 ; \
+			if (! seen[$$N]) { seen[$$N] = 1 ; print $$N"\t"$$0 ; } \
 		} } } ' \
 		$(SERVICES) | $(DBLOAD) -r -i $(SERVICES) \
 		-o $(YPMAPDIR)/$@ - $@
@@ -384,8 +394,24 @@ netid.byname: $(GROUP) $(PASSWD) $(HOSTS) $(NETID) $(YPDIR)/Makefile
 
 mail.aliases: $(ALIASES) $(YPDIR)/Makefile
 	@echo "Updating $@..."
-	@$(AWK) '{ if ($$1 != "" && $$1 !~ "#" && $$1 != "+") \
-		print $$0 }' $(ALIASES) | $(DBLOAD) -l --aliases \
+	@$(AWK) '{ \
+			if ($$1 ~ "^#.*") \
+				next; \
+			if ($$1 == "" || $$1 == "+") { \
+				if (line != "") \
+					{print line; line = "";} \
+				next; \
+			} \
+			if ($$0 ~ /^[[:space:]]/) \
+				line = line $$0; \
+			else { \
+				if (line != "") \
+					{print line; line = "";} \
+				line = $$0; \
+			} \
+		} \
+		END {if (line != "") print line}' \
+		$(ALIASES) | $(DBLOAD) --aliases \
 			-i $(ALIASES) -o $(YPMAPDIR)/$@ - $@
 	-@$(NOPUSH) || $(YPPUSH) -d $(DOMAIN) $@
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2009 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,10 +12,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
-
-#define _GNU_SOURCE
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -33,13 +31,14 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
-#ifdef NEED_SVCSOC_H
+#ifdef HAVE_RPC_SVC_SOC_H
 #include <rpc/svc_soc.h>
-#endif
+#endif /* HAVE_RPC_SVC_SOC_H */
 #include "log_msg.h"
 #include "ypxfrd.h"
 #include "access.h"
 #include "yp_db.h"
+#include "compat.h"
 
 static int file = 0;
 
@@ -97,7 +96,7 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
 {
   static struct xfr result;
   char buf[MAXPATHLEN];
-  struct sockaddr_in *rqhost;
+  const struct sockaddr_in *rqhost;
   int valid;
 
   if (debug_flag)
@@ -124,7 +123,7 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
       else
 	{
 	  if (debug_flag)
-	    log_msg ("\t-> Ignored (not a valid domain)");
+	    log_msg ("\t-> Ignored (not a valid domain/map)");
 	}
       ypdb_close_all ();
 
@@ -148,6 +147,12 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
     if ((argp->xfr_db_type != XFR_DB_BSD_NDBM) &&
 	(argp->xfr_db_type != XFR_DB_ANY))
 #endif /* sun */
+#elif defined (HAVE_LIBQDBM)
+    if ((argp->xfr_db_type != XFR_DB_QDBM) &&
+	(argp->xfr_db_type != XFR_DB_ANY))
+#elif defined (HAVE_LIBTC)
+    if ((argp->xfr_db_type != XFR_DB_TC) &&
+	(argp->xfr_db_type != XFR_DB_ANY))
 #else
   if (argp->xfr_db_type != XFR_DB_ANY)
 #endif

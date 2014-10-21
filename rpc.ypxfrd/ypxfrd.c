@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1996-1999, 2001-2003, 2005, 2006, 2010 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,12 +12,10 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 /* ypxfrd - ypxfrd main routines.  */
-
-#define _GNU_SOURCE
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -41,11 +39,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
-#ifdef NEED_SVCSOC_H
+#ifdef HAVE_RPC_SVC_SOC_H
 #include <rpc/svc_soc.h>
-#endif
+#endif /* HAVE_RPC_SVC_SOC_H */
 #include <rpc/pmap_clnt.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif /* HAVE_GETOPT_H */
 #include "ypxfrd.h"
 #include "access.h"
 #include "ypserv_conf.h"
@@ -55,6 +55,10 @@
 #endif
 
 #include "log_msg.h"
+#include "compat.h"
+#include "pidfile.h"
+
+#define _YPXFRD_PIDFILE _PATH_VARRUN"ypxfrd.pid"
 
 extern void ypxfrd_freebsd_prog_1(struct svc_req *, SVCXPRT *);
 
@@ -73,39 +77,7 @@ char *path_ypdb = YPMAPDIR;
 
 char *progname;
 
-#if HAVE__RPC_DTABLESIZE
-extern int _rpc_dtablesize(void);
-#elif HAVE_GETDTABLESIZE
-static int
-_rpc_dtablesize()
-{
-  static int size;
-
-  if (size == 0)
-    {
-      size = getdtablesize();
-    }
-  return (size);
-}
-#else
-
-#include <sys/resource.h>
-
-static int
-_rpc_dtablesize()
-{
-  static int size = 0;
-  struct rlimit rlb;
-
-  if (size == 0)
-    {
-      if (getrlimit(RLIMIT_NOFILE, &rlb) >= 0)
-	size = rlb.rlim_cur;
-    }
-
-  return size;
-}
-#endif
+static int foreground_flag = 0;
 
 /*
 ** Needed, if we start rpc.ypxfrd from inetd
@@ -135,20 +107,21 @@ closedown (int sig)
 
 /* Clean up after child processes signal their termination.  */
 static void
-sig_child (int sig __attribute__ ((unused)))
+sig_child (int sig UNUSED)
 {
-   int st;
+  int save_errno = errno;
 
-   /* Clear all childs.  */
-   while (waitpid(-1, &st, WNOHANG) > 0)
-     ;
+  while (wait3 (NULL, WNOHANG, NULL) > 0)
+    ;
+  errno = save_errno;
 }
 
 /* Clean up if we quit the program.  */
 static void
-sig_quit (int sig __attribute__ ((unused)))
+sig_quit (int sig UNUSED)
 {
   pmap_unset (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS);
+  unlink (_YPXFRD_PIDFILE);
   exit (0);
 }
 
@@ -156,7 +129,7 @@ sig_quit (int sig __attribute__ ((unused)))
 ** Reload securenets and config file
 */
 static void
-sig_hup (int sig __attribute__ ((unused)))
+sig_hup (int sig UNUSED)
 {
   load_securenets();
   load_config();
@@ -165,9 +138,9 @@ sig_hup (int sig __attribute__ ((unused)))
 }
 
 static void
-Usage (int exitcode)
+usage (int exitcode)
 {
-  fputs ("usage: rpc.ypxfrd [--debug] [-d path] [-p port]\n", stderr);
+  fputs ("usage: rpc.ypxfrd [--debug] [-d path] [-p port] [-f|--foreground]\n", stderr);
   fputs ("       rpc.ypxfrd --version\n", stderr);
 
   exit (exitcode);
@@ -182,7 +155,11 @@ main (int argc, char **argv)
   struct sockaddr_in socket_address;
   int result;
   struct sigaction sa;
+#if defined(__hpux)
   int socket_size;
+#else /* not __hpux */
+  socklen_t socket_size;
+#endif
 
   progname = strrchr (argv[0], '/');
   if (progname == (char *) NULL)
@@ -203,12 +180,13 @@ main (int argc, char **argv)
         {"port", required_argument, NULL, 'p'},
 	{"path", required_argument, NULL, 'd'},
 	{"dir", required_argument, NULL, 'd'},
+        {"foreground", no_argument, NULL, 'f'},
         {"usage", no_argument, NULL, 'u'},
 	{"help", no_argument, NULL, 'h'},
         {NULL, 0, NULL, '\0'}
       };
 
-      c=getopt_long(argc, argv, "p:d:uh",long_options, &option_index);
+      c=getopt_long(argc, argv, "p:d:fuh",long_options, &option_index);
       if (c==EOF) break;
       switch (c)
         {
@@ -226,15 +204,24 @@ main (int argc, char **argv)
 	  break;
 	case 'p':
 	  my_port = atoi(optarg);
+	  if (my_port <= 0 || my_port > 0xffff) {
+	    /* Invalid port number */
+	    fprintf (stdout, "Warning: rpc.ypxfrd: Invalid port %d (0x%x)\n", 
+			my_port, my_port);
+	    my_port = -1;
+	  }
 	  if (debug_flag)
 	    log_msg("Using port %d\n", my_port);
 	  break;
+	case 'f':
+	  foreground_flag = 1;
+	  break;
 	case 'u':
         case 'h':
-          Usage(0);
+          usage(0);
           break;
         case '?':
-          Usage(1);
+          usage(1);
           break;
         }
     }
@@ -244,8 +231,8 @@ main (int argc, char **argv)
 
   if (debug_flag)
     log_msg("[Welcome to the rpc.ypxfrd Daemon, version %s]\n", VERSION);
-  else
-    if(!_rpcpmstart)
+  else 
+    if (!_rpcpmstart && !foreground_flag)
       {
 	int i;
 
@@ -279,9 +266,21 @@ main (int argc, char **argv)
 
 	umask(0);
 	i = open("/dev/null", O_RDWR);
-	dup(i);
-	dup(i);
+	if (dup(i) == -1)
+	  {
+	    int err = errno;
+	    log_msg ("dup failed: %s\n", strerror (err));
+	    exit (err);
+	  }
+	if (dup(i) == -1)
+	  {
+	    int err = errno;
+	    log_msg ("dup failed: %s\n", strerror (err));
+	    exit (err);
+	  }
       }
+
+  create_pidfile (_YPXFRD_PIDFILE, "rpc.ypxfrd");
 
   /* Change current directory to database location */
   if (chdir(path_ypdb) < 0)
@@ -357,7 +356,11 @@ main (int argc, char **argv)
   _rpcfdtype = 0;
   if (getsockname(0, (struct sockaddr *)&socket_address, &socket_size) == 0)
     {
-      int  int_size = sizeof (int);
+#if defined(__hpux)
+      int int_size = sizeof (int);
+#else /* not __hpux */
+      socklen_t  int_size = sizeof (int);
+#endif
       if (socket_address.sin_family != AF_INET)
 	return 1;
       if (getsockopt(0, SOL_SOCKET, SO_TYPE, (void*)&_rpcfdtype,
@@ -453,8 +456,16 @@ main (int argc, char **argv)
       alarm (_RPCSVC_CLOSEDOWN);
     }
 
+  /* If we use systemd as an init system, we may want to give it 
+     a message, that this daemon is ready to accept connections.
+     At this time, sockets for receiving connections are already 
+     created, so we can say we're ready now. It is a nop if we 
+     don't use systemd. */
+  announce_ready();
+
   svc_run();
   log_msg("svc_run returned");
+  unlink (_YPXFRD_PIDFILE);
   exit(1);
   /* NOTREACHED */
 }

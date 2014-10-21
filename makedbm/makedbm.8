@@ -1,0 +1,109 @@
+.\"     Title: makedbm
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.73.1 <http://docbook.sf.net/>
+.\"      Date: 09/26/2007
+.\"    Manual: NIS Reference Manual
+.\"    Source: NIS Reference Manual
+.\"
+.TH "MAKEDBM" "8" "09/26/2007" "NIS Reference Manual" "NIS Reference Manual"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+makedbm - create or dump a ypserv database file
+.SH "SYNOPSIS"
+.HP 20
+\fB/usr/lib/yp/makedbm\fR [\-a | \-r] [\-b] [\-c] [\-s] [\-l] [\-i\ \fIYP_INPUT_NAME\fR] [\-o\ \fIYP_OUTPUT_NAME\fR] [\-m\ \fIYP_MASTER_NAME\fR] \fIinputfile\fR \fIdbname\fR
+.HP 20
+\fB/usr/lib/yp/makedbm\fR \-u\ \fIdbname\fR
+.HP 20
+\fB/usr/lib/yp/makedbm\fR \-c
+.HP 20
+\fB/usr/lib/yp/makedbm\fR \-\-version
+.SH "DESCRIPTION"
+.PP
+\fBmakedbm\fR
+takes the inputfile and converts it to a ypserv database file\. In the moment, GDBM is used as database\. Each line of the input file is converted to a single record\. All characters up to the first TAB or SPACE are the key, and the rest of the line is the data\.
+\fBmakedbm\fR
+does not treat `#\' as a special character\.
+.SH "OPTIONS"
+.PP
+\fB\-a\fR
+.RS 4
+Special support for mail aliases\. We couldn\'t use sendmail for it, since sendmail uses db, but ypserv gdbm as database format\.
+.RE
+.PP
+\fB\-b\fR
+.RS 4
+Insert the
+\fBYP_INTERDOMAIN\fR
+into the output\. This key causes
+\fBypserv\fR(8)
+to use
+\fBDNS\fR
+for host name and address lookups for hosts not found in the maps\.
+.RE
+.PP
+\fB\-c\fR
+.RS 4
+send a
+\fBYPPROC_CLEAR\fR
+to the local
+\fBypserv\fR(8)\. This causes ypserv to invalidate all cached entries\.
+.RE
+.PP
+\fB\-l\fR
+.RS 4
+Convert the keys of the given map to lower case\.
+.RE
+.PP
+\fB\-i\fR\fI YP_INPUT_NAME\fR
+.RS 4
+Create a special entry with the key
+\fBYP_INPUT_NAME\fR\.
+.RE
+.PP
+\fB\-m\fR\fI YP_MASTER_NAME\fR
+.RS 4
+Create a special entry with the key
+\fBYP_MASTER_NAME\fR\. If no master host name is specified,
+\fBYP_MASTER_NAME\fR
+will be set to the local host name\.
+.RE
+.PP
+\fB\-o\fR\fI YP_OUTPUT_NAME\fR
+.RS 4
+Create a special entry with the key
+\fBYP_OUTPUT_NAME\fR\.
+.RE
+.PP
+\fB\-r\fR
+.RS 4
+Handle `#\' as comment sign and remove the comment\.
+.RE
+.PP
+\fB\-s\fR
+.RS 4
+Secure map\. Accept connections from secure
+\fBNIS\fR
+networks only (reserved ports)\.
+.RE
+.PP
+\fB\-u\fR\fI dbname\fR
+.RS 4
+Dump a ypserv database file\. Prints out the file in text format, one entry per line, with a single space separating keys from values\.
+.RE
+.PP
+\fB\-\-no\-limit\-check\fR
+.RS 4
+Don\'t check for NIS key and data limit\.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBypserv\fR(8)
+.SH "AUTHOR"
+.PP
+
+\fBmakedbm\fR
+was written by Thorsten Kukuk <kukuk@linux\-nis\.org>\.

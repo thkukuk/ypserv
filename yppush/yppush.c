@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1996-2005 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,14 +12,12 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +27,10 @@
 #include <time.h>
 #include "yp.h"
 #include <rpcsvc/ypclnt.h>
+#include <rpc/svc.h>
+#if defined(HAVE_RPC_SVC_SOC_H)
+#include <rpc/svc_soc.h> /* for svcudp_create() */
+#endif /* HAVE_RPC_SVC_SOC_H */
 #include <arpa/inet.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -41,26 +43,20 @@
 #include <memory.h>
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
 #elif defined(HAVE_NDBM)
 #include <ndbm.h>
 #include <fcntl.h>
+#elif defined(HAVE_LIBTC)
+#include <tcbdb.h>
 #endif
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
+#endif /* HAVE_GETOPT_H */
+#include "compat.h"
 
 #include "log_msg.h"
-
-#ifndef HAVE_STRDUP
-#include <compat/strdup.c>
-#endif
-
-#ifndef HAVE_GETOPT_LONG
-#include <compat/getopt.c>
-#include <compat/getopt1.c>
-#endif
-
-#ifndef HAVE_STRERROR
-#include <compat/strerror.c>
-#endif
 
 #ifndef YPMAPDIR
 #define YPMAPDIR "/var/yp"
@@ -82,39 +78,8 @@ static u_int timeout = 90;
 static u_int MapOrderNum;
 static u_int maxchildren = 1;
 static u_int children = 0;
+static int my_port = -1;
 
-#if HAVE__RPC_DTABLESIZE
-extern int _rpc_dtablesize (void);
-#elif HAVE_GETDTABLESIZE
-
-int
-_rpc_dtablesize ()
-{
-  static int size;
-
-  if (size == 0)
-    size = getdtablesize ();
-
-  return size;
-}
-#else
-
-#include <sys/resource.h>
-
-int
-_rpc_dtablesize ()
-{
-  static int size = 0;
-  struct rlimit rlb;
-
-
-  if (size == 0)
-    if (getrlimit (RLIMIT_NOFILE, &rlb) >= 0)
-      size = rlb.rlim_cur;
-
-  return size;
-}
-#endif
 
 static char *
 yppush_err_string (enum yppush_status status)
@@ -158,9 +123,9 @@ yppush_err_string (enum yppush_status status)
 }
 
 bool_t
-yppushproc_null_1_svc (void *req __attribute__ ((unused)),
-		       void *resp __attribute__ ((unused)),
-		       struct svc_req *rqstp __attribute__ ((unused)))
+yppushproc_null_1_svc (void *req UNUSED,
+		       void *resp UNUSED,
+		       struct svc_req *rqstp UNUSED)
 {
   resp = NULL;
 
@@ -172,7 +137,8 @@ yppushproc_null_1_svc (void *req __attribute__ ((unused)),
 
 
 bool_t
-yppushproc_xfrresp_1_svc (yppushresp_xfr *req, void *resp, struct svc_req *rqstp)
+yppushproc_xfrresp_1_svc (yppushresp_xfr *req,
+			  void *resp UNUSED, struct svc_req *rqstp)
 {
   struct sockaddr_in *sin;
   char *h;
@@ -187,7 +153,6 @@ yppushproc_xfrresp_1_svc (yppushresp_xfr *req, void *resp, struct svc_req *rqstp
 		      sizeof (sin->sin_addr.s_addr), AF_INET);
   h = (hp && hp->h_name) ? hp->h_name : inet_ntoa (sin->sin_addr);
 
-  memcpy ((yppushresp_xfr *) resp, req, sizeof (yppushresp_xfr));
   if (verbose_flag)
     {
       log_msg ("Status received from ypxfr on %s:", h);
@@ -206,8 +171,6 @@ yppush_xfrrespprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
   union {
     yppushresp_xfr yppushproc_xfrresp_1_arg;
   } argument;
-  union {
-  } result;
   bool_t retval;
   xdrproc_t _xdr_argument, _xdr_result;
   bool_t (*local)(char *, void *, struct svc_req *);
@@ -235,11 +198,18 @@ yppush_xfrrespprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
   memset ((char *)&argument, 0, sizeof (argument));
   if (!svc_getargs (transp, _xdr_argument, (caddr_t) &argument))
     {
+      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+
+      log_msg ("cannot decode arguments for %d from %s",
+              rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+      /* try to free already allocated memory during decoding */
+      svc_freeargs (transp, _xdr_argument, (caddr_t) &argument);
+
       svcerr_decode (transp);
       return;
     }
-  retval = (bool_t) (*local)((char *)&argument, (void *)&result, rqstp);
-  if (retval > 0 && !svc_sendreply(transp, _xdr_result, (char *)&result))
+  retval = (bool_t) (*local)((char *)&argument, NULL, rqstp);
+  if (retval > 0 && !svc_sendreply(transp, _xdr_result, NULL))
     {
       svcerr_systemerr (transp);
     }
@@ -299,10 +269,12 @@ get_dbm_entry (char *key)
   static char mappath[MAXPATHLEN + 2];
   char *val;
   datum dkey, dval;
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   GDBM_FILE dbm;
 #elif defined (HAVE_NDBM)
   DBM *dbm;
+#elif defined (HAVE_LIBTC)
+  TCBDB *dbm;
 #endif
 
   if (strlen (YPMAPDIR) + strlen (DomainName) + strlen (current_map) + 3 < MAXPATHLEN)
@@ -313,23 +285,33 @@ get_dbm_entry (char *key)
       exit (1);
     }
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (mappath, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
-  dbm = dbm_open (mappath, O_CREAT | O_RDWR, 0600);
+  dbm = dbm_open (mappath, O_RDONLY, 0600);
+#elif defined(HAVE_LIBTC)
+  dbm = tcbdbnew();
+  if (!tcbdbopen(dbm, mappath, BDBOREADER | BDBONOLCK))
+    {
+      tcbdbdel(dbm);
+      dbm = NULL;
+    }
 #endif
   if (dbm == NULL)
     {
       log_msg ("YPPUSH: Cannot open %s", mappath);
+      log_msg ("YPPUSH: consider rebuilding maps using ypinit");
       exit (1);
     }
 
   dkey.dptr = key;
   dkey.dsize = strlen (dkey.dptr);
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dval = gdbm_fetch (dbm, dkey);
 #elif defined(HAVE_NDBM)
   dval = dbm_fetch (dbm, dkey);
+#elif defined(HAVE_LIBTC)
+  dval.dptr = tcbdbget (dbm, dkey.dptr, dkey.dsize, &dval.dsize);
 #endif
   if (dval.dptr == NULL)
     val = NULL;
@@ -339,10 +321,13 @@ get_dbm_entry (char *key)
       strncpy (val, dval.dptr, dval.dsize);
       val[dval.dsize] = 0;
     }
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   gdbm_close (dbm);
 #elif defined(HAVE_NDBM)
   dbm_close (dbm);
+#elif defined(HAVE_LIBTC)
+  tcbdbclose (dbm);
+  tcbdbdel (dbm);
 #endif
   return val;
 }
@@ -386,11 +371,11 @@ getordernum (void)
 #if defined(__NetBSD__)
 static int
 add_slave_server (u_long status, char *key, int keylen,
-		  char *val, int vallen, void *data __attribute__ ((unused)))
+		  char *val, int vallen, void *data UNUSED)
 #else
 static int
 add_slave_server (int status, char *key, int keylen,
-		  char *val, int vallen, char *data __attribute__ ((unused)))
+		  char *val, int vallen, char *data UNUSED)
 #endif
 {
   char host[YPMAXPEER + 2];
@@ -436,7 +421,7 @@ add_slave_server (int status, char *key, int keylen,
 }
 
 static void
-child_sig_int (int sig __attribute__ ((unused)))
+child_sig_int (int sig UNUSED)
 {
   if (CallbackProg != 0)
     svc_unregister (CallbackProg, 1);
@@ -453,6 +438,7 @@ yppush_foreach (const char *host)
   u_int transid;
   char server[YPMAXPEER + 2];
   int sock;
+  struct sockaddr_in s_in;
   struct sigaction sa;
 
   if (verbose_flag > 1)
@@ -478,12 +464,38 @@ yppush_foreach (const char *host)
   PushClient = clnt_create (server, YPPROG, YPVERS, "udp");
   if (PushClient == NULL)
     {
-      log_msg ("%s", host);
-      clnt_pcreateerror ("");
+      clnt_pcreateerror (server);
       return 1;
     }
 
-  sock = RPC_ANYSOCK;
+
+  if (my_port >= 0)
+    {
+      sock = socket (AF_INET, SOCK_DGRAM, 0);
+      if (sock < 0)
+        {
+          log_msg ("can not create UDP: %s", strerror (errno));
+          exit (1);
+        }
+      else
+        {
+          /* bind to socket */
+          memset ((char *) &s_in, 0, sizeof (s_in));
+          s_in.sin_family = AF_INET;
+          s_in.sin_addr.s_addr = htonl (INADDR_ANY);
+          s_in.sin_port = htons (my_port);
+
+          if  (bind (sock, (struct sockaddr *) &s_in, sizeof (s_in)) < 0)
+            {
+          log_msg ("yppush: can not bind UDP: %s ", strerror (errno));
+          exit (1);
+            }
+        }
+    }
+  else
+    sock = RPC_ANYSOCK;
+
+
   CallbackXprt = svcudp_create (sock);
   if (CallbackXprt == NULL)
     {
@@ -555,9 +567,10 @@ yppush_foreach (const char *host)
 }
 
 static void
-sig_child (int sig __attribute__ ((unused)))
+sig_child (int sig UNUSED)
 {
   int status;
+  int save_errno = errno;
 
   while (waitpid (-1, &status, WNOHANG) > 0)
     {
@@ -565,13 +578,15 @@ sig_child (int sig __attribute__ ((unused)))
 	log_msg ("Child %d exists", WEXITSTATUS (status));
       children--;
     }
+
+  errno = save_errno;
 }
 
 static inline void
 Usage (int exit_code)
 {
-  log_msg ("Usage: yppush [-d domain] [-t timeout] [-p #] [-h host] [-v] mapname ...");
-  log_msg ("       yppush --version");
+  log_msg ("Usage:\n  yppush [-d domain] [-t timeout] [--parallel # | --port #] [-h host] [-v] mapname ...");
+  log_msg ("  yppush --version");
   exit (exit_code);
 }
 
@@ -605,6 +620,7 @@ main (int argc, char **argv)
 	{"help", no_argument, NULL, 'u'},
 	{"usage", no_argument, NULL, 'u'},
 	{"parallel", required_argument, NULL, 'p'},
+	{"port", required_argument, NULL, '\254'},
 	{"timeout", required_argument, NULL, 't'},
 	{NULL, 0, NULL, '\0'}
       };
@@ -626,6 +642,11 @@ main (int argc, char **argv)
 	case 'j':
 	case 'p':
 	  maxchildren = atoi (optarg);
+	  if (my_port >= 0)
+	    {
+	      log_msg ("yppush cannot run in parallel with a fixed port");
+	      return 1;
+	    }
 	  break;
 	case 'h':
 	  /* we can handle multiple hosts */
@@ -645,6 +666,20 @@ main (int argc, char **argv)
 	case '\255':
           log_msg ("yppush (%s) %s", PACKAGE, VERSION);
           return 0;
+	case '\254':
+	  my_port = atoi (optarg);
+	  if (maxchildren > 1)
+	    {
+	      log_msg ("yppush cannot run in parallel with a fixed port");
+	      return 1;
+	    }
+	  if (my_port <= 0 || my_port > 0xffff) {
+	    /* Invalid port number */
+	    fprintf (stdout, "Warning: yppush: Invalid port %d (0x%x)\n", 
+			my_port, my_port);
+	    my_port = -1;
+	  }
+	  break;
 	default:
 	  Usage (1);
 	}

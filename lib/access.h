@@ -13,8 +13,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifndef __ACCESS_H__
 #define __ACCESS_H__
@@ -34,5 +34,8 @@ extern int is_valid (struct svc_req *rqstp, const char *map,
 /* securenets.c */
 extern void load_securenets (void);
 extern int securenet_host (const struct in_addr sin_addr);
+
+/* systemd */
+extern void announce_ready (void);
 
 #endif

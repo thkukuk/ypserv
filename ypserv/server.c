@@ -1,10 +1,9 @@
-/* Copyright (c) 2000, 2001, 2002, 2003  Thorsten Kukuk
+/* Copyright (c) 2000, 2001, 2002, 2003, 2005, 2006, 2009, 2011, 2013  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
 
    The YP Server is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,48 +12,48 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#define _GNU_SOURCE
-
 #include <string.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
 #include <unistd.h>
+#include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <time.h>
 #include "yp.h"
 #include "yp_db.h"
 #include "access.h"
 #include "ypserv_conf.h"
 #include "log_msg.h"
-
-extern volatile int children; /* ypserv.c  */
-extern int forked; /* ypserv.c  */
+#include "compat.h"
 
 bool_t
-ypproc_null_2_svc (void *argp __attribute__ ((unused)),
-		   void *result __attribute__ ((unused)),
+ypproc_null_2_svc (void *argp UNUSED, void *result UNUSED,
 		   struct svc_req *rqstp)
 {
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_null() [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr),
 	       ntohs (rqhost->sin_port));
     }
 
-  if (!is_valid (rqstp, NULL, NULL))
+  if (is_valid (rqstp, NULL, NULL) < 1)
     return FALSE;
 
   return TRUE;
@@ -67,7 +66,7 @@ ypproc_domain_2_svc (domainname *argp, bool_t *result,
 {
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_domain(\"%s\") [From: %s:%d]",
 	       *argp, inet_ntoa (rqhost->sin_addr),
 	       ntohs (rqhost->sin_port));
@@ -75,6 +74,7 @@ ypproc_domain_2_svc (domainname *argp, bool_t *result,
 
   switch (is_valid (rqstp, NULL, *argp))
     {
+    case -4: /* -4 should not happen */
     case -3:
     case -2: /* -2 should not happen */
       *result = FALSE;
@@ -82,6 +82,11 @@ ypproc_domain_2_svc (domainname *argp, bool_t *result,
     case -1:
       if (debug_flag)
         log_msg ("\t-> Ignored (not a valid source host)");
+      *result = FALSE;
+      break;
+    case 0:
+      if (debug_flag)
+        log_msg ("\t-> Ignored (forbidden by securenets)");
       *result = FALSE;
       break;
     default:
@@ -102,7 +107,7 @@ ypproc_domain_nonack_2_svc (domainname *argp, bool_t *result,
 {
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_domain_nonack(\"%s\") [From: %s:%d]",
 	       *argp, inet_ntoa (rqhost->sin_addr),
 	       ntohs (rqhost->sin_port));
@@ -115,12 +120,17 @@ ypproc_domain_nonack_2_svc (domainname *argp, bool_t *result,
         log_msg ("\t-> Ignored (not a valid domain)");
       /* Bail out and don't return any RPC value */
       return FALSE;
+    case -4: /* Should not happen */
     case -2: /* Should not happen */
-      log_msg ("Map name not valid, this cannot happen???");
+      log_msg ("Map name not valid/does not exist, this cannot happen???");
       return FALSE;
     case -1:
       if (debug_flag)
         log_msg ("\t-> Ignored (not a valid source host)");
+      return FALSE;
+    case 0:
+      if (debug_flag)
+        log_msg ("\t-> Ignored (forbidden by securenets)");
       return FALSE;
     default:
       *result = TRUE;
@@ -142,7 +152,7 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
 
       log_msg ("ypproc_match(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
@@ -163,7 +173,7 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
-	  result->stat = YP_YPERR;
+	  result->stat = YP_NOMAP;
 	  break;
 	case -2:
 	  if (debug_flag)
@@ -174,6 +184,16 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid domain)");
 	  result->stat = YP_NODOM;
+	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
+	  break;
+	case -4:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (map name not found)");
+	  result->stat = YP_NOMAP;
 	  break;
 	}
       return TRUE;
@@ -230,7 +250,7 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_first(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
 
@@ -248,7 +268,8 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
-	  result->stat = YP_YPERR;
+	  result->stat = YP_NOMAP;
+	  break;
 	case -2:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid map name)");
@@ -258,6 +279,16 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid domain)");
           result->stat = YP_NODOM;
+	  break;
+	case -4:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (map does not exist)");
+	  result->stat = YP_NOMAP;
+	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
 	  break;
         }
       return TRUE;
@@ -325,7 +356,7 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
 
       log_msg ("ypproc_next(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
@@ -347,7 +378,7 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");
-          result->stat = YP_YPERR;
+          result->stat = YP_NOMAP;
 	  break;
 	case -2:
           if (debug_flag)
@@ -358,6 +389,16 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid domain)");
           result->stat = YP_NODOM;
+	  break;
+	case -4:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (map does not exist)");
+	  result->stat = YP_NOMAP;
+	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
 	  break;
         }
       return TRUE;
@@ -422,7 +463,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 		  struct svc_req *rqstp)
 {
   DB_FILE dbp;
-  struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+  const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
   int valid;
 
   if (debug_flag)
@@ -443,10 +484,18 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
   result->transid = argp->transid;
 
   valid = is_valid (rqstp, argp->map_parms.map, argp->map_parms.domain);
-  if (valid < 1)
+  if (valid < 1 && valid != -4) /* Map does not exist has a special meaning */
     {
       switch (valid)
 	{
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  else
+	    log_msg ("refuse to transfer map from %s",
+		     inet_ntoa (rqhost->sin_addr));
+	  result->xfrstat = YPXFR_REFUSED;
+	  break;
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
@@ -507,7 +556,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
           if ((size_t)val.dsize != strlen (argp->map_parms.peer) ||
               strncmp (val.dptr, argp->map_parms.peer, val.dsize) != 0)
             {
-	      char buf[val.dsize + 1];
+	      char *buf = alloca (val.dsize + 1);
 
 	      strncpy (buf, val.dptr, val.dsize);
 	      buf[val.dsize] = '\0';
@@ -551,9 +600,17 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	    log_msg ("refuse to transfer %s from %s, no trusted master",
 		     argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
 
-	  ypdb_close (dbp);
 	  result->xfrstat = YPXFR_NODOM;
 	  return TRUE;
+	}
+      else
+	{
+	  if (debug_flag)
+	    log_msg ("\t->New map %s from %s (is a trusted master!)",
+		     argp->map_parms.map, argp->map_parms.peer);
+	  else
+	    log_msg ("New map %s from trusted master %s",
+		     argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
 	}
     }
   /* If you wish to allow the transfer of new maps, change the next
@@ -563,9 +620,10 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     {
       /* We doesn't have the map, refuse the transfer */
       if (debug_flag)
-        log_msg ("\t->Ignored (I don't have this map)");
+        log_msg ("\t->Ignored (transfer %s from %s, map doesn't exist local)",
+		 argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
       else
-        log_msg ("refuse to transfer %s from %s, map doesn't exist",
+        log_msg ("refuse to transfer %s from %s, map doesn't exist local",
 		 argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
 
       result->xfrstat = YPXFR_REFUSED;
@@ -573,7 +631,6 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     }
 #endif
 
-  ++children;
   switch (fork ())
     {
     case 0:
@@ -584,13 +641,23 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 
         umask (0);
         i = open ("/dev/null", O_RDWR);
-        dup (i);
-        dup (i);
+        if (dup (i) == -1)
+	  {
+	    int err = errno;
+	    log_msg ("ypxfr execl(): %s", strerror (err));
+	    exit (err);
+	  }
+        if (dup (i) == -1)
+	  {
+	    int err = errno;
+	    log_msg ("ypxfr execl(): %s", strerror (err));
+	    exit (err);
+	  }
 
         sprintf (ypxfr_command, "%s/ypxfr", YPBINDIR);
-        sprintf (t, "%u", argp->transid);
-        sprintf (g, "%u", argp->prog);
-        sprintf (p, "%u", argp->port);
+        snprintf (t, sizeof (t), "%u", argp->transid);
+        snprintf (g, sizeof (g), "%u", argp->prog);
+        snprintf (p, sizeof (p), "%u", argp->port);
         if (debug_flag)
           execl (ypxfr_command, "ypxfr", "--debug", "-d",
                  argp->map_parms.domain, "-h", argp->map_parms.peer,
@@ -605,7 +672,6 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
         exit (0);
       }
     case -1:
-      --children;
       log_msg ("Cannot fork: %s", strerror (errno));
       result->xfrstat = YPXFR_XFRERR;
       break;
@@ -617,13 +683,12 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
   return TRUE;
 }
 
-bool_t ypproc_clear_2_svc (void *argp __attribute__ ((unused)),
-			   void *result __attribute__ ((unused)),
+bool_t ypproc_clear_2_svc (void *argp UNUSED, void *result UNUSED,
 			   struct svc_req *rqstp)
 {
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_clear_2_svc() [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
     }
@@ -725,7 +790,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost;
+      const struct sockaddr_in *rqhost;
 
       rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_all_2_svc(): [From: %s:%d]",
@@ -749,10 +814,15 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
     {
       switch (valid)
 	{
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->ypresp_all_u.val.stat = YP_NOMAP;
+	  break;
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
-	  result->ypresp_all_u.val.stat = YP_YPERR;
+	  result->ypresp_all_u.val.stat = YP_NOMAP;
 	  break;
 	case -2:
 	  if (debug_flag)
@@ -763,55 +833,31 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid domain)");
 	  result->ypresp_all_u.val.stat = YP_NODOM;
+	  break;
+	case -4:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (map does not exist)");
+	  result->ypresp_all_u.val.stat = YP_NOMAP;
+	  break;
 	}
       return TRUE;
     }
 
-  if (children >= MAX_CHILDREN)
+  switch (fork ())
     {
-      int wait = 0;
-
-      while (wait < 3)
-        {
-          sleep (1);
-
-          if (children < MAX_CHILDREN)
-            break;
-          ++wait;
-        }
-    }
-
-  if (children < MAX_CHILDREN)
-    {
-      ++children;
-      switch (fork ())
-        {
-        case 0:
-          ++forked;
+    case 0: /* child */
 #ifdef DEBUG
-          log_msg ("ypserv has forked for ypproc_all(): pid=%i", getpid ());
-          if (!forked)
-            abort ();
+      log_msg ("ypserv has forked for ypproc_all(): pid=%i", getpid ());
 #endif
-          /* Close all databases ! */
-          ypdb_close_all ();
-          break;
-        case -1:
-          --children;
-          log_msg ("WARNING(ypproc_all_2_svc): cannot fork: %s",
-		   strerror (errno));
-          result->ypresp_all_u.val.stat = YP_YPERR;
-          return TRUE;
-        default:
-          return FALSE;
-          break;
-        }
-    }
-  else
-    {
-      log_msg ("WARNING(ypproc_all_2_svc): too many running children!");
+      break;
+    case -1:  /* parent, error */
+      log_msg ("WARNING(ypproc_all_2_svc): cannot fork: %s",
+	       strerror (errno));
       result->ypresp_all_u.val.stat = YP_YPERR;
       return TRUE;
+    default: /* parent, default */
+      return FALSE;
+      break;
     }
 
   /* We are now in the child part. Don't let the child ypserv share
@@ -823,7 +869,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
       log_msg ("ERROR: could not allocate enough memory! [%s|%d]",
 	       __FILE__, __LINE__);
       result->ypresp_all_u.val.stat = YP_YPERR;
-      return TRUE;
+      goto out;
     }
 
   data->dbm = ypdb_open (argp->domain, argp->map);
@@ -862,9 +908,9 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	    log_msg ("\t -> First value returned.");
 
 	  if (result->ypresp_all_u.val.stat == YP_TRUE)
-	    return TRUE; /* We return to commit the data.
-			    This also means, we don't give
-			    data free here */
+	    goto out; /* We return to commit the data.
+			 This also means, we don't give
+			 data free here */
 	}
       else
 	result->ypresp_all_u.val.stat = YP_NOMORE;
@@ -877,7 +923,12 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
   if (debug_flag)
     log_msg ("\t -> Exit from ypproc_all without sending data.");
 
-  return TRUE;
+ out:
+  if (!svc_sendreply (rqstp->rq_xprt, (xdrproc_t) xdr_ypresp_all,
+		      (caddr_t) result))
+    svcerr_systemerr (rqstp->rq_xprt);
+  /* Note: no need to free args; we're exiting.  */
+  _exit(0);
 }
 
 bool_t
@@ -889,7 +940,7 @@ ypproc_master_2_svc (ypreq_nokey *argp, ypresp_master *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
       log_msg ("ypproc_master_2_svc(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
 
@@ -907,7 +958,7 @@ ypproc_master_2_svc (ypreq_nokey *argp, ypresp_master *result,
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");
-	  result->stat = YP_YPERR;
+	  result->stat = YP_NOMAP;
 	  break;
 	case -2:
           if (debug_flag)
@@ -918,6 +969,17 @@ ypproc_master_2_svc (ypreq_nokey *argp, ypresp_master *result,
           if (debug_flag)
             log_msg ("\t-> Ignored (not a domain)");
           result->stat = YP_NODOM;
+	  break;
+	case -4:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (map does not exist)");
+	  result->stat = YP_NOMAP;
+	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
+	  break;
         }
       result->peer = strdup ("");
       return TRUE;
@@ -996,7 +1058,7 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost;
+      const struct sockaddr_in *rqhost;
 
       rqhost = svc_getcaller (rqstp->rq_xprt);
 
@@ -1017,7 +1079,7 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");
-          result->stat = YP_YPERR;
+          result->stat = YP_NOMAP;
 	  break;
 	case -2:
           if (debug_flag)
@@ -1028,6 +1090,16 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid domain)");
           result->stat = YP_NODOM;
+	  break;
+	case -4:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (map does not exist)");
+	  result->stat = YP_NOMAP;
+	  break;
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
 	  break;
         }
       return TRUE;
@@ -1120,7 +1192,7 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
 
   if (debug_flag)
     {
-      struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+      const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
 
       log_msg ("ypproc_maplist_2_svc(): [From: %s:%d]",
 	       inet_ntoa (rqhost->sin_addr), ntohs (rqhost->sin_port));
@@ -1135,12 +1207,20 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
     {
       switch (valid)
 	{
+	case 0:
+	  if (debug_flag)
+	    log_msg ("\t-> Ignored (forbidden by securenets)");
+	  result->stat = YP_NOMAP;
+	  break;
 	case -1:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid source host)");
-          result->stat = YP_YPERR;
+          result->stat = YP_NOMAP;
 	  break;
+	case -4: /* should never happen */
 	case -2: /* should never happen */
+	  result->stat = YP_NOMAP;
+	  break;
 	case -3:
           if (debug_flag)
             log_msg ("\t-> Ignored (not a valid domain)");
@@ -1203,7 +1283,7 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
 }
 
 int
-ypprog_2_freeresult (SVCXPRT *transp __attribute__ ((unused)),
+ypprog_2_freeresult (SVCXPRT *transp UNUSED,
 		     xdrproc_t xdr_result, caddr_t result)
 {
   xdr_free (xdr_result, result);

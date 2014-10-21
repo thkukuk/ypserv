@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,10 +12,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
-
-#define _GNU_SOURCE
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
@@ -24,11 +22,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
 #endif
 
 #include "hash.h"
+#include "compat.h"
 
 #define PARSE_FOR_USERS 0
 #define PARSE_FOR_HOSTS 1
@@ -133,13 +132,16 @@ main (int argc, char **argv)
 
       while (buffer[strlen (buffer) - 1] == '\\')
 	{
+	  char *s;
 #ifdef DEBUG_NETGROUP
-	  fgets (&buffer[strlen (buffer) - 1],
-		 BUFSIZE - strlen (buffer), debug_file);
+	  s = fgets (&buffer[strlen (buffer) - 1],
+		     BUFSIZE - strlen (buffer), debug_file);
 #else
-	  fgets (&buffer[strlen (buffer) - 1],
-		 BUFSIZE - strlen (buffer), stdin);
+	  s = fgets (&buffer[strlen (buffer) - 1],
+		     BUFSIZE - strlen (buffer), stdin);
 #endif
+	  if (s == NULL)
+	    continue;
 	  if ((cptr = strchr (buffer, '\n')) != NULL)
 	    *cptr = '\0';
 	}
@@ -333,7 +335,7 @@ usage (int exit_code)
   exit (exit_code);
 }
 
-int
+static int
 insert_netgroup (hash_t ** liste, const char *key, const char *val)
 {
   hash_t *work;

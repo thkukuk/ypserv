@@ -1,5 +1,5 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003 Thorsten Kukuk
-   Author: Thorsten Kukuk <kukuk@suse.de>
+/* Copyright (c) 1996-2011 Thorsten Kukuk
+   Author: Thorsten Kukuk <kukuk@thkukuk.de>
 
    The YP Server is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -12,10 +12,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
-
-#define _GNU_SOURCE
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
@@ -29,36 +27,38 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <signal.h>
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
-#include <poll.h>
+#endif
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
+#if defined(HAVE_RPC_SVC_SOC_H)
+#include <rpc/svc_soc.h> /* for svcudp_create() */
+#endif /* HAVE_RPC_SVC_SOC_H */
 
 #include "yp.h"
 #include "access.h"
 #include "log_msg.h"
 #include "ypserv_conf.h"
+#include "compat.h"
+#include "pidfile.h"
+#if USE_SLP
+#include "reg_slp.h"
+#endif
 
-#ifdef HAVE_PATHS_H
-#include <paths.h>
-#endif
-#ifndef _PATH_VARRUN
-#define _PATH_VARRUN "/etc/"
-#endif
 #define _YPSERV_PIDFILE _PATH_VARRUN"ypserv.pid"
 
 #ifndef YPOLDVERS
 #define YPOLDVERS 1
 #endif
 
-volatile int children = 0;
-int forked = 0;
-
 static char *path_ypdb = YPMAPDIR;
+static int foreground_flag = 0;
 
 static void
 ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
@@ -184,6 +184,14 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
   memset ((char *) &argument, 0, sizeof (argument));
   if (!svc_getargs (transp, _xdr_argument, (caddr_t) &argument))
     {
+      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+
+      log_msg ("ERROR: Cannot decode arguments for %d from %s",
+	       rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+      /* try to free already allocated memory during decoding.
+	 bnc#471924 */
+      svc_freeargs (transp, _xdr_argument, (caddr_t) &argument);
+
       svcerr_decode (transp);
       return;
     }
@@ -194,196 +202,105 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
 
   if (!svc_freeargs (transp, _xdr_argument, (caddr_t) &argument))
     {
-      fprintf (stderr, "unable to free arguments");
-      exit (1);
+      log_msg ("ERROR: Unable to free arguments");
+      return; /* don't abort */
     }
 
   if (!ypprog_2_freeresult (transp, _xdr_result, (caddr_t) &result))
-    fprintf (stderr, "unable to free results");
+    log_msg ("ERROR: Unable to free results");
 
   return;
 }
 
+#if 0
 static void
-ypserv_svc_run (void)
+mysvc_run (void)
 {
-  int i;
+#ifdef FD_SETSIZE
+  fd_set readfds;
+#else
+  int readfds;
+#endif /* def FD_SETSIZE */
 
   for (;;)
     {
-      struct pollfd *my_pollfd;
-
-      if (svc_max_pollfd == 0 && svc_pollfd == NULL)
-        return;
-
-      my_pollfd = malloc (sizeof (struct pollfd) * svc_max_pollfd);
-      for (i = 0; i < svc_max_pollfd; ++i)
-        {
-          my_pollfd[i].fd = svc_pollfd[i].fd;
-          my_pollfd[i].events = svc_pollfd[i].events;
-          my_pollfd[i].revents = 0;
-        }
-
-      switch (i = poll (my_pollfd, svc_max_pollfd, -1))
+#ifdef FD_SETSIZE
+      readfds = svc_fdset;
+#else
+      readfds = svc_fds;
+#endif /* def FD_SETSIZE */
+      switch (select (_rpc_dtablesize (), &readfds, (fd_set *)NULL,
+		      (fd_set *)NULL, (struct timeval *) 0))
         {
         case -1:
-          free (my_pollfd);
           if (errno == EINTR)
-            continue;
-          syslog (LOG_ERR, "svc_run: - poll failed: %m");
+            {
+              continue;
+            }
+          perror ("svc_run: - select failed");
           return;
         case 0:
-          free (my_pollfd);
           continue;
         default:
-          svc_getreq_poll (my_pollfd, i);
-          free (my_pollfd);
-          if (forked)
-            _exit (0);
+          svc_getreqset (&readfds);
         }
     }
 }
+#endif
 
-
-/* Create a pidfile on startup */
+extern FILE *debug_output;
+/* SIGUSR1: enable/disable debug output.  */
 static void
-create_pidfile (void)
+sig_usr1 (int sig UNUSED)
 {
-  int fd, left, written, flags;
-  pid_t pid;
-  char pbuf[10], *ptr;
-  struct flock lock;
+  int save_errno = errno;
 
-  fd = open (_YPSERV_PIDFILE, O_CREAT | O_RDWR,
-	     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  if (fd < 0)
+  if (debug_flag)
     {
-      log_msg ("cannot create pidfile %s", _YPSERV_PIDFILE);
-      if (debug_flag)
-	log_msg ("\n");
+      debug_flag = 0;
+      if (debug_output != stderr)
+	fclose (debug_output);
+      debug_output = stderr;
     }
-
-  /* Make sure file gets correctly closed when process finished.  */
-  flags = fcntl (fd, F_GETFD, 0);
-  if (flags == -1)
-    {
-      /* Cannot get file flags.  */
-      close (fd);
-      return;
-    }
-  flags |= FD_CLOEXEC;		/* Close on exit.  */
-  if (fcntl (fd, F_SETFD, flags) < 0)
-    {
-      /* Cannot set new flags.  */
-      close (fd);
-      return;
-    }
-
-  lock.l_type = F_WRLCK;
-  lock.l_start = 0;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
-
-  /* Is the pidfile locked by another ypserv ? */
-  if (fcntl (fd, F_GETLK, &lock) < 0)
-    {
-      log_msg ("fcntl error");
-      if (debug_flag)
-	log_msg ("\n");
-    }
-  if (lock.l_type == F_UNLCK)
-    pid = 0;			/* false, not locked by another proc */
   else
-    pid = lock.l_pid;		/* true, return pid of lock owner */
-
-  if (0 != pid)
     {
-      log_msg ("ypserv already running (pid %d) - exiting", pid);
-      if (debug_flag)
-	log_msg ("\n");
-      exit (1);
+      debug_output = fopen ("/var/yp/ypserv.log", "a");
+      if (debug_output != NULL)
+	debug_flag = 1;
     }
-
-  /* write lock */
-  lock.l_type = F_WRLCK;
-  lock.l_start = 0;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
-  if (0 != fcntl (fd, F_SETLK, &lock))
-    log_msg ("cannot lock pidfile");
-  sprintf (pbuf, "%ld\n", (long) getpid ());
-  left = strlen (pbuf);
-  ptr = pbuf;
-  while (left > 0)
-    {
-      if ((written = write (fd, ptr, left)) <= 0)
-	return;			/* error */
-      left -= written;
-      ptr += written;
-    }
-
-  return;
+  errno = save_errno;
 }
 
 /* Clean up if we quit the program. */
 static void
-sig_quit (int sig __attribute__ ((unused)))
+sig_quit (int sig UNUSED)
 {
-#if defined(HAVE_RPCB_UNSET)
-  rpcb_unset (YPPROG, YPVERS, NULL);
-#else
   pmap_unset (YPPROG, YPVERS);
-#endif
   pmap_unset (YPPROG, YPOLDVERS);
   unlink (_YPSERV_PIDFILE);
+#if USE_SLP
+  if (slp_flag)
+    deregister_slp ();
+#endif
 
   exit (0);
 }
 
-/* Reload securenets and config file */
-static void
-sig_hup (int sig __attribute__ ((unused)))
-{
-  int old_cached_filehandles = cached_filehandles;
-
-  load_securenets ();
-  load_config ();
-  /* Don't allow to decrease the number of max. cached files with
-     SIGHUP.  */
-  if (cached_filehandles < old_cached_filehandles)
-    cached_filehandles = old_cached_filehandles;
-}
-
 /* Clean up after child processes signal their termination. */
 static void
-sig_child (int sig)
+sig_child (int sig UNUSED)
 {
-  int st;
-  pid_t pid;
+  int save_errno = errno;
 
-  if (debug_flag)
-    log_msg ("sig_child: got signal %i", sig);
-
-
-  /* Clear all childs */
-  while ((pid = waitpid (-1, &st, WNOHANG)) > 0)
-    {
-      if (debug_flag)
-        log_msg ("pid=%d", pid);
-      --children;
-    }
-
-  if (children < 0)
-    log_msg ("children is lower 0 (%i)!", children);
-  else if (debug_flag)
-    log_msg ("children = %i", children);
+  while (wait3 (NULL, WNOHANG, NULL) > 0)
+    ;
+  errno = save_errno;
 }
-
 
 static void
 Usage (int exitcode)
 {
-  fputs ("usage: ypserv [-d [path]]\n", stderr);
+  fputs ("usage: ypserv [-d] [-p port] [-f|--foreground]\n", stderr);
   fputs ("       ypserv --version\n", stderr);
 
   exit (exitcode);
@@ -392,8 +309,9 @@ Usage (int exitcode)
 int
 main (int argc, char **argv)
 {
-  SVCXPRT *transp;
-  struct sigaction sa;
+  SVCXPRT *transp_udp, *transp_tcp;
+  int my_port = -1, my_socket, result;
+  struct sockaddr_in s_in;
 
   openlog ("ypserv", LOG_PID, LOG_DAEMON);
 
@@ -404,12 +322,14 @@ main (int argc, char **argv)
       static struct option long_options[] = {
 	{"version", no_argument, NULL, 'v'},
 	{"debug", no_argument, NULL, 'd'},
+	{"port", required_argument, NULL, 'p'},
 	{"usage", no_argument, NULL, 'u'},
 	{"help", no_argument, NULL, 'h'},
+	{"foreground", no_argument, NULL, 'f'},
 	{NULL, 0, NULL, '\0'}
       };
 
-      c = getopt_long (argc, argv, "vdbuh", long_options, &option_index);
+      c = getopt_long (argc, argv, "vdp:fbuh", long_options, &option_index);
       if (c == -1)
 	break;
       switch (c)
@@ -420,6 +340,20 @@ main (int argc, char **argv)
 	  return 0;
 	case 'd':
 	  ++debug_flag;
+	  break;
+	case 'p':
+	  my_port = atoi (optarg);
+	  if (my_port <= 0 || my_port > 0xffff) {
+	    /* Invalid port number */
+	    fprintf (stdout, "Warning: ypserv: Invalid port %d (0x%x)\n", 
+			my_port, my_port);
+	    my_port = -1;
+	  }
+	  if (debug_flag)
+	    log_msg ("Using port %d\n", my_port);
+	  break;
+	case 'f':
+	  foreground_flag = 1;
 	  break;
 	case 'u':
 	case 'h':
@@ -436,7 +370,7 @@ main (int argc, char **argv)
 
   if (debug_flag)
     log_msg ("[ypserv (%s) %s]\n", PACKAGE, VERSION);
-  else
+  else if (! foreground_flag)
     {
       int i;
 
@@ -452,7 +386,7 @@ main (int argc, char **argv)
       if (setsid () == -1)
 	{
 	  log_msg ("Cannot setsid: %s\n", strerror (errno));
-	  exit (-1);
+	  exit (1);
 	}
 
       if ((i = fork ()) > 0)
@@ -470,8 +404,22 @@ main (int argc, char **argv)
 
       umask (0);
       i = open ("/dev/null", O_RDWR);
-      dup (i);
-      dup (i);
+      if (i == -1)
+	{
+	  log_msg ("opening /dev/null failed: %s\n", strerror (errno));
+	  exit (1);
+	}
+      /* two dups: stdin, stdout, stderr */
+      if (dup (i) == -1)
+	{
+	  log_msg ("dup failed: %s\n", strerror (errno));
+	  exit (1);
+	}
+      if (dup (i) == -1)
+	{
+	  log_msg ("dup failed: %s\n", strerror (errno));
+	  exit (1);
+	}
     }
 
   if (argc > 0 && debug_flag)
@@ -487,7 +435,7 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  create_pidfile ();
+  create_pidfile (_YPSERV_PIDFILE, "ypserv");
 
   load_securenets ();
   load_config ();
@@ -496,102 +444,150 @@ main (int argc, char **argv)
    * Ignore SIGPIPEs. They can hurt us if someone does a ypcat
    * and then hits CTRL-C before it terminates.
    */
-  sigaction (SIGPIPE, NULL, &sa);
-  sa.sa_handler = SIG_IGN;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGPIPE, &sa, NULL);
+  signal (SIGPIPE, SIG_IGN);
   /*
    * If program quits, give ports free.
    */
-  sigaction (SIGTERM, NULL, &sa);
-  sa.sa_handler = sig_quit;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGTERM, &sa, NULL);
-
-  sigaction (SIGINT, NULL, &sa);
-  sa.sa_handler = sig_quit;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGINT, &sa, NULL);
-
+  signal (SIGTERM, sig_quit);
+  signal (SIGINT, sig_quit);
   /*
-   * If we get a SIGHUP, reload the securenets and config file.
+   * Ignore SIGHUP, it's not safe and we cannot reload all variables
    */
-  sigaction (SIGHUP, NULL, &sa);
-  sa.sa_handler = sig_hup;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGHUP, &sa, NULL);
-
+  signal (SIGHUP, SIG_IGN);
+  /*
+   * If we get a SIGUSR1, enable/disable debuging.
+   */
+  signal (SIGUSR1, sig_usr1);
   /*
    * On SIGCHLD wait for the child process, so it can give free all
    * resources.
    */
-  sigaction (SIGCHLD, NULL, &sa);
-  sa.sa_handler = sig_child;
-  sigemptyset (&sa.sa_mask);
-  sigaction (SIGCHLD, &sa, NULL);
+  signal (SIGCHLD, sig_child);
 
-#if defined(HAVE_RPCB_UNSET)
-  rpcb_unset (YPPROG, YPVERS, NULL);
-#else
   pmap_unset (YPPROG, YPVERS);
-#endif
   pmap_unset (YPPROG, YPOLDVERS);
 
-  transp = svcudp_create (RPC_ANYSOCK);
-  if (transp == NULL)
+  if (my_port >= 0)
+    {
+      my_socket = socket (AF_INET, SOCK_DGRAM, 0);
+      if (my_socket < 0)
+	{
+	  log_msg ("can not create UDP: %s", strerror (errno));
+	  exit (1);
+	}
+
+      memset ((char *) &s_in, 0, sizeof (s_in));
+      s_in.sin_family = AF_INET;
+      s_in.sin_addr.s_addr = htonl (INADDR_ANY);
+      s_in.sin_port = htons (my_port);
+
+      result = bind (my_socket, (struct sockaddr *) &s_in,
+		     sizeof (s_in));
+      if (result < 0)
+	{
+	  log_msg ("ypserv: can not bind UDP: %s ", strerror (errno));
+	  exit (1);
+	}
+    }
+  else
+    my_socket = RPC_ANYSOCK;
+
+  transp_udp = svcudp_create (my_socket);
+  if (transp_udp == NULL)
     {
       log_msg ("cannot create udp service.");
       exit (1);
     }
 
+  if (!svc_register (transp_udp, YPPROG, YPVERS, ypprog_2, IPPROTO_UDP))
+    {
+      log_msg ("unable to register (YPPROG, YPVERS, udp).");
+      svc_destroy (transp_udp);
+      exit (1);
+    }
+
   /* XXX ypprog_2 should be ypprog_1 */
-  if (!svc_register (transp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_UDP))
+  if (!svc_register (transp_udp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_UDP))
     {
       log_msg ("unable to register (YPPROG, YPOLDVERS, udp).");
       exit (1);
     }
 
-#if !defined (HAVE_SVC_CREATE)
-  if (!svc_register (transp, YPPROG, YPVERS, ypprog_2, IPPROTO_UDP))
+  if (my_port >= 0)
     {
-      log_msg ("unable to register (YPPROG, YPVERS, udp).");
-      exit (1);
-    }
-#endif
+      my_socket = socket (AF_INET, SOCK_STREAM, 0);
+      if (my_socket < 0)
+	{
+	  log_msg ("ypserv: can not create TCP: %s", strerror (errno));
+	  exit (1);
+	}
 
-  transp = svctcp_create (RPC_ANYSOCK, 0, 0);
-  if (transp == NULL)
+      memset (&s_in, 0, sizeof (s_in));
+      s_in.sin_family = AF_INET;
+      s_in.sin_addr.s_addr = htonl (INADDR_ANY);
+      s_in.sin_port = htons (my_port);
+
+      result = bind (my_socket, (struct sockaddr *) &s_in,
+		     sizeof (s_in));
+      if (result < 0)
+	{
+	  log_msg ("ypserv: can not bind TCP ", strerror (errno));
+	  exit (1);
+	}
+    }
+  else
+    my_socket = RPC_ANYSOCK;
+
+  transp_tcp = svctcp_create (my_socket, 0, 0);
+  if (transp_tcp == NULL)
     {
       log_msg ("ypserv: cannot create tcp service\n");
+      svc_destroy (transp_udp);
+      exit (1);
+    }
+
+  if (!svc_register (transp_tcp, YPPROG, YPVERS, ypprog_2, IPPROTO_TCP))
+    {
+      log_msg ("ypserv: unable to register (YPPROG, YPVERS, tcp)\n");
+      svc_destroy (transp_udp);
+      svc_destroy (transp_tcp);
       exit (1);
     }
 
   /* XXX ypprog_2 should be ypprog_1 */
-  if (!svc_register (transp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_TCP))
+  if (!svc_register (transp_tcp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_TCP))
     {
       log_msg ("ypserv: unable to register (YPPROG, YPOLDVERS, tcp)\n");
+      svc_destroy (transp_udp);
+      svc_destroy (transp_tcp);
       exit (1);
     }
 
-#if !defined (HAVE_SVC_CREATE)
-  if (!svc_register (transp, YPPROG, YPVERS, ypprog_2, IPPROTO_TCP))
-    {
-      log_msg ("ypserv: unable to register (YPPROG, YPVERS, tcp)\n");
-      exit (1);
-    }
+#if USE_SLP
+  if (slp_flag)
+    register_slp ();
 #endif
 
-#if defined(HAVE_SVC_CREATE)
-  if (!svc_create (ypprog_2, YPPROG, YPVERS, "netpath"))
-    {
-      log_msg ("unable to create (YPPROG, YPVERS) for netpath.");
-      exit (1);
-    }
-#endif
+  /* If we use systemd as an init system, we may want to give it 
+     a message, that this daemon is ready to accept connections.
+     At this time, sockets for receiving connections are already 
+     created, so we can say we're ready now. It is a nop if we 
+     don't use systemd. */
+  announce_ready();
 
-  ypserv_svc_run ();
+#if 0
+  mysvc_run ();
+#else
+  svc_run ();
+#endif
   log_msg ("svc_run returned");
   unlink (_YPSERV_PIDFILE);
+#if USE_SLP
+  if (slp_flag)
+    deregister_slp ();
+#endif
+  svc_destroy (transp_udp);
+  svc_destroy (transp_tcp);
   exit (1);
   /* NOTREACHED */
 }

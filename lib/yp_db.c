@@ -1,4 +1,4 @@
-/* Copyright (c)  2000, 2001, 2002 Thorsten Kukuk
+/* Copyright (c)  2000, 2001, 2002, 2003, 2004, 2009, 2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,20 +12,19 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#define _GNU_SOURCE
 
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <sys/param.h>
 
 #include "ypserv_conf.h"
@@ -35,11 +34,15 @@
 
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
 #elif defined(HAVE_NDBM)
 #include <ndbm.h>
+#elif defined(HAVE_LIBTC)
+#include <tcbdb.h>
 #endif
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
 
 /* Open a GDBM database */
 static GDBM_FILE
@@ -55,6 +58,7 @@ _db_open (const char *domain, const char *map)
 
       dbp = gdbm_open (buf, 0, GDBM_READER, 0, NULL);
 
+      /* XXX dead code, gdbm_cache_value isn't implemented yet */
       if (dbp && gdbm_cache_value >= 0)
 	gdbm_setopt(dbp, GDBM_CACHESIZE, &gdbm_cache_value, sizeof(int));
 
@@ -148,6 +152,121 @@ ypdb_nextkey (DB_FILE file, datum key)
   return tkey;
 }
 
+#elif defined(HAVE_LIBTC)
+
+/*****************************************************
+  The following stuff is for Tokyo Cabinet suport !
+******************************************************/
+
+/* Open a Tokyo Cabinet B+ Tree database */
+static DB_FILE
+_db_open (const char *domain, const char *map)
+{
+  DB_FILE dbp;
+  char buf[MAXPATHLEN + 2];
+  int isok;
+
+  if (strlen (domain) + strlen (map) < MAXPATHLEN)
+    {
+      sprintf (buf, "%s/%s", domain, map);
+
+      dbp = tcbdbnew ();
+      isok = tcbdbopen (dbp, buf, BDBOREADER | BDBONOLCK);
+
+      if (debug_flag && !isok)
+        {
+      	  log_msg ("tcbdbopen: Tokyo Cabinet Error: %s", 
+                   tcbdberrmsg (tcbdbecode (dbp)));
+      	  log_msg ("tcbdbopen: consider rebuilding maps using ypinit");
+      	}
+      else if (debug_flag)
+	log_msg ("\t\t->Returning OK!");
+      if ( !isok )
+	{
+	  /* DB not successful opened. Close database object and set return value to NULL. */
+	  tcbdbdel (dbp);
+	  dbp = NULL;
+	}
+    }
+  else
+    {
+      dbp = NULL;
+      log_msg ("Path too long: %s/%s", domain, map);
+    }
+
+  return dbp;
+}
+
+static inline int
+_db_close (DB_FILE dbp)
+{
+  tcbdbclose (dbp);
+  tcbdbdel (dbp);
+  dbp = NULL;
+  return 0;
+}
+
+datum
+ypdb_firstkey (DB_FILE dbp)
+{
+  datum tkey;
+  BDBCUR *cur;
+  
+  /* In case of error, we return original key */
+  if (!(cur = tcbdbcurnew (dbp)) || !tcbdbcurfirst (cur)
+      || (tkey.dptr = tcbdbcurkey (cur, &tkey.dsize)) == NULL)
+    {
+      tkey.dptr = NULL;
+      tkey.dsize = 0;
+    }
+
+  if (cur)
+    tcbdbcurdel (cur);
+
+  return tkey;
+}
+
+int
+ypdb_exists (DB_FILE dbp, datum key)
+{
+  return tcbdbvnum (dbp, key.dptr, key.dsize) > 0;
+}
+
+datum
+ypdb_nextkey (DB_FILE dbp, datum key)
+{
+  datum tkey;
+  BDBCUR *cur;
+  
+  tkey.dptr = NULL;
+  tkey.dsize = 0;
+  
+  /* In case of error, we return empty key */
+  if (!(cur = tcbdbcurnew (dbp)))
+    return tkey;
+
+  /* We try to jump to key and get next, or we move to the first */
+  if (tcbdbcurjump (cur, key.dptr, key.dsize) && tcbdbcurnext (cur))
+    {
+      if ((tkey.dptr = tcbdbcurkey (cur, &tkey.dsize)) == NULL)
+        tkey.dsize = 0;
+    }
+    
+  tcbdbcurdel (cur);
+  return tkey;
+}
+
+datum
+ypdb_fetch (DB_FILE bdb, datum key)
+{
+  datum res;
+  
+  if ((res.dptr = tcbdbget (bdb, key.dptr, key.dsize, &res.dsize)) == NULL)
+      res.dsize = 0;
+  
+  return res;
+}
+
 #else
 
 #error "No database found or selected!"
@@ -185,11 +304,23 @@ ypdb_close_all (void)
       if (fast_open_files[i].dbp != NULL)
 	{
 	  if (fast_open_files[i].flag & F_OPEN_FLAG)
-	    fast_open_files[i].flag |= F_MUST_CLOSE;
+	    {
+	      if (debug_flag)
+		log_msg ("ypdb_close_all (%s/%s|%d) MARKED_TO_BE_CLOSE",
+			 fast_open_files[i].domain,
+			 fast_open_files[i].map, i);
+	      fast_open_files[i].flag |= F_MUST_CLOSE;
+	    }
 	  else
 	    {
+	      if (debug_flag)
+		log_msg ("ypdb_close_all (%s/%s|%d)",
+			 fast_open_files[i].domain,
+			 fast_open_files[i].map, i);
 	      free (fast_open_files[i].domain);
+	      fast_open_files[i].domain = NULL;
 	      free (fast_open_files[i].map);
+	      fast_open_files[i].map = NULL;
 	      _db_close (fast_open_files[i].dbp);
 	      fast_open_files[i].dbp = NULL;
 	      fast_open_files[i].flag = 0;
@@ -223,7 +354,9 @@ ypdb_close (DB_FILE file)
 				 fast_open_files[i].domain,
 				 fast_open_files[i].map, i);
 		      free (fast_open_files[i].domain);
+		      fast_open_files[i].domain = NULL;
 		      free (fast_open_files[i].map);
+		      fast_open_files[i].map = NULL;
 		      _db_close (fast_open_files[i].dbp);
 		      fast_open_files[i].dbp = NULL;
 		      fast_open_files[i].flag = 0;
@@ -306,7 +439,7 @@ ypdb_open (const char *domain, const char *map)
 	    }
 	}
 
-      /* Search for free entry. I we do not found one, close the LRU */
+      /* Search for free entry. If we do not found one, close the LRU */
       for (i = 0; i < cached_filehandles; i++)
 	{
 #if 0
@@ -325,7 +458,11 @@ ypdb_open (const char *domain, const char *map)
 
 	      if ((fast_open_files[i].dbp = _db_open (domain, map)) == NULL)
 		return NULL;
+	      /* since .dbp is NULL, .domain must be NULL, too */
+	      assert (fast_open_files[i].domain == NULL);
 	      fast_open_files[i].domain = strdup (domain);
+	      /* since .dbp is NULL, .map must be NULL, too */
+	      assert (fast_open_files[i].map == NULL);
 	      fast_open_files[i].map = strdup (map);
 	      fast_open_files[i].flag |= F_OPEN_FLAG;
 
@@ -351,6 +488,12 @@ ypdb_open (const char *domain, const char *map)
 	  {
 	    int j;
 	    Fopen tmp;
+	    DB_FILE dbp;
+
+	    /* Check, if we can open the file. Else there is no reason
+	       to close a cached handle.  */
+	    if ((dbp = _db_open (domain, map)) == NULL)
+	      return NULL;
 
 	    if (debug_flag)
 	      {
@@ -366,7 +509,7 @@ ypdb_open (const char *domain, const char *map)
 	    fast_open_files[i].domain = strdup (domain);
 	    fast_open_files[i].map = strdup (map);
 	    fast_open_files[i].flag = F_OPEN_FLAG;
-	    fast_open_files[i].dbp = _db_open (domain, map);
+	    fast_open_files[i].dbp = dbp;
 
 	    /* LRU: Move the new entry to the first positon */
 	    tmp = fast_open_files[i];

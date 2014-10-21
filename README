@@ -1,5 +1,5 @@
 
-This is version 2.7 of an YP (NIS version 2) Server for Linux, but it
+This is version 2.16 of an YP (NIS version 2) Server for Linux, but it
 also runs under other OS like SunOS 4.1.x, Solaris 2.x, AIX, HP-UX,
 IRIS, Ultrix and OSF1 (alpha).
 
@@ -13,6 +13,8 @@ ftp://ftp.kernel.org/pub/linux/utils/net/NIS
 
 ypserv does not longer have support for tcp_wrappers. You need to
 use /var/yp/securenets to allow/deny queries from other hosts.
+And don't forget to allow localhost access to ypserv! Else ypserv
+will not work correct.
 
 This version has support for the ndbm database from Sun.  gdbm is
 about 3 times faster for most YP functions, except yp_first/yp_next.
@@ -22,7 +24,7 @@ initgroups will need about 22 minutes for a group file with 10.000
 entries and ndbm, with gdbm, only 20 seconds. The load of the server
 is the same, but gdbm needs much more memory for caching.
 
-WARNING: NEVER use libdb1/libdb2 in ndbm compat mode, this does NOT work!
+WARNING: NEVER use libdb1-libdb4 in ndbm compat mode, this does NOT work!
 
 1024 Byte limit in NIS protocoll:
 ---------------------------------
@@ -37,4 +39,4 @@ versions support it.
 For more NIS or NIS+ related stuff, look at
 http://www.linux-nis.org/nis/ or http://www.linux-nis.org/nisplus/
 
-Thorsten Kukuk <kukuk@suse.de>, 4. February 2003
+Thorsten Kukuk <kukuk@thkukuk.de>, 19. May 2005

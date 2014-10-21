@@ -12,19 +12,14 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifndef _LIB_YPXFRD_H_
 #define _LIB_YPXFRD_H_
 
 #include <rpc/rpc.h>
 
-#if 0
-#define _YPMAXDOMAIN 64
-#define _YPMAXMAP 64
-#define _YPMAXPEER 64
-#endif
 #define YPXFRBLOCK 32767
 
 enum xfrstat {
@@ -54,7 +49,9 @@ enum xfr_db_type {
   XFR_DB_OPAQUE = 10,
   XFR_DB_ANY = 11,
   XFR_DB_UNKNOWN = 12,
-  XFR_DB_GNU_GDBM64 = 13
+  XFR_DB_GNU_GDBM64 = 13,
+  XFR_DB_QDBM = 14,
+  XFR_DB_TC = 15
 };
 typedef enum xfr_db_type xfr_db_type;
 
@@ -94,9 +91,10 @@ typedef struct xfr xfr;
 #define YPXFRD_FREEBSD_VERS 1
 
 #define YPXFRD_GETMAP 1
-extern  struct xfr *ypxfrd_getmap_1(ypxfr_mapname *, CLIENT *);
-extern  struct xfr *ypxfrd_getmap_1_svc(ypxfr_mapname *, struct svc_req *);
-extern int ypxfrd_freebsd_prog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
+extern  struct xfr *ypxfrd_getmap_1 (ypxfr_mapname *, CLIENT *);
+extern  struct xfr *ypxfrd_getmap_1_svc (ypxfr_mapname *, struct svc_req *);
+extern  void ypxfrd_freebsd_prog_1 (struct svc_req *, register SVCXPRT *);
+extern  int ypxfrd_freebsd_prog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 extern  bool_t xdr_xfrstat (XDR *, xfrstat*);
 extern  bool_t xdr_xfr_db_type (XDR *, xfr_db_type*);

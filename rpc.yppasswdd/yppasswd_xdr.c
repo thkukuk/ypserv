@@ -21,8 +21,8 @@ xdr_xpasswd(XDR *xdrs, xpasswd *objp)
 {
 	return xdr_string(xdrs, &objp->pw_name, ~0)
 	    && xdr_string(xdrs, &objp->pw_passwd, ~0)
-	    && xdr_int(xdrs, &objp->pw_uid)
-	    && xdr_int(xdrs, &objp->pw_gid)
+	    && xdr_int(xdrs, (int*)&objp->pw_uid) /* cast uid_t* -> int* */
+	    && xdr_int(xdrs, (int*)&objp->pw_gid) /* cast gid_t* -> int* */
 	    && xdr_string(xdrs, &objp->pw_gecos, ~0)
 	    && xdr_string(xdrs, &objp->pw_dir, ~0)
 	    && xdr_string(xdrs, &objp->pw_shell, ~0);

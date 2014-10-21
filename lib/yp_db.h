@@ -5,11 +5,17 @@
 #include "config.h"
 #endif
 
+#include "yp.h"
+
 #define F_ALL   0x01
 #define F_NEXT  0x02
 
+#if defined(HAVE_COMPAT_LIBGDBM)
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
+#endif
 
 #define DB_FILE GDBM_FILE
 #define ypdb_fetch(a,b)  gdbm_fetch(a,b)
@@ -17,7 +23,6 @@
 #define ypdb_free(a) free(a)
 #define ypdb_firstkey(a) gdbm_firstkey(a)
 #define ypdb_nextkey(a,b) gdbm_nextkey(a,b)
-#define ypdb_fetch(a,b) gdbm_fetch(a,b)
 
 #elif defined(HAVE_NDBM)
 
@@ -32,6 +37,19 @@ extern int ypdb_exists (DB_FILE file, datum key);
 #define ypdb_firstkey(a) dbm_firstkey(a)
 extern datum ypdb_nextkey (DB_FILE file, datum key);
 extern datum ypdb_fetch (DB_FILE file, datum key);
+
+#elif defined(HAVE_LIBTC)
+
+#include <tcbdb.h>
+
+#define DB_FILE TCBDB *
+
+#define ypdb_free(a) free(a)
+
+extern int ypdb_exists (DB_FILE file, datum key);
+extern datum ypdb_firstkey (DB_FILE file);
+extern datum ypdb_nextkey (DB_FILE file, datum key);
+extern datum ypdb_fetch (DB_FILE bdb, datum key);
 
 #else
 

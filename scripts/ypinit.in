@@ -156,7 +156,7 @@ then
 	exit 1
 fi
 
-if [ -z "$DOMAIN" ]
+if [ "${DOMAIN}x" = "x" ] || [ "${DOMAIN}" = "(none)" ]
 then
 	echo "The local host's domain name hasn't been set.  Please set it."
 	exit 1

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2003 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2003, 2005, 2006 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -13,8 +13,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -82,7 +82,8 @@ load_securenets (void)
       memset (buf1, 0, sizeof (buf1));
       memset (buf2, 0, sizeof (buf2));
       memset (buf3, 0, sizeof (buf3));
-      fgets (buf3, 128, in);
+      if (fgets (buf3, 128, in) == NULL)
+	continue;
       line++;
 
       if (buf3[0] == '\0' || buf3[0] == '#' || buf3[0] == '\n')
@@ -153,8 +154,16 @@ load_securenets (void)
       tmp = securenets;
       while (tmp)
 	{
-	  log_msg ("Find securenet: %s %s", inet_ntoa (tmp->netmask),
-		   inet_ntoa (tmp->network));
+	  char *p1 = strdup (inet_ntoa (tmp->netmask));
+	  char *p2 = strdup (inet_ntoa (tmp->network));
+
+	  if (p1 != NULL && p2 != NULL)
+	    {
+	      log_msg ("Find securenet: %s %s", p1, p2);
+	      free (p1);
+	      free (p2);
+	    }
+
 	  tmp = tmp->next;
 	}
     }

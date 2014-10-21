@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001, 2002  Thorsten Kukuk
+/* Copyright (c) 2000-2005, 2011  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,34 +12,49 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#define _GNU_SOURCE
-
 #include <unistd.h>
 #include <syslog.h>
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
+#endif /* HAVE_GETOPT_H */
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/param.h>
 #include "log_msg.h"
 #include "yp.h"
 #include "ypxfr.h"
 #include "ypxfrd.h"
 #include <rpcsvc/ypclnt.h>
+#if defined(HAVE_RPC_CLNT_SOC_H)
+#include <rpc/clnt_soc.h> /* for clntudp_create() */
+#endif /* HAVE_RPC_CLNT_SOC_H */
+#include "compat.h"
 
+#if defined(HAVE_COMPAT_LIBGDBM)
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
+#endif
 
 #define ypdb_store gdbm_store
 #define YPDB_REPLACE GDBM_REPLACE
@@ -54,6 +69,45 @@ static GDBM_FILE dbm;
 #define ypdb_close dbm_close
 #define ypdb_fetch dbm_fetch
 static DBM *dbm;
+#elif defined(HAVE_LIBTC)
+#include <tcbdb.h>
+
+#define YPDB_REPLACE 1
+
+static inline int
+ypdb_close (TCBDB *dbp)
+{
+  tcbdbclose (dbp);
+  tcbdbdel (dbp);
+  dbp = NULL;
+  return 0;
+}
+
+static int
+ypdb_store (TCBDB *dbm, datum key, datum data, int mode)
+{
+  if (mode != YPDB_REPLACE)
+    return 1;
+
+  return !tcbdbput(dbm, key.dptr, key.dsize, data.dptr, data.dsize);
+}
+
+static datum
+ypdb_fetch (TCBDB *bdb, datum key)
+{
+  datum res;
+  
+  if (!(res.dptr = tcbdbget(bdb, key.dptr, key.dsize, &res.dsize)))
+    {
+      res.dptr = NULL;
+      res.dsize = 0;
+    }
+  
+  return res;
+}
+
+static TCBDB *dbm;
+
 #endif
 
 #ifndef YPMAPDIR
@@ -188,7 +242,7 @@ xdr_ypxfr_xfr (XDR *xdrs, xfr *objp)
     }
 }
 
-int
+static int
 ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
 {
   CLIENT *clnt;
@@ -233,6 +287,16 @@ ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
   req.xfr_db_type = XFR_DB_BSD_NDBM;
   req.xfr_byte_order = XFR_ENDIAN_ANY;
 #endif
+#elif defined (HAVE_LIBQDBM)
+  req.xfr_db_type = XFR_DB_QDBM;
+#if defined(WORDS_BIGENDIAN)
+  req.xfr_byte_order = XFR_ENDIAN_BIG;
+#else
+  req.xfr_byte_order = XFR_ENDIAN_LITTLE;
+#endif
+#elif defined (HAVE_LIBTC)
+  req.xfr_db_type = XFR_DB_TC;
+  req.xfr_byte_order = XFR_ENDIAN_ANY;
 #endif
   memset (&resp, 0, sizeof (resp));
 
@@ -276,11 +340,11 @@ error:
 #if defined(__NetBSD__)
 static int
 ypxfr_foreach (u_long status, char *key, int keylen,
-               char *val, int vallen, void *data __attribute__ ((unused)))
+               char *val, int vallen, void *data UNUSED)
 #else
 static int
 ypxfr_foreach (int status, char *key, int keylen,
-               char *val, int vallen, char *data __attribute__ ((unused)))
+               char *val, int vallen, char *data UNUSED)
 #endif
 {
   datum outKey, outData;
@@ -345,8 +409,9 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   CLIENT *clnt_udp;
   struct sockaddr_in sockaddr, sockaddr_udp;
   struct ypresp_order resp_order;
+  struct ypresp_master resp_master;
   struct ypreq_nokey req_nokey;
-  uint32_t masterOrderNum;
+  time_t masterOrderNum;
   struct hostent *h;
   int sock, result;
 
@@ -377,8 +442,6 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       h = gethostbyname (source_host);
       if (!h)
 	return YPXFR_RSRC;
-      master_host = alloca (strlen (source_host) + 1);
-      strcpy (master_host, source_host);
     }
   else
     {
@@ -388,10 +451,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 
       if (yp_master (source_domain, map, &master_name))
         return YPXFR_MADDR;
-      master_host = alloca (strlen (master_name) + 1);
-      strcpy (master_host, master_name);
+      h = gethostbyname (master_name);
       free (master_name);
-      h = gethostbyname (master_host);
       if (!h)
 	return YPXFR_RSRC;
     }
@@ -408,18 +469,59 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
     }
 
   /* We cannot use the libc functions since we don't know which host
+     they use. So query the host we must use to get the official master
+     server name for the map on the master host. */
+  req_nokey.domain = source_domain;
+  req_nokey.map = map;
+  memset (&resp_master, 0, sizeof (resp_master));
+  if (ypproc_master_2 (&req_nokey, &resp_master, clnt_udp) != RPC_SUCCESS)
+    {
+      log_msg (clnt_sperror (clnt_udp, "ypproc_master_2"));
+      clnt_destroy (clnt_udp);
+      return YPXFR_YPERR;
+    }
+  else if (resp_master.stat != YP_TRUE)
+    {
+      clnt_destroy (clnt_udp);
+      switch (resp_master.stat)
+	{
+	case YP_NOMAP:
+	  return YPXFR_NOMAP;
+	case YP_NODOM:
+	  return YPXFR_NODOM;
+	case YP_BADDB:
+	  return YPXFR_DBM;
+	case YP_YPERR:
+	  return YPXFR_YPERR;
+	case YP_BADARGS:
+	  return YPXFR_BADARGS;
+	default:
+	  log_msg ("ERROR: not expected value: %s", resp_master.stat);
+	  return YPXFR_XFRERR;
+	}
+    }
+  else
+    {
+      master_host = alloca (strlen (resp_master.peer) + 1);
+      strcpy (master_host, resp_master.peer);
+      xdr_free ((xdrproc_t) xdr_ypresp_master, (caddr_t) &resp_master);
+    }
+
+  /* We cannot use the libc functions since we don't know which host
      they use. So query the host we must use to get the order number
      for the map on the master host. */
   req_nokey.domain = source_domain;
   req_nokey.map = map;
+  memset (&resp_order, 0, sizeof (resp_order));
   if (ypproc_order_2 (&req_nokey, &resp_order, clnt_udp) != RPC_SUCCESS)
     {
-      log_msg (clnt_sperror (clnt_udp, "masterOrderNum"));
+      log_msg (clnt_sperror (clnt_udp, "ypproc_order_2"));
       masterOrderNum = time (NULL); /* We set it to the current time.
                                        So a new map will be always newer. */
     }
   else if (resp_order.stat != YP_TRUE)
     {
+      clnt_destroy (clnt_udp);
       switch (resp_order.stat)
 	{
 	case YP_NOMAP:
@@ -440,19 +542,26 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   else
     {
       masterOrderNum = resp_order.ordernum;
-      xdr_free ((xdrproc_t) xdr_ypresp_order, (char *) &resp_order);
+      xdr_free ((xdrproc_t) xdr_ypresp_order, (caddr_t) &resp_order);
     }
 
   /* If we doesn't force the map, look, if the new map is really newer */
   if (!force)
     {
-      uint32_t localOrderNum = 0;
+      time_t localOrderNum = 0;
       datum inKey, inVal;
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
       dbm = gdbm_open (dbName_orig, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
-      dbm = dbm_open (dbName_orig, O_CREAT|O_RDWR, 0600);
+      dbm = dbm_open (dbName_orig, O_RDONLY, 0600);
+#elif defined(HAVE_LIBTC)
+      dbm = tcbdbnew ();
+      if (!tcbdbopen (dbm, dbName_orig, BDBOREADER | BDBONOLCK))
+        {
+          tcbdbdel (dbm);
+          dbm = NULL;
+        }
 #endif
       if (dbm == NULL)
         {
@@ -504,16 +613,24 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 
   /* Try to use ypxfrd for getting the new map. If it fails, use the old
      method. */
-  if ((result = ypxfrd_transfer (master_host, map, target_domain, dbName_temp)) != 0)
+  if ((result = ypxfrd_transfer (master_host, map,
+				 target_domain, dbName_temp)) != 0)
     {
       /* No success with ypxfrd, get the map entry by entry */
       char orderNum[255];
       CLIENT *clnt_tcp;
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
       dbm = gdbm_open (dbName_temp, 0, GDBM_NEWDB, 0600, NULL);
 #elif defined(HAVE_NDBM)
       dbm = dbm_open (dbName_temp, O_CREAT|O_RDWR, 0600);
+#elif defined(HAVE_LIBTC)
+      dbm = tcbdbnew ();
+      if (!tcbdbopen (dbm, dbName_orig, BDBOWRITER | BDBOCREAT | BDBOTRUNC))
+        {
+          tcbdbdel (dbm);
+          dbm = NULL;
+        }
 #endif
       if (dbm == NULL)
         {
@@ -530,9 +647,10 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
         {
           ypdb_close (dbm);
           unlink (dbName_temp);
+	  clnt_destroy (clnt_udp);
           return YPXFR_DBM;
         }
-      snprintf (orderNum, sizeof (orderNum), "%d", masterOrderNum);
+      snprintf (orderNum, sizeof (orderNum), "%ld", (long)masterOrderNum);
       outKey.dptr = "YP_LAST_MODIFIED";
       outKey.dsize = strlen (outKey.dptr);
       outData.dptr = orderNum;
@@ -541,6 +659,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
         {
           ypdb_close (dbm);
           unlink (dbName_temp);
+	  clnt_destroy (clnt_udp);
           return YPXFR_DBM;
         }
 
@@ -551,6 +670,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       req_key.map = map;
       req_key.key.keydat_val = "YP_INTERDOMAIN";
       req_key.key.keydat_len = strlen ("YP_INTERDOMAIN");
+      memset (&resp_val, 0, sizeof (resp_val));
       if (ypproc_match_2 (&req_key, &resp_val, clnt_udp) != RPC_SUCCESS)
         {
           clnt_perror (clnt_udp, "ypproc_match(YP_INTERDOMAIN)");
@@ -574,8 +694,9 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
                   unlink (dbName_temp);
                   return YPXFR_DBM;
                 }
+	      xdr_free ((xdrproc_t) xdr_ypresp_val,
+			(char *) &resp_val);
             }
-          xdr_free ((xdrproc_t) xdr_ypresp_val, (char *) &resp_val);
         }
 
       /* Get the YP_SECURE field. */
@@ -583,6 +704,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       req_key.map = map;
       req_key.key.keydat_val = "YP_SECURE";
       req_key.key.keydat_len = strlen ("YP_SECURE");
+      memset (&resp_val, 0, sizeof (resp_val));
       if (ypproc_match_2 (&req_key, &resp_val, clnt_udp) != RPC_SUCCESS)
         {
           clnt_perror (clnt_udp, "yproc_match");
@@ -606,8 +728,9 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
                   unlink (dbName_temp);
                   return YPXFR_DBM;
                 }
+	      xdr_free ((xdrproc_t) xdr_ypresp_val,
+			(char *) &resp_val);
             }
-          xdr_free ((xdrproc_t) xdr_ypresp_val, (char *) &resp_val);
         }
 
       /* We don't need clnt_udp any longer, give it free */
@@ -627,6 +750,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
         req_nokey.domain = source_domain;
         req_nokey.map = map;
         xdr_ypall_callback = &callback;
+	memset (&resp_all, 0, sizeof (resp_all));
         if (ypproc_all_2 (&req_nokey, &resp_all, clnt_tcp) != RPC_SUCCESS)
           {
             clnt_perror (clnt_tcp, "ypall");
@@ -655,7 +779,12 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
     }
 
   if (result == 0)
-    rename (dbName_temp, dbName_orig);
+    {
+#if defined(HAVE_LIBTC)
+      chmod(dbName_temp, S_IRUSR|S_IWUSR);
+#endif
+      rename (dbName_temp, dbName_orig);
+    }
   else
     unlink(dbName_temp);
 
@@ -684,7 +813,7 @@ main (int argc, char **argv)
   struct in_addr remote_addr;
   unsigned int transid = 0;
   unsigned short int remote_port = 0;
-  uint32_t program_number = 0;
+  unsigned long program_number = 0;
   int force = 0;
   int noclear = 0;
 
@@ -695,6 +824,8 @@ main (int argc, char **argv)
     openlog ("ypxfr", LOG_PID, LOG_DAEMON);
   else
     debug_flag = 1;
+
+  memset (&remote_addr, 0, sizeof (remote_addr));
 
   while (1)
     {
@@ -774,10 +905,22 @@ main (int argc, char **argv)
   argv += optind;
 
   if (target_domain == NULL)
-    yp_get_default_domain (&target_domain);
+    {
+      if (yp_get_default_domain (&target_domain) != 0)
+	{
+	  log_msg ("Cannot get default domain");
+	  exit (1);
+	}
+
+      if (target_domain == NULL)
+	{
+	  log_msg ("Please specify domainname");
+	  exit (1);
+	}
+    }
 
   if (source_domain == NULL)
-    source_domain = target_domain;
+      source_domain = target_domain;
 
   for (; *argv; argv++)
     {

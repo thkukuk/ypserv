@@ -107,7 +107,9 @@ enum xfr_db_type {
 	XFR_DB_OPAQUE		= 10,	/* Mystery format -- just pass along */
 	XFR_DB_ANY		= 11,	/* I'll take any format you've got */
 	XFR_DB_UNKNOWN		= 12,	/* Unknown format */
-	XFR_DB_GNU_GDBM64	= 13	/* GNU GDBM, 64 bit platforms */
+	XFR_DB_GNU_GDBM64	= 13,	/* GNU GDBM, 64 bit platforms */
+	XFR_DB_QDBM		= 14,	/* QDBM */
+	XFR_DB_TC		= 15	/* Tokyo Cabinet DB */s
 };
 
 /*

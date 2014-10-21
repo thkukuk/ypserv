@@ -1,10 +1,9 @@
-/* Copyright (C) 1997, 1998, 1999, 2000, 2002, 2003 Thorsten Kukuk
+/* Copyright (C) 1997, 1998, 1999, 2000, 2002, 2003, 2009 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
 
    The YP Server is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,8 +12,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -31,12 +30,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#if defined(HAVE_SYSTEMD_SD_DAEMON_H)
+#include <systemd/sd-daemon.h>
+#endif
 
 #include "log_msg.h"
 #include "ypserv_conf.h"
 #include "access.h"
 #include "yp_db.h"
 #include "yp.h"
+#include "compat.h"
 
 static conffile_t *conf = NULL;
 
@@ -125,12 +128,13 @@ is_valid_domain (const char *domain)
    return  0, if securenets does not allow access from this host
    return -1, if request comes from an unauthorized host
    return -2, if the map name is not valid
-   return -3, if the domain is not valid */
+   return -3, if the domain is not valid
+   return -4, if the map does not exist */
 
 int
 is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 {
-  struct sockaddr_in *sin;
+  const struct sockaddr_in *sin;
   int status;
   static unsigned long int oldaddr = 0;		/* so we dont log multiple times */
   static int oldstatus = -1;
@@ -189,8 +193,8 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 		  status = -1;
 	      ypdb_close (dbp);
 	    }
-	  else
-	    status = -2;
+          else
+              status = -4;
 	}
     }
 
@@ -201,8 +205,8 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
     }
   else
     {
-      if (status < 1 && ((sin->sin_addr.s_addr != oldaddr)
-			 || (status != oldstatus)))
+      if ((status < 1 && status != -4) &&
+	  ((sin->sin_addr.s_addr != oldaddr) || (status != oldstatus)))
 	syslog (LOG_WARNING,
 		"refused connect from %s:%d to procedure %s (%s,%s;%d)\n",
 		inet_ntoa (sin->sin_addr), ntohs (sin->sin_port),
@@ -213,4 +217,26 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
   oldstatus = status;
 
   return status;
+}
+
+/* Send a messages to systemd daemon, that inicialization of daemon
+   is finished and daemon is ready to accept connections.
+   It is a nop if we don't use systemd. */
+void
+announce_ready()
+{
+#if USE_SD_NOTIFY
+  int result;
+
+  result = sd_notifyf(0, "READY=1\n"
+                         "STATUS=Processing requests...\n"
+                         "MAINPID=%lu", (unsigned long) getpid());
+
+  /* Return code from sd_notifyf can be ignored, as per sd_notifyf(3).
+     However, if we use systemd's native unit file, we need to send 
+     this message to let systemd know that daemon is ready.
+     Thus, we want to know that the call had some issues. */
+  if (result < 0)
+    log_msg ("sd_notifyf failed: %s\n", strerror(-result));
+#endif
 }

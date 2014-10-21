@@ -1,10 +1,9 @@
-/* Copyright (c) 1996,1997, 1998, 1999, 2000, 2002 Thorsten Kukuk
+/* Copyright (c) 1996-2006, 2011 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
 
    The YP Server is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,27 +12,30 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
-
-#define _GNU_SOURCE
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
 
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif /* HAVE_ALLOCA_H */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif /* HAVE_GETOPT_H */
 #include <fcntl.h>
 #include <ctype.h>
 #include <netdb.h>
 #include <rpc/rpc.h>
 
 #include "yp.h"
+#include "compat.h"
 
 #if defined (__NetBSD__) || (defined(__GLIBC__) && (__GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 /* <rpc/rpc.h> is missing the prototype */
@@ -43,9 +45,13 @@ int callrpc (char *host, u_long prognum, u_long versnum, u_long procnum,
 #include <sys/param.h>
 #include <sys/time.h>
 
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
 
+#if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
+#elif defined(HAVE_LIBQDBM)
+#include <hovel.h>
+#endif
 
 #define ypdb_store gdbm_store
 #define YPDB_REPLACE GDBM_REPLACE
@@ -60,6 +66,30 @@ static GDBM_FILE dbm;
 #define YPDB_REPLACE DBM_REPLACE
 #define ypdb_close dbm_close
 static DBM *dbm;
+
+#elif defined (HAVE_LIBTC)
+
+#include <tcbdb.h>
+
+#define YPDB_REPLACE 1
+
+static TCBDB *dbm;
+
+static inline int
+ypdb_store(TCBDB *dbm, datum key, datum data, int mode)
+{
+  if (mode != YPDB_REPLACE)
+    return 1;
+
+  return !tcbdbput(dbm, key.dptr, key.dsize, data.dptr, data.dsize);
+}
+
+static inline void
+ypdb_close (TCBDB *dbm)
+{
+  tcbdbclose (dbm);
+  tcbdbdel (dbm);
+}
 
 #else
 
@@ -118,10 +148,17 @@ create_file (char *fileName, char *dbmName, char *masterName,
 
   filename = calloc (1, strlen (dbmName) + 3);
   sprintf (filename, "%s~", dbmName);
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (filename, 0, GDBM_NEWDB | GDBM_FAST, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (filename, O_CREAT | O_RDWR, 0600);
+#elif defined(HAVE_LIBTC)
+  dbm = tcbdbnew();
+  if (!tcbdbopen(dbm, filename, BDBOWRITER | BDBOCREAT))
+  {
+    tcbdbdel(dbm);
+    dbm = NULL;
+  }
 #endif
   if (dbm == NULL)
     {
@@ -261,7 +298,8 @@ create_file (char *fileName, char *dbmName, char *masterName,
 	      char *nkey = NULL;
 	      size_t nkeylen = 0;
 #ifdef HAVE_GETLINE
-	      getline (&nkey, &nkeylen, input);
+	      if (getline (&nkey, &nkeylen, input) == -1)
+		break;
 #elif HAVE_GETDELIM
 	      getdelim (&nkey, &nkeylen, '\n', input);
 #else
@@ -381,6 +419,9 @@ create_file (char *fileName, char *dbmName, char *masterName,
 	{
 	  while (*cptr && *cptr != '\t')
 	    ++cptr;
+	  /* But a key should not end with a space.  */
+	  while (cptr[-1] == ' ')
+	    --cptr;
 	}
 
       *cptr++ = '\0';
@@ -447,26 +488,40 @@ create_file (char *fileName, char *dbmName, char *masterName,
 #endif
 #else
   unlink (dbmName);
+#if defined(HAVE_LIBTC)
+	  chmod(filename, S_IRUSR|S_IWUSR);
+#endif
   rename (filename, dbmName);
 #endif
   free (filename);
+
+  if (strcmp (fileName, "-") != 0)
+    fclose (input);
 }
 
 static void
 dump_file (char *dbmName)
 {
   datum key, data;
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   dbm = gdbm_open (dbmName, 0, GDBM_READER, 0600, NULL);
 #elif defined(HAVE_NDBM)
   dbm = dbm_open (dbmName, O_RDONLY, 0600);
+#elif defined(HAVE_LIBTC)
+  dbm = tcbdbnew();
+  if (!tcbdbopen (dbm, dbmName, BDBOREADER | BDBONOLCK))
+  {
+    tcbdbdel(dbm);
+    dbm = NULL;
+  }
 #endif
   if (dbm == NULL)
     {
       fprintf (stderr, "makedbm: Cannot open %s\n", dbmName);
+      fprintf (stderr, "makedbm: Consider rebuilding maps using ypinit\n");
       exit (1);
     }
-#if defined(HAVE_LIBGDBM)
+#if defined(HAVE_COMPAT_LIBGDBM)
   for (key = gdbm_firstkey (dbm); key.dptr; key = gdbm_nextkey (dbm, key))
     {
       data = gdbm_fetch (dbm, key);
@@ -476,7 +531,7 @@ dump_file (char *dbmName)
 	  perror (dbmName);
 	  exit (1);
 	}
-      printf ("%.*s %.*s\n",
+      printf ("%.*s\t%.*s\n",
 	      key.dsize, key.dptr,
 	      data.dsize, data.dptr);
       free (data.dptr);
@@ -492,11 +547,37 @@ dump_file (char *dbmName)
 	  perror (dbmName);
 	  exit (1);
 	}
-      printf ("%.*s %.*s\n",
+      printf ("%.*s\t%.*s\n",
 	      key.dsize, key.dptr,
 	      data.dsize, data.dptr);
       key = dbm_nextkey (dbm);
     }
+#elif defined(HAVE_LIBTC)
+  {
+    BDBCUR *cur;
+    cur = tcbdbcurnew (dbm);
+    if (tcbdbcurfirst (cur))
+      {
+        while ((key.dptr = tcbdbcurkey (cur, &key.dsize)) != NULL)
+          {
+            data.dptr = tcbdbcurval (cur, &data.dsize);
+            if (!data.dptr)
+	      {
+	        fprintf (stderr, "Error:\n");
+	        perror (dbmName);
+	        exit (1);
+              }
+            
+            printf ("%.*s\t%.*s\n",
+                  key.dsize, key.dptr,
+                  data.dsize, data.dptr);
+	  
+            if (!tcbdbcurnext (cur))
+              break;
+          }
+      }
+    tcbdbcurdel (cur);
+  }
 #endif
   ypdb_close (dbm);
 }

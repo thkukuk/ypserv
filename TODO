@@ -7,8 +7,3 @@ Things to do (in no particular order):
 
 	o IP numbers in ypserver file doesn't work
 
-	o Rewrite makedbm
-
-	o Cracklib support for rpc.yppasswdd? (rpasswdd should
-	  be used instead)
-

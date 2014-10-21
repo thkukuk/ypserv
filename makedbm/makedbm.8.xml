@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='makedbm'>
+
+  <refmeta>
+    <refentrytitle>makedbm</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>makedbm</refname>
+    <refpurpose>create or dump a ypserv database file</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+  <refsynopsisdiv id='synopsis'>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/makedbm</command>    
+      <group choice='opt'><arg choice='plain'>-a </arg><arg choice='plain'>-r </arg></group>
+      <arg choice='opt'>-b </arg>
+      <arg choice='opt'>-c </arg>
+      <arg choice='opt'>-s </arg>
+      <arg choice='opt'>-l </arg>
+      <arg choice='opt'>-i <replaceable>YP_INPUT_NAME</replaceable></arg>
+      <arg choice='opt'>-o <replaceable>YP_OUTPUT_NAME</replaceable></arg>
+      <arg choice='opt'>-m <replaceable>YP_MASTER_NAME</replaceable></arg>
+      <arg choice='plain'><replaceable>inputfile</replaceable></arg>
+      <arg choice='plain'><replaceable>dbname</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/makedbm</command>    
+      <arg choice='plain'>-u <replaceable>dbname</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/makedbm</command>    
+      <arg choice='plain'>-c </arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/makedbm</command>    
+      <arg choice='plain'>--version </arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+
+<refsect1 id='description'><title>DESCRIPTION</title>
+<para><emphasis remap='B'>makedbm</emphasis>
+takes the inputfile and converts it to a ypserv database file. In the
+moment, GDBM is used as database. Each line of the input file is converted
+to a single record. All characters up to the first TAB or SPACE are the key,
+and the rest of the line is the data.
+<emphasis remap='B'>makedbm</emphasis>
+does not treat `#' as a special character.</para>
+</refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><option>-a</option></term>
+  <listitem>
+<para>Special support for mail aliases. We couldn't use sendmail for it, since
+sendmail uses db, but ypserv gdbm as database format.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-b</option></term>
+  <listitem>
+<para>Insert the
+<emphasis remap='B'>YP_INTERDOMAIN</emphasis>
+into the output.  This key causes
+<citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+to use
+<emphasis remap='B'>DNS</emphasis>
+for host name and address lookups for hosts not found in the maps.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-c</option></term>
+  <listitem>
+<para>send a
+<emphasis remap='B'>YPPROC_CLEAR</emphasis>
+to the local
+<citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+This causes ypserv to invalidate all cached entries.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-l</option></term>
+  <listitem>
+<para>Convert the keys of the given map to lower case.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-i</option><replaceable> YP_INPUT_NAME</replaceable></term>
+  <listitem>
+<para>Create a special entry with the key
+<emphasis remap='B'>YP_INPUT_NAME</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-m</option><replaceable> YP_MASTER_NAME</replaceable></term>
+  <listitem>
+<para>Create a special entry with the key
+<emphasis remap='B'>YP_MASTER_NAME</emphasis>.
+If no master host name is specified,
+<emphasis remap='B'>YP_MASTER_NAME</emphasis>
+will be set to the local host name.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-o</option><replaceable> YP_OUTPUT_NAME</replaceable></term>
+  <listitem>
+<para>Create a special entry with the key
+<emphasis remap='B'>YP_OUTPUT_NAME</emphasis>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-r</option></term>
+  <listitem>
+<para>Handle `#' as comment sign and remove the comment.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-s</option></term>
+  <listitem>
+<para>Secure map. Accept connections from secure
+<emphasis remap='B'>NIS</emphasis>
+networks only (reserved ports).</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-u</option><replaceable> dbname</replaceable></term>
+  <listitem>
+<para>Dump a ypserv database file. Prints out the file in text format, one entry
+per line, with a single space separating keys from values.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>--no-limit-check</option></term>
+  <listitem>
+<para>Don't check for NIS key and data limit.</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
+</refsect1>
+
+  <refsect1 id='author'>
+    <title>AUTHOR</title>
+    <para>
+      <command>makedbm</command> was written by
+      Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;.
+    </para>
+  </refsect1>
+</refentry>
+

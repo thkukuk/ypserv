@@ -1,8 +1,112 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2003 Thorsten Kukuk
+Copyright (C) 1998-2013 Thorsten Kukuk
 
-Please send bug reports, questions and suggestions to <kukuk@suse.de>.
+Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
+
+
+Version 2.32.1
+* Adjust for systemd >= 209
+
+Version 2.32
+* Update autoconf/automake
+* ypserv: remove broken SIGHUP support.
+* /var/yp/Makefile: read MINUID/MINGID from /etc/login.defs
+
+Version 2.31
+* Fix build failures
+
+Version 2.30
+* Add systemd support
+
+Version 2.29
+* Fix memory leaks in error case in rpc.yppasswdd and rpc.ypxfrd
+
+Version 2.28
+* Add support for tokyocabinet (gdbm replacement)
+* Lot of small bug fixes
+
+Version 2.27
+* qdbm support was added
+* Lot of small bug fixes
+
+Version 2.26
+* ypserv: Fix trusted_master option
+* mknetid: Fix group parsing
+
+Version 2.25
+* Lot of small bug fixes/improved error handling
+
+Version 2.24
+* rpc.yppasswdd: Fix -x option
+
+Version 2.23
+* rpc.ypxfrd creates now a pid file
+
+Version 2.22
+* Update ypserv.8 manual page
+* Fix possible memory corruption bug
+
+Version 2.21
+* Better handling of RPC decoding errors
+
+Version 2.20
+* Manual page cleanup
+* Add some sanity checks
+
+Version 2.19
+* Fix ypxfr crashes
+* Fix ypserv crash if own hostname is not resolveable
+
+Version 2.18
+* rpc.yppasswdd: Fix possible buffer overflow with -x/-E option
+
+Version 2.17
+* Fix debug output
+* Don't ignore securenets for ypserv domain functions
+
+Version 2.16
+* Fix signal handlers
+* Fix HP-UX support
+
+Version 2.15
+* makedbm: Use correct seperator if dumping databases
+* rcp.yppasswdd, rpc.ypxfrd, yppush, ypserv: Compile with -fpie
+
+Version 2.14
+* ypxfr: Fix problems with fetching maps from SGI ypserv
+
+Version 2.13
+* ypserv: Set SLP domain attribute if configured
+* ypserv: Fix memory leak if file cache is too small
+
+Version 2.12.2
+* ypserv: Refresh SLP registering after some time
+* ypserv: Fixes for creating services.byservicename
+
+Version 2.12.1
+* ypserv: Change SLP URL to service:ypserv
+
+Version 2.12
+* ypserv: Fix compatibility problems with Solaris 9
+
+Version 2.11
+* ypserv: Add SLP support
+* ypxfr: Fix seg.fault
+* yppush: Add support for fix port
+
+Version 2.10
+* ypserv: Remove fork limit
+* ypserv: Save/restore errno in signal handler
+* makedbm: Remove spaces from end of key
+
+Version 2.9
+* ypxfr: query ypserv for correct master name
+* Make it more portable
+* Make number of allowed childs a compile time option
+* Use system svc_run()
+* Fix return code for wrong/invalid map- and domainname
+* Make source code more portable
 
 Version 2.8
 * Fix compiler warnings

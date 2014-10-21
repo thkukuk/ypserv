@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1999, 2001 Thorsten Kukuk
+/* Copyright (c) 1996, 1999, 2001, 2009 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,12 +12,13 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifndef _MKNETID_H_
 #define _MKNETID_H_
 
+extern char *xstrtok (char *cp, int delim);
 extern int insert_user(const char *key, const char *domain,
 			const char *uid, const char *gid);
 extern int insert_host(const char *host, const char *domain);

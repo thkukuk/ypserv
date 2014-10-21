@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1999, 2001  Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1999, 2001, 2003  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,14 +12,12 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <string.h>
@@ -37,32 +35,6 @@ struct {
   char *data;
 } *xdr_ypall_callback;
 
-
-bool_t
-xdr_domainname (XDR *xdrs, domainname *objp)
-{
-  if (!xdr_string (xdrs, objp, YPMAXDOMAIN))
-    return (FALSE);
-
-  return (TRUE);
-}
-
-bool_t
-xdr_mapname (XDR *xdrs, mapname *objp)
-{
-  if (!xdr_string (xdrs, objp, YPMAXMAP))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_peername (XDR *xdrs, peername *objp)
-{
-  if (!xdr_string (xdrs, objp, YPMAXPEER))
-    return (FALSE);
-  return (TRUE);
-}
 
 bool_t
 xdr_keydat (XDR *xdrs, keydat *objp)
@@ -108,31 +80,11 @@ xdr_ypresp_key_val (XDR *xdrs, ypresp_key_val *objp)
 }
 
 bool_t
-xdr_ypresp_master (XDR *xdrs, ypresp_master *objp)
-{
-  if (!xdr_ypstat (xdrs, &objp->stat))
-    return FALSE;
-  if (!xdr_peername (xdrs, &objp->peer))
-    return FALSE;
-  return TRUE;
-}
-
-bool_t
 xdr_ypresp_order (XDR *xdrs, ypresp_order *objp)
 {
   if (!xdr_ypstat (xdrs, &objp->stat))
     return FALSE;
   if (!xdr_u_int (xdrs, &objp->ordernum))
-    return FALSE;
-  return TRUE;
-}
-
-bool_t
-xdr_ypbind_binding (XDR *xdrs, ypbind_binding *objp)
-{
-  if (!xdr_opaque (xdrs, objp->ypbind_binding_addr, 4))
-    return FALSE;
-  if (!xdr_opaque (xdrs, objp->ypbind_binding_port, 2))
     return FALSE;
   return TRUE;
 }
@@ -164,46 +116,6 @@ xdr_ypreq_key (XDR *xdrs, ypreq_key *objp)
   if (!xdr_keydat (xdrs, &objp->key))
     return FALSE;
 
-  return TRUE;
-}
-
-bool_t
-xdr_ypreq_nokey (XDR *xdrs, ypreq_nokey *objp)
-{
-  if (!xdr_domainname (xdrs, &objp->domain))
-    return FALSE;
-
-  if (!xdr_mapname (xdrs, &objp->map))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_ypstat (XDR *xdrs, ypstat *objp)
-{
-  if (!xdr_enum (xdrs, (enum_t *) objp))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_ypxfrstat (XDR *xdrs, ypxfrstat *objp)
-{
-  if (!xdr_enum (xdrs, (enum_t *) objp))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_ypresp_xfr (XDR * xdrs, ypresp_xfr * objp)
-{
-  if (!xdr_u_int (xdrs, &objp->transid))
-    return FALSE;
-  if (!xdr_ypxfrstat (xdrs, &objp->xfrstat))
-    return FALSE;
   return TRUE;
 }
 
@@ -273,9 +185,9 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
 	    (objp->ypresp_all_u.val.key.keydat_val,
 	     objp->ypresp_all_u.val.key.keydat_len,
 	     &(objp->ypresp_all_u.val.key.keydat_val),
-	     &(objp->ypresp_all_u.val.key.keydat_len),
+	     (int *) &(objp->ypresp_all_u.val.key.keydat_len),
 	     &(objp->ypresp_all_u.val.val.valdat_val),
-	     &(objp->ypresp_all_u.val.val.valdat_len));
+	     (int *) &(objp->ypresp_all_u.val.val.valdat_len));
 	}
     }
   else
@@ -288,6 +200,7 @@ static struct timeval TIMEOUT = { 25, 0 };
 enum clnt_stat
 ypproc_all_2 (ypreq_nokey *argp, ypresp_all *clnt_res, CLIENT *clnt)
 {
+  memset(clnt_res, 0, sizeof(ypresp_all));
   return (clnt_call(clnt, YPPROC_ALL,
                     (xdrproc_t) xdr_ypreq_nokey, (caddr_t) argp,
                     (xdrproc_t) ypxfr_xdr_ypresp_all, (caddr_t) clnt_res,

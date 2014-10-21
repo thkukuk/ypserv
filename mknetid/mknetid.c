@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1999, 2001, 2002 Thorsten Kukuk
+/* Copyright (c) 1996, 1999, 2001, 2002, 2009, 2012 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -12,12 +12,10 @@
 
    You should have received a copy of the GNU General Public
    License along with the YP Server; see the file COPYING. If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 /* mknetid - generate netid.byname map.  */
-
-#define _GNU_SOURCE
 
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
@@ -29,13 +27,16 @@
 #include <unistd.h>
 #include <rpc/types.h>
 #include <rpcsvc/ypclnt.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 
 #include "mknetid.h"
+#include "compat.h"
 
 static int quiet_flag = 0;
 
-static char *
+char *
 xstrtok (char *cp, int delim)
 {
   static char *str = NULL;
@@ -156,10 +157,10 @@ main (int argc, char *argv[])
 
   while (!feof (file))
     {
-#ifdef HAVE_GETLINE
-      ssize_t n = getline (&line, &length, file);
-#elif HAVE_GETDELIM
+#if HAVE_GETDELIM
       ssize_t n = getdelim (&line, &length, '\n', file);
+#else
+      ssize_t n = getline (&line, &length, file);
 #endif
       if (n < 1)
 	break;
@@ -168,14 +169,34 @@ main (int argc, char *argv[])
 	{
 
 	  char *ptr, *key, *uid, *gid;
+	  char *err_line = strdup (line);
 
 	  key = xstrtok (line, ':');
 	  ptr = xstrtok (NULL, ':');
 	  uid = xstrtok (NULL, ':');
 	  gid = xstrtok (NULL, ':');
+
+	  if (key == NULL || ptr == NULL ||
+	      uid == NULL || gid == NULL)
+	    {
+	      int n = strlen (err_line);
+
+	      if (err_line[n - 1] == '\n')
+		err_line[n - 1] = '\0';
+
+	      if (strlen (err_line) > 0)
+		fprintf (stderr, "WARNING: bad netid entry: '%s'\n",
+			 err_line);
+	      free (err_line);
+	      continue;
+	    }
+
+	  free (err_line);
+
 	  if (insert_user (key, domain, uid, gid) < 0)
 	    if (!quiet_flag)
-	      fprintf (stderr, "WARNING: unix.%s@%s multiply defined, ignore new one\n",
+	      fprintf (stderr,
+		       "WARNING: unix.%s@%s multiply defined, ignore new one\n",
 		       uid, domain);
 	}
     }
@@ -189,45 +210,64 @@ main (int argc, char *argv[])
 
   while (!feof (file))
     {
-#ifdef HAVE_GETLINE
-      ssize_t n = getline (&line, &length, file);
-#elif HAVE_GETDELIM
+#if HAVE_GETDELIM
       ssize_t n = getdelim (&line, &length, '\n', file);
+#else
+      ssize_t n = getline (&line, &length, file);
 #endif
       if (n < 1)
 	break;
+
+      if (line[n - 1] == '\n')
+        {
+          if(n < 2)
+            continue; /* empty line */
+	  line[n - 1] = '\0';
+        }
 
       if (line[0] != '+' && line[0] != '-')
 	{
 	  char *grpname, *ptr, *gid, *user;
 
-	  if (line[strlen (line) - 1] == '\n')
-	    line[strlen (line) - 1] = '\0';
-
 	  grpname = xstrtok (line, ':');
 	  ptr = xstrtok (NULL, ':');
 	  gid = xstrtok (NULL, ':');
-	  while ((user = xstrtok (NULL, ',')) != NULL)
+	  if(grpname && ptr && gid)
+	    length -= gid - line;
+	  else
+	    {
+	      fprintf (stderr, "ERROR: bad format of group \"%s\".\n",
+		       grpname);
+	      exit (1);
+	    }
+	  user = xstrtok (NULL, ',');
+	  while (user != NULL) {
+	    length = length - strlen(user) - 1;
 	    if (add_group (user, gid) < 0)
 	      if (!quiet_flag)
 		fprintf (stderr, "WARNING: unknown user \"%s\" in group \"%s\".\n",
 			 user, grpname);
+	    if (length > 0)
+	      user = xstrtok (user + strlen(user) + 1, ',');
+	    else
+	      user = NULL;
+	  }
 	}
     }
   fclose (file);
 
   if ((file = fopen (hostname, "r")) == NULL)
     {
-      fprintf (stderr, "ERROR: Can't open %s\n", grpname);
+      fprintf (stderr, "ERROR: Can't open %s\n", hostname);
       exit (1);
     }
 
   while (!feof (file))
     {
-#ifdef HAVE_GETLINE
-      ssize_t n = getline (&line, &length, file);
-#elif HAVE_GETDELIM
+#if HAVE_GETDELIM
       ssize_t n = getdelim (&line, &length, '\n', file);
+#else
+      ssize_t n = getline (&line, &length, file);
 #endif
       if (n < 1)
 	break;
@@ -260,18 +300,27 @@ main (int argc, char *argv[])
     {
       while (!feof (file))
 	{
-#ifdef HAVE_GETLINE
-	  ssize_t n = getline (&line, &length, file);
-#elif HAVE_GETDELIM
+#if HAVE_GETDELIM
 	  ssize_t n = getdelim (&line, &length, '\n', file);
+#else
+	  ssize_t n = getline (&line, &length, file);
 #endif
 	  if (n < 1)
 	    break;
 
 	  if (line[0] != '#')
 	    {
+	      int n = strlen (line);
+
+	      if (line[n - 1] == '\n')
+		line[n - 1] = '\0';
 	      if (strpbrk (line, " \t") == NULL)
-		fprintf (stderr, "WARNING: bad netid entry: '%s'", line);
+		{
+		  if (strlen (line) > 0)
+		    fprintf (stderr,
+			     "WARNING: bad netid entry: '%s'\n",
+			     line);
+		}
 	      else
 		printf ("%s\n", line);
 	    }

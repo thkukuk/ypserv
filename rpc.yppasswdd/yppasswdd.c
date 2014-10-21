@@ -1,13 +1,12 @@
 /*
-   Copyright (c) 1996, 1997, 1998, 1999, 2001 Thorsten Kukuk, <kukuk@suse.de>
+   Copyright (c) 1996-2006, 2010, 2011, 2012 Thorsten Kukuk, <kukuk@thkukuk.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
 
-   The NYS YP Server is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+   The YP Server is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   version 2 as published by the Free Software Foundation.
 
    The NYS YP Server is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,8 +15,8 @@
 
    You should have received a copy of the GNU General Public
    License along with the NYS YP Server; see the file COPYING.  If
-   not, write to the Free Software Foundation, Inc., 675 Mass Ave,
-   Cambridge, MA 02139, USA. */
+   not, write to the Free Software Foundation, Inc., 51 Franklin Street,
+   Suite 500, Boston, MA 02110-1335, USA. */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -34,36 +33,25 @@
 #include <fcntl.h>
 #include <syslog.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <arpa/inet.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
 #if defined(HAVE_RPC_SVC_SOC_H)
 #include <rpc/svc_soc.h>
 #endif
 #include "yppasswd.h"
-#if defined(HAVE_GETOPT_H) && defined(HAVE_GETOPT_LONG)
+#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
-#else
-#include <compat/getopt.h>
-#endif
-#ifndef HAVE_GETOPT_LONG
-#include <compat/getopt.c>
-#include <compat/getopt1.c>
-#endif
-
-#ifndef HAVE_STRERROR
-#include <compat/strerror.c>
 #endif
 
 #include "log_msg.h"
+#include "compat.h"
+#include "pidfile.h"
+#include "access.h"
 
-#ifdef HAVE_PATHS_H
-#include <paths.h>
-#endif
-#ifndef _PATH_VARRUN
-#define _PATH_VARRUN "/etc/"
-#endif
 #define _YPPASSWDD_PIDFILE _PATH_VARRUN"yppasswdd.pid"
 
 int use_shadow = 0;
@@ -71,6 +59,8 @@ int allow_chsh = 0;
 int allow_chfn = 0;
 int solaris_mode = -1;
 int x_flag = -1;
+
+static int foreground_flag = 0;
 
 #define xprt_addr(xprt)	(svc_getcaller(xprt)->sin_addr)
 #define xprt_port(xprt)	ntohs(svc_getcaller(xprt)->sin_port)
@@ -105,6 +95,13 @@ yppasswdprog_1 (struct svc_req *rqstp, SVCXPRT * transp)
   memset ((char *) &argument, 0, sizeof (argument));
   if (!svc_getargs (transp, xdr_argument, (caddr_t) &argument))
     {
+      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+
+      log_msg ("cannot decode arguments for %d from %s",
+              rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+      /* try to free already allocated memory during decoding */
+      svc_freeargs (transp, xdr_argument, (caddr_t) &argument);
+
       svcerr_decode (transp);
       return;
     }
@@ -121,90 +118,30 @@ yppasswdprog_1 (struct svc_req *rqstp, SVCXPRT * transp)
     }
 }
 
-/* Create a pidfile on startup */
-static void
-create_pidfile (void)
-{
-  int fd, left, written;
-  pid_t pid;
-  char pbuf[50], *ptr;
-  struct flock lock;
-
-  fd = open (_YPPASSWDD_PIDFILE, O_CREAT | O_RDWR,
-	     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  if (fd < 0)
-    {
-      log_msg ("cannot create pidfile %s", _YPPASSWDD_PIDFILE);
-      if (debug_flag)
-	log_msg ("\n");
-    }
-
-  lock.l_type = F_WRLCK;
-  lock.l_start = 0;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
-
-  /* Is the pidfile locked by another ypserv ? */
-  if (fcntl (fd, F_GETLK, &lock) < 0)
-    {
-      log_msg ("fcntl error");
-      if (debug_flag)
-	log_msg ("\n");
-    }
-  if (lock.l_type == F_UNLCK)
-    pid = 0;	        /* false, region is not locked by another proc */
-  else
-    pid = lock.l_pid;	/* true, return pid of lock owner */
-
-  if (0 != pid)
-    {
-      log_msg ("rpc.yppasswdd already running (pid %d) - exiting", pid);
-      if (debug_flag)
-	log_msg ("\n");
-      exit (1);
-    }
-
-  /* write lock */
-  lock.l_type = F_WRLCK;
-  lock.l_start = 0;
-  lock.l_whence = SEEK_SET;
-  lock.l_len = 0;
-  if (0 != fcntl (fd, F_SETLK, &lock))
-    log_msg ("cannot lock pidfile");
-  sprintf (pbuf, "%ld\n", (long) getpid ());
-  left = strlen (pbuf);
-  ptr = pbuf;
-  while (left > 0)
-    {
-      if ((written = write (fd, ptr, left)) <= 0)
-	return;			/* error */
-      left -= written;
-      ptr += written;
-    }
-  return;
-}
-
-
 static void
 usage (FILE * fp, int n)
 {
-  fputs ("Usage: rpc.yppasswdd [--debug] [-s shadowfile] [-p passwdfile] [-e chsh|chfn]\n", fp);
-  fputs ("       rpc.yppasswdd [--debug] [-D directory] [-e chsh|chfn]\n", fp);
-  fputs ("       rpc.yppasswdd [--debug] [-x program |-E program] [-e chsh|chfn]\n", fp);
+  fputs ("Usage: rpc.yppasswdd [--debug] [-s shadowfile] [-p passwdfile] [-e chsh|chfn] [-f|--foreground]\n", fp);
+  fputs ("       rpc.yppasswdd [--debug] [-D directory] [-e chsh|chfn] [-f|--foreground]\n", fp);
+  fputs ("       rpc.yppasswdd [--debug] [-x program |-E program] [-e chsh|chfn] [-f|--foreground]\n", fp);
   fputs ("       rpc.yppasswdd --port number\n", fp);
   fputs ("       rpc.yppasswdd --version\n", fp);
   exit (n);
 }
 
 static void
-sig_child (int sig __attribute__ ((unused)))
+sig_child (int sig UNUSED)
 {
-  wait (NULL);
+  int save_errno = errno;
+
+  while (wait3 (NULL, WNOHANG, NULL) > 0)
+    ;
+  errno = save_errno;
 }
 
 /* Clean up if we quit the program. */
 static void
-sig_quit (int sig __attribute__ ((unused)))
+sig_quit (int sig UNUSED)
 {
   pmap_unset (YPPASSWDPROG, YPPASSWDVERS);
   unlink (_YPPASSWDD_PIDFILE);
@@ -274,12 +211,13 @@ main (int argc, char **argv)
 	{"usage", no_argument, NULL, 'h'},
 	{"help", no_argument, NULL, 'h'},
 	{"execute", required_argument, NULL, 'x'},
+	{"foreground", no_argument, NULL, 'f'},
 	{"debug", no_argument, NULL, '\254'},
 	{"port", required_argument, NULL, '\253'},
 	{NULL, 0, NULL, '\0'}
       };
 
-      c=getopt_long (argc, argv, "e:p:s:uhvD:E:x:m", long_options,
+      c=getopt_long (argc, argv, "e:p:s:fuhvD:E:x:m", long_options,
 		     &option_index);
       if (c == EOF)
 	break;
@@ -298,6 +236,9 @@ main (int argc, char **argv)
 	    usage (stderr, 1);
 	  solaris_mode = 0;
 	  path_passwd = optarg;
+	  break;
+	case 'f':
+	  foreground_flag = 1;
 	  break;
 	case 's':
 	  if (solaris_mode == 1)
@@ -338,6 +279,12 @@ main (int argc, char **argv)
 	  break;
 	case '\253':
           my_port = atoi (optarg);
+	  if (my_port <= 0 || my_port > 0xffff) {
+		/* Invalid port number */
+	    fprintf (stdout, "Warning: rpc.yppasswdd: Invalid port %d (0x%x)\n",
+			my_port, my_port);
+		my_port = -1;
+	  }
           if (debug_flag)
             log_msg ("Using port %d\n", my_port);
           break;
@@ -404,7 +351,7 @@ main (int argc, char **argv)
       log_msg ("rpc.yppasswdd - NYS YP server version %s\n", VERSION);
 #endif /* CHECKROOT */
     }
-  else
+  else if (!foreground_flag)
     {
       int i;
 
@@ -429,22 +376,48 @@ main (int argc, char **argv)
 
       if (i < 0)
 	{
-	  log_msg ("rpc.yppasswdd: cannot fork: %s\n", strerror (errno));
-	  exit (-1);
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: cannot fork: %s\n", strerror (err));
+	  exit (err);
 	}
 
       for (i = 0; i < getdtablesize (); ++i)
         close (i);
       errno = 0;
 
-      chdir ("/");
+      if (chdir ("/") == -1)
+	{
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: chdir failed: %s\n", strerror (err));
+	  exit (err);
+	}
       umask(0);
       i = open("/dev/null", O_RDWR);
-      dup(i);
-      dup(i);
+      if (i == -1)
+	{
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: open /dev/null failed: %s\n",
+		   strerror (err));
+	  exit (err);
+	}
+
+      /* two dups, we have stdin, stdout, stderr */
+      if (dup(i) == -1)
+	{
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: dup failed: %s\n", strerror (err));
+	  exit (err);
+	}
+
+      if (dup(i) == -1)
+	{
+	  int err = errno;
+	  log_msg ("rpc.yppasswdd: dup failed: %s\n", strerror (err));
+	  exit (err);
+	}
     }
 
-  create_pidfile ();
+  create_pidfile (_YPPASSWDD_PIDFILE, "rpc.yppasswdd");
 
   /* Register a signal handler to reap children after they terminated */
   install_sighandler ();
@@ -492,6 +465,13 @@ main (int argc, char **argv)
       log_msg ("unable to register yppaswdd udp service.\n");
       exit (1);
     }
+
+  /* If we use systemd as an init system, we may want to give it 
+     a message, that this daemon is ready to accept connections.
+     At this time, sockets for receiving connections are already 
+     created, so we can say we're ready now. It is a nop if we 
+     don't use systemd. */
+  announce_ready();
 
   /* Run the server */
   svc_run ();
