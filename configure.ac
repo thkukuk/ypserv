@@ -117,9 +117,6 @@ AC_SUBST(libc_cv_fpie)
 AC_SUBST(PIE_CFLAGS)
 AC_SUBST(PIE_LDFLAGS)
 
-AM_WITH_DMALLOC
-AM_WITH_EFENCE
-
 dnl Check for big or little endian system
 AC_C_BIGENDIAN
 dnl Check for 64bit systems
