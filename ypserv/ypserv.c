@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2011 Thorsten Kukuk
+/* Copyright (c) 1996-2011, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@thkukuk.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -19,6 +19,7 @@
 #include "config.h"
 #endif
 
+#include <netdb.h>
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -27,19 +28,15 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <signal.h>
-#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
-#endif
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
-#include <rpc/pmap_clnt.h>
-#if defined(HAVE_RPC_SVC_SOC_H)
-#include <rpc/svc_soc.h> /* for svcudp_create() */
-#endif /* HAVE_RPC_SVC_SOC_H */
+#include <rpc/rpc_com.h>
+#include <rpc/nettype.h>
 
 #include "yp.h"
 #include "access.h"
@@ -47,9 +44,6 @@
 #include "ypserv_conf.h"
 #include "compat.h"
 #include "pidfile.h"
-#if USE_SLP
-#include "reg_slp.h"
-#endif
 
 #define _YPSERV_PIDFILE _PATH_VARRUN"ypserv.pid"
 
@@ -184,10 +178,27 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
   memset ((char *) &argument, 0, sizeof (argument));
   if (!svc_getargs (transp, _xdr_argument, (caddr_t) &argument))
     {
-      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+           int error;
+      char host[NI_MAXHOST];
+      char serv[NI_MAXSERV];
+      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
 
-      log_msg ("ERROR: Cannot decode arguments for %d from %s",
-	       rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+      struct sockaddr *sap = (struct sockaddr *)(rqhost->buf);
+
+      error = getnameinfo (sap, sizeof (struct sockaddr), 
+                           host, sizeof(host), serv, sizeof(serv),
+                           NI_NUMERICHOST | NI_NUMERICSERV);
+      if (error)
+        {
+          log_msg ("ypprog_2: getnameinfo(): %s", 
+                   gai_strerror(error));
+        }
+      else
+        {
+          log_msg ("ERROR: Cannot decode arguments for %d from %s:%s",
+                   rqstp->rq_proc, host, serv);
+	}
+      
       /* try to free already allocated memory during decoding.
 	 bnc#471924 */
       svc_freeargs (transp, _xdr_argument, (caddr_t) &argument);
@@ -211,42 +222,6 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
 
   return;
 }
-
-#if 0
-static void
-mysvc_run (void)
-{
-#ifdef FD_SETSIZE
-  fd_set readfds;
-#else
-  int readfds;
-#endif /* def FD_SETSIZE */
-
-  for (;;)
-    {
-#ifdef FD_SETSIZE
-      readfds = svc_fdset;
-#else
-      readfds = svc_fds;
-#endif /* def FD_SETSIZE */
-      switch (select (_rpc_dtablesize (), &readfds, (fd_set *)NULL,
-		      (fd_set *)NULL, (struct timeval *) 0))
-        {
-        case -1:
-          if (errno == EINTR)
-            {
-              continue;
-            }
-          perror ("svc_run: - select failed");
-          return;
-        case 0:
-          continue;
-        default:
-          svc_getreqset (&readfds);
-        }
-    }
-}
-#endif
 
 extern FILE *debug_output;
 /* SIGUSR1: enable/disable debug output.  */
@@ -278,10 +253,6 @@ sig_quit (int sig UNUSED)
   pmap_unset (YPPROG, YPVERS);
   pmap_unset (YPPROG, YPOLDVERS);
   unlink (_YPSERV_PIDFILE);
-#if USE_SLP
-  if (slp_flag)
-    deregister_slp ();
-#endif
 
   exit (0);
 }
@@ -309,9 +280,10 @@ Usage (int exitcode)
 int
 main (int argc, char **argv)
 {
-  SVCXPRT *transp_udp, *transp_tcp;
-  int my_port = -1, my_socket, result;
-  struct sockaddr_in s_in;
+  struct netconfig *nconf;
+  void *nc_handle;
+  int connmaxrec = RPC_MAXDATASIZE;
+  int my_port = -1;
 
   openlog ("ypserv", LOG_PID, LOG_DAEMON);
 
@@ -464,110 +436,59 @@ main (int argc, char **argv)
    */
   signal (SIGCHLD, sig_child);
 
-  pmap_unset (YPPROG, YPVERS);
-  pmap_unset (YPPROG, YPOLDVERS);
-
-  if (my_port >= 0)
+  /* XXX my_port handling missing! */
+  
+#if 0 /* XXX */
+  if (!__rpcbind_is_up()) 
     {
-      my_socket = socket (AF_INET, SOCK_DGRAM, 0);
-      if (my_socket < 0)
-	{
-	  log_msg ("can not create UDP: %s", strerror (errno));
-	  exit (1);
-	}
-
-      memset ((char *) &s_in, 0, sizeof (s_in));
-      s_in.sin_family = AF_INET;
-      s_in.sin_addr.s_addr = htonl (INADDR_ANY);
-      s_in.sin_port = htons (my_port);
-
-      result = bind (my_socket, (struct sockaddr *) &s_in,
-		     sizeof (s_in));
-      if (result < 0)
-	{
-	  log_msg ("ypserv: can not bind UDP: %s ", strerror (errno));
-	  exit (1);
-	}
+      log_msg ("terminating: rpcbind is not running");
+      return 1;
     }
-  else
-    my_socket = RPC_ANYSOCK;
-
-  transp_udp = svcudp_create (my_socket);
-  if (transp_udp == NULL)
-    {
-      log_msg ("cannot create udp service.");
-      exit (1);
-    }
-
-  if (!svc_register (transp_udp, YPPROG, YPVERS, ypprog_2, IPPROTO_UDP))
-    {
-      log_msg ("unable to register (YPPROG, YPVERS, udp).");
-      svc_destroy (transp_udp);
-      exit (1);
-    }
-
-  /* XXX ypprog_2 should be ypprog_1 */
-  if (!svc_register (transp_udp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_UDP))
-    {
-      log_msg ("unable to register (YPPROG, YPOLDVERS, udp).");
-      exit (1);
-    }
-
-  if (my_port >= 0)
-    {
-      my_socket = socket (AF_INET, SOCK_STREAM, 0);
-      if (my_socket < 0)
-	{
-	  log_msg ("ypserv: can not create TCP: %s", strerror (errno));
-	  exit (1);
-	}
-
-      memset (&s_in, 0, sizeof (s_in));
-      s_in.sin_family = AF_INET;
-      s_in.sin_addr.s_addr = htonl (INADDR_ANY);
-      s_in.sin_port = htons (my_port);
-
-      result = bind (my_socket, (struct sockaddr *) &s_in,
-		     sizeof (s_in));
-      if (result < 0)
-	{
-	  log_msg ("ypserv: can not bind TCP ", strerror (errno));
-	  exit (1);
-	}
-    }
-  else
-    my_socket = RPC_ANYSOCK;
-
-  transp_tcp = svctcp_create (my_socket, 0, 0);
-  if (transp_tcp == NULL)
-    {
-      log_msg ("ypserv: cannot create tcp service\n");
-      svc_destroy (transp_udp);
-      exit (1);
-    }
-
-  if (!svc_register (transp_tcp, YPPROG, YPVERS, ypprog_2, IPPROTO_TCP))
-    {
-      log_msg ("ypserv: unable to register (YPPROG, YPVERS, tcp)\n");
-      svc_destroy (transp_udp);
-      svc_destroy (transp_tcp);
-      exit (1);
-    }
-
-  /* XXX ypprog_2 should be ypprog_1 */
-  if (!svc_register (transp_tcp, YPPROG, YPOLDVERS, ypprog_2, IPPROTO_TCP))
-    {
-      log_msg ("ypserv: unable to register (YPPROG, YPOLDVERS, tcp)\n");
-      svc_destroy (transp_udp);
-      svc_destroy (transp_tcp);
-      exit (1);
-    }
-
-#if USE_SLP
-  if (slp_flag)
-    register_slp ();
 #endif
 
+  /* Set non-blocking mode and maximum record size for
+     connection oriented RPC transports. */
+  if (!rpc_control(RPC_SVC_CONNMAXREC_SET, &connmaxrec)) 
+    log_msg ("unable to set maximum RPC record size");
+  
+  rpcb_unset (YPPROG, YPVERS, NULL);
+  rpcb_unset (YPPROG, YPOLDVERS, NULL);
+
+  nc_handle = __rpc_setconf ("netpath");   /* open netconfig file */
+  if (nc_handle == NULL) 
+    {
+      log_msg("could not read /etc/netconfig, exiting..");
+      return 1;
+    }
+  
+  while ((nconf = __rpc_getconf (nc_handle))) 
+    {
+      SVCXPRT *xprt;
+      
+      if (debug_flag)
+	log_msg ("Call svc_tp_create for %s", nconf->nc_protofmly);
+      
+      if ((xprt = svc_tp_create (ypprog_2, YPPROG, YPVERS, nconf)) == NULL) 
+	{
+	  log_msg ("terminating: cannot create rpcbind handle");
+	  return 1;
+	}
+
+      /* support ypserv V1, but only on udp/tcp transports */
+      if (strcmp(nconf->nc_protofmly, NC_INET) == 0) 
+	{
+	  (void) rpcb_unset(YPPROG, YPOLDVERS, nconf);
+	  if (!svc_reg(xprt, YPPROG, YPOLDVERS, ypprog_2, nconf)) 
+	    {
+	      log_msg ("unable to register (YPPROG, YPOLDVERS).");
+	      continue;
+              }
+            
+          }
+    }
+  
+  __rpc_endconf (nc_handle);    
+  
   /* If we use systemd as an init system, we may want to give it 
      a message, that this daemon is ready to accept connections.
      At this time, sockets for receiving connections are already 
@@ -575,19 +496,9 @@ main (int argc, char **argv)
      don't use systemd. */
   announce_ready();
 
-#if 0
-  mysvc_run ();
-#else
   svc_run ();
-#endif
   log_msg ("svc_run returned");
   unlink (_YPSERV_PIDFILE);
-#if USE_SLP
-  if (slp_flag)
-    deregister_slp ();
-#endif
-  svc_destroy (transp_udp);
-  svc_destroy (transp_tcp);
   exit (1);
   /* NOTREACHED */
 }

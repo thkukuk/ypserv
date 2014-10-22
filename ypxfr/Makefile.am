@@ -22,7 +22,8 @@ libexec_PROGRAMS = ypxfr
 
 ypxfr_SOURCES = ypxfr.c ypxfr_clnt.c ypxfr_xdr.c
 
-ypxfr_LDADD = @LIBDBM@ $(top_builddir)/lib/libyp.a
+ypxfr_LDADD = @LIBDBM@ $(top_builddir)/lib/libyp.a @TIRPC_LIBS@ @NSL_LIBS@
+ypxfr_CFLAGS = @TIRPC_LIBS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1999, 2001, 2002, 2009, 2012 Thorsten Kukuk
+/* Copyright (c) 1996, 1999, 2001, 2002, 2009, 2012, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -25,11 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <rpc/types.h>
-#include <rpcsvc/ypclnt.h>
-#ifdef HAVE_GETOPT_H
 #include <getopt.h>
-#endif
 
 #include "mknetid.h"
 #include "compat.h"
@@ -81,6 +77,7 @@ main (int argc, char *argv[])
   char *hostname = "/etc/hosts";
   char *netidname = "/etc/netid";
   char *domain = NULL;
+  char domainbuf[1024];
   FILE *file;
 
   while (1)
@@ -141,12 +138,14 @@ main (int argc, char *argv[])
     Usage (1);
 
   if (domain == NULL)
-    {
-      if (yp_get_default_domain (&domain) != 0)
+    {      
+      if (getdomainname (domainbuf, sizeof (domainbuf)) != 0)
 	{
 	  fprintf (stderr, "YPPUSH: Cannot get default domain\n");
 	  return 1;
 	}
+      else
+	domain = domainbuf;
     }
 
   if ((file = fopen (pwname, "r")) == NULL)
@@ -157,11 +156,7 @@ main (int argc, char *argv[])
 
   while (!feof (file))
     {
-#if HAVE_GETDELIM
-      ssize_t n = getdelim (&line, &length, '\n', file);
-#else
       ssize_t n = getline (&line, &length, file);
-#endif
       if (n < 1)
 	break;
 
@@ -210,11 +205,7 @@ main (int argc, char *argv[])
 
   while (!feof (file))
     {
-#if HAVE_GETDELIM
-      ssize_t n = getdelim (&line, &length, '\n', file);
-#else
       ssize_t n = getline (&line, &length, file);
-#endif
       if (n < 1)
 	break;
 
@@ -264,19 +255,15 @@ main (int argc, char *argv[])
 
   while (!feof (file))
     {
-#if HAVE_GETDELIM
-      ssize_t n = getdelim (&line, &length, '\n', file);
-#else
       ssize_t n = getline (&line, &length, file);
-#endif
       if (n < 1)
 	break;
 
       if (line[0] != '#')
 	{
-	  char *ptr, *host;
+	  char *host;
 
-	  ptr = xstrtok (line, ' ');
+	  (void)xstrtok (line, ' ');
 	  host = xstrtok (NULL, ' ');
 	  while (host != NULL && strlen (host) == 0)
 	    host = xstrtok (NULL, ' ');
@@ -300,11 +287,7 @@ main (int argc, char *argv[])
     {
       while (!feof (file))
 	{
-#if HAVE_GETDELIM
-	  ssize_t n = getdelim (&line, &length, '\n', file);
-#else
 	  ssize_t n = getline (&line, &length, file);
-#endif
 	  if (n < 1)
 	    break;
 

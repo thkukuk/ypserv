@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001, 2003, 2007 Thorsten Kukuk <kukuk@suse.de>
+# Copyright (c) 2001, 2003, 2007, 2014 Thorsten Kukuk <kukuk@suse.de>
 #
 AUTOMAKE_OPTIONS = 1.7 gnits
 #
@@ -15,15 +15,16 @@ CLEANFILES = *~
 
 EXTRA_DIST = ${MANS} ${XMLS}
 
-man_MANS = ypxfrd.8 rpc.ypxfrd.8
+man_MANS = rpc.ypxfrd.8 ypxfrd.8
 XMLS = rpc.ypxfrd.8.xml
 
 sbin_PROGRAMS = rpc.ypxfrd
 
 rpc_ypxfrd_SOURCES = ypxfrd.c ypxfrd_server.c ypxfrd_svc.c
 
-rpc_ypxfrd_LDADD = @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@ $(LIBSYSTEMD_DAEMON)
-rpc_ypxfrd_CFLAGS = @PIE_CFLAGS@
+rpc_ypxfrd_LDADD = @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a \
+	@LIBDBM@ @SYSTEMD_LIBS@ @TIRPC_LIBS@
+rpc_ypxfrd_CFLAGS = @PIE_CFLAGS@ @SYSTEMD_CFLAGS@ @TIRPC_CFLAGS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml

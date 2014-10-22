@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2005 Thorsten Kukuk
+/* Copyright (c) 1996-2005, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -28,9 +28,6 @@
 #include "yp.h"
 #include <rpcsvc/ypclnt.h>
 #include <rpc/svc.h>
-#if defined(HAVE_RPC_SVC_SOC_H)
-#include <rpc/svc_soc.h> /* for svcudp_create() */
-#endif /* HAVE_RPC_SVC_SOC_H */
 #include <arpa/inet.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -51,9 +48,7 @@
 #elif defined(HAVE_LIBTC)
 #include <tcbdb.h>
 #endif
-#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
-#endif /* HAVE_GETOPT_H */
 #include "compat.h"
 
 #include "log_msg.h"
@@ -243,7 +238,7 @@ yppush_svc_run (char *target)
     {
       readfds = svc_fdset;
 
-      switch (select (_rpc_dtablesize (), &readfds, (void *) 0, (void *) 0, &tr))
+      switch (select (svc_maxfd+1, &readfds, (void *) 0, (void *) 0, &tr))
 	{
 	case -1:
 	  if (errno == EINTR)
@@ -251,7 +246,7 @@ yppush_svc_run (char *target)
 	      tr = tb;		/* Read the Linux select.2 manpage ! */
 	      continue;
 	    }
-	  log_msg ("svc_run: - select failed (%s)", strerror (errno));
+	  log_msg ("yppush_svc_run: - select failed (%s)", strerror (errno));
 	  return;
 	case 0:
 	  log_msg ("%s->%s: Callback timed out", current_map, target);
@@ -446,11 +441,9 @@ yppush_foreach (const char *host)
 
   sa.sa_handler = child_sig_int;
   sigemptyset (&sa.sa_mask);
-#if defined(linux) || (defined(sun) && defined(__srv4__))
   sa.sa_flags = SA_NOMASK;
   /* Do  not  prevent  the  signal   from   being
      received from within its own signal handler. */
-#endif
   sigaction (SIGINT, &sa, NULL);
 
   if (strlen (host) < YPMAXPEER)
@@ -461,41 +454,7 @@ yppush_foreach (const char *host)
       exit (1);
     }
 
-  PushClient = clnt_create (server, YPPROG, YPVERS, "udp");
-  if (PushClient == NULL)
-    {
-      clnt_pcreateerror (server);
-      return 1;
-    }
-
-
-  if (my_port >= 0)
-    {
-      sock = socket (AF_INET, SOCK_DGRAM, 0);
-      if (sock < 0)
-        {
-          log_msg ("can not create UDP: %s", strerror (errno));
-          exit (1);
-        }
-      else
-        {
-          /* bind to socket */
-          memset ((char *) &s_in, 0, sizeof (s_in));
-          s_in.sin_family = AF_INET;
-          s_in.sin_addr.s_addr = htonl (INADDR_ANY);
-          s_in.sin_port = htons (my_port);
-
-          if  (bind (sock, (struct sockaddr *) &s_in, sizeof (s_in)) < 0)
-            {
-          log_msg ("yppush: can not bind UDP: %s ", strerror (errno));
-          exit (1);
-            }
-        }
-    }
-  else
-    sock = RPC_ANYSOCK;
-
-
+  sock = RPC_ANYSOCK;
   CallbackXprt = svcudp_create (sock);
   if (CallbackXprt == NULL)
     {
@@ -507,6 +466,11 @@ yppush_foreach (const char *host)
       if (svc_register (CallbackXprt, CallbackProg, 1,
 			yppush_xfrrespprog_1, IPPROTO_UDP))
 	break;
+    }        
+  if (CallbackProg == 0x5FFFFFFF) 
+    {
+      log_msg ("can't register yppush_xfrrespprog_1");
+      exit (1);
     }
 
   switch (transid = fork ())
@@ -518,7 +482,6 @@ yppush_foreach (const char *host)
       yppush_svc_run (server);
       exit (0);
     default:
-      close (CallbackXprt->xp_sock);
       req.map_parms.domain = (char *) DomainName;
       req.map_parms.map = (char *) current_map;
       /* local_hostname is correct since we have compared it

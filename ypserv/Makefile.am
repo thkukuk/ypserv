@@ -6,7 +6,7 @@ AUTOMAKE_OPTIONS = 1.7 gnits
 localedir = $(datadir)/locale
 
 DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
-	-DYPMAPDIR=\"@YPMAPDIR@\" -DUSE_FQDN=@USE_FQDN@ -DUSE_SLP=@USE_SLP@
+	-DYPMAPDIR=\"@YPMAPDIR@\" -DUSE_FQDN=@USE_FQDN@
 AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
 
 CLEANFILES = *~
@@ -16,14 +16,12 @@ EXTRA_DIST = ${MANS} ${XMLS}
 man_MANS = ypserv.8
 XMLS = ypserv.8.xml
 
-noinst_HEADERS = reg_slp.h
-
 sbin_PROGRAMS = ypserv
 
-ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c reg_slp.c
+ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c
 
-ypserv_LDADD =  @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@ @LIBSLP@ $(LIBSYSTEMD_DAEMON)
-ypserv_CFLAGS = @PIE_CFLAGS@
+ypserv_LDADD =  @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@ @SYSTEMD_LIBS@ @TIRPC_LIBS@
+ypserv_CFLAGS = @PIE_CFLAGS@ @SYSTEMD_CFLAGS@ @TIRPC_CFLAGS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml

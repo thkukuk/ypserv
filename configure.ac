@@ -72,6 +72,7 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AM_PROG_CC_C_O
 AC_USE_SYSTEM_EXTENSIONS
+AC_GNU_SOURCE
 
 if eval "test x$GCC = xyes"; then
   for flag in \
@@ -149,8 +150,6 @@ AC_SUBST(MAKE)
 
 dnl Check for aliases path
 AC_PATH_PROG(ALIASES, aliases, /etc/mail/aliases, /etc/mail:/etc)
-
-
 
 dnl Should we use a gethostbyname after gethostname to use FQDN ? default yes
 AC_ARG_ENABLE(fqdn, AS_HELP_STRING([--disable-fqdn],
@@ -241,25 +240,10 @@ then
   exit
 fi
 
-AC_CHECK_LIB(xcrypt,crypt,LIBCRYPT="-lxcrypt",LIBCRYPT="")
-if test -z "$LIBCRYPT" ; then
-  AC_CHECK_LIB(crypt,crypt,LIBCRYPT="-lcrypt",LIBCRYPT="")
-  AC_CHECK_HEADERS(crypt.h)
-else
-  AC_CHECK_HEADERS(xcrypt.h crypt.h)
-fi
+PKG_CHECK_MODULES([TIRPC], [libtirpc], [USE_IPV6=1], [USE_IPV6=0])
+AC_CHECK_LIB(crypt,crypt,LIBCRYPT="-lcrypt",LIBCRYPT="")
+AC_CHECK_HEADERS(crypt.h)
 AC_SUBST(LIBCRYPT)
-
-USE_SLP=0
-AC_CHECK_LIB(slp,SLPReg,LIBSLP="-lslp",LIBSLP="")
-AC_SUBST(LIBSLP)
-if test -n "$LIBSLP" ; then
-	AC_CHECK_HEADERS(slp.h)
-        if test "$ac_cv_header_slp_h" = yes; then
-	  USE_SLP=1
-	fi
-fi
-AC_SUBST(USE_SLP)
 
 AC_CHECK_FUNCS(getrpcport)
 if test "$ac_cv_func_getrpcport" = no; then
@@ -267,25 +251,11 @@ if test "$ac_cv_func_getrpcport" = no; then
 	             [ac_cv_func_getrpcport=yes; LIBS="-lrpcsvc $LIBS"])
 fi
 
-USE_SD_NOTIFY=0
+PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 209], [USE_SD_NOTIFY=1], [USE_SD_NOTIFY=0])
 AC_SUBST(USE_SD_NOTIFY)
-AC_CHECK_LIB(systemd-daemon,sd_notify,LIBSYSTEMD_DAEMON="-lsystemd-daemon",
-	LIBSYSTEMD_DAEMON="")
-if test -z "$LIBSYSTEMD_DAEMON" ; then
-	AC_CHECK_LIB(systemd,sd_notify,LIBSYSTEMD_DAEMON="-lsystemd",
-	LIBSYSTEMD_DAEMON="")
-fi
-if test -n "$LIBSYSTEMD_DAEMON" ; then
-	AC_CHECK_HEADERS(systemd/sd-daemon.h)
-	if test "$ac_cv_header_systemd_sd_daemon_h" = yes; then
-          USE_SD_NOTIFY=1
-        fi
-fi
-AC_SUBST(USE_SD_NOTIFY)
-AC_SUBST(LIBSYSTEMD_DAEMON)
 
-AC_CHECK_LIB(nsl,gethostbyname)
-AC_CHECK_LIB(socket,socket)
+AC_CHECK_LIB(nsl,gethostbyname, NSL_LIBS="-lnsl", NSL_LIBS="")
+AC_SUBST(NSL_LIBS)
 AC_CHECK_LIB(resolv, res_gethostbyname, RESOLV="-lresolv", RESOLV="")
 if test x$RESOLV != x
 then
@@ -302,7 +272,6 @@ AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h paths.h sys/file.h sys/time.h syslog.h unistd.h)
 AC_CHECK_HEADERS(getopt.h shadow.h rpc/clnt_soc.h rpc/svc_soc.h)
 AC_CHECK_HEADERS(netinet/in.h alloca.h)
-AC_CHECK_TYPE(in_addr_t, ,[AC_DEFINE(in_addr_t,int,[Define to int if you don't have in_addr_t])],[#include <netinet/in.h>])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -373,7 +342,7 @@ Configuration:
   Compiler flags:         ${CFLAGS}
   Preprocessor:		  ${CPP}
   Preprocessor flags:     ${CPPFLAGS}
-  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT} ${LIBSYSTEMD_DAEMON}
+  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT} ${SYSTEMD_LIBS} ${TIRPC_LIBS}
   Awk:                    ${AWK}
   Shell:		  ${BASH}
   NIS map dir:            ${YPMAPDIR}
