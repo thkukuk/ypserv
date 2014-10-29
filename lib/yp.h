@@ -7,30 +7,14 @@
 #define _YP_H_RPCGEN
 
 #include <rpc/rpc.h>
+#include <rpcsvc/yp_prot.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define YPMAXRECORD 1024
-#define YPMAXDOMAIN 64
 #define YPMAXMAP 64
-#define YPMAXPEER 64
-
-enum ypstat {
-	YP_TRUE = 1,
-	YP_NOMORE = 2,
-	YP_FALSE = 0,
-	YP_NOMAP = -1,
-	YP_NODOM = -2,
-	YP_NOKEY = -3,
-	YP_BADOP = -4,
-	YP_BADDB = -5,
-	YP_YPERR = -6,
-	YP_BADARGS = -7,
-	YP_VERS = -8
-};
-typedef enum ypstat ypstat;
 
 enum ypxfrstat {
 	YPXFR_SUCC = 1,
@@ -58,16 +42,6 @@ typedef char *mapname;
 
 typedef char *peername;
 
-typedef struct {
-	u_int keydat_len;
-	char *keydat_val;
-} keydat;
-
-typedef struct {
-	u_int valdat_len;
-	char *valdat_val;
-} valdat;
-
 #if defined(HAVE_LIBTC)
 
 typedef struct {
@@ -76,60 +50,6 @@ typedef struct {
 } datum;
 
 #endif
-
-struct ypmap_parms {
-	domainname domain;
-	mapname map;
-	u_int ordernum;
-	peername peer;
-};
-typedef struct ypmap_parms ypmap_parms;
-
-struct ypreq_key {
-	domainname domain;
-	mapname map;
-	keydat key;
-};
-typedef struct ypreq_key ypreq_key;
-
-struct ypreq_nokey {
-	domainname domain;
-	mapname map;
-};
-typedef struct ypreq_nokey ypreq_nokey;
-
-struct ypreq_xfr {
-	ypmap_parms map_parms;
-	u_int transid;
-	u_int prog;
-	u_int port;
-};
-typedef struct ypreq_xfr ypreq_xfr;
-
-struct ypresp_val {
-	ypstat stat;
-	valdat val;
-};
-typedef struct ypresp_val ypresp_val;
-
-struct ypresp_key_val {
-	ypstat stat;
-	valdat val;
-	keydat key;
-};
-typedef struct ypresp_key_val ypresp_key_val;
-
-struct ypresp_master {
-	ypstat stat;
-	peername peer;
-};
-typedef struct ypresp_master ypresp_master;
-
-struct ypresp_order {
-	ypstat stat;
-	u_int ordernum;
-};
-typedef struct ypresp_order ypresp_order;
 
 typedef struct
 {
@@ -141,91 +61,15 @@ typedef struct
     void *data;
 } xdr_ypall_cb_t;
 
-struct ypresp_all {
-	bool_t more;
-	union {
-		ypresp_key_val val;
-	} ypresp_all_u;
-};
-typedef struct ypresp_all ypresp_all;
-
 struct ypresp_xfr {
 	u_int transid;
 	ypxfrstat xfrstat;
 };
 typedef struct ypresp_xfr ypresp_xfr;
 
-struct ypmaplist {
-	mapname map;
-	struct ypmaplist *next;
-};
-typedef struct ypmaplist ypmaplist;
-
-struct ypresp_maplist {
-	ypstat stat;
-	ypmaplist *maps;
-};
-typedef struct ypresp_maplist ypresp_maplist;
-
-enum yppush_status {
-	YPPUSH_SUCC = 1,
-	YPPUSH_AGE = 2,
-	YPPUSH_NOMAP = -1,
-	YPPUSH_NODOM = -2,
-	YPPUSH_RSRC = -3,
-	YPPUSH_RPC = -4,
-	YPPUSH_MADDR = -5,
-	YPPUSH_YPERR = -6,
-	YPPUSH_BADARGS = -7,
-	YPPUSH_DBM = -8,
-	YPPUSH_FILE = -9,
-	YPPUSH_SKEW = -10,
-	YPPUSH_CLEAR = -11,
-	YPPUSH_FORCE = -12,
-	YPPUSH_XFRERR = -13,
-	YPPUSH_REFUSED = -14
-};
-typedef enum yppush_status yppush_status;
-
-struct yppushresp_xfr {
-	u_int transid;
-	yppush_status status;
-};
-typedef struct yppushresp_xfr yppushresp_xfr;
-
-enum ypbind_resptype {
-	YPBIND_SUCC_VAL = 1,
-	YPBIND_FAIL_VAL = 2
-};
-typedef enum ypbind_resptype ypbind_resptype;
-
-struct ypbind_binding {
-	char ypbind_binding_addr[4];
-	char ypbind_binding_port[2];
-};
-typedef struct ypbind_binding ypbind_binding;
-
-struct ypbind_resp {
-	ypbind_resptype ypbind_status;
-	union {
-		u_int ypbind_error;
-		ypbind_binding ypbind_bindinfo;
-	} ypbind_resp_u;
-};
-typedef struct ypbind_resp ypbind_resp;
 #define YPBIND_ERR_ERR 1
 #define YPBIND_ERR_NOSERV 2
 #define YPBIND_ERR_RESC 3
-
-struct ypbind_setdom {
-	domainname ypsetdom_domain;
-	ypbind_binding ypsetdom_binding;
-	u_int ypsetdom_vers;
-};
-typedef struct ypbind_setdom ypbind_setdom;
-
-#define YPPROG 100004
-#define YPVERS 2
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define YPPROC_NULL 0
@@ -309,7 +153,6 @@ extern int ypprog_2_freeresult ();
 #define YPPUSH_XFRRESPPROG 0x40000000
 #define YPPUSH_XFRRESPVERS 1
 
-#if defined(__STDC__) || defined(__cplusplus)
 #define YPPUSHPROC_NULL 0
 extern  enum clnt_stat yppushproc_null_1(void *, void *, CLIENT *);
 extern  bool_t yppushproc_null_1_svc(void *, void *, struct svc_req *);
@@ -318,51 +161,13 @@ extern  enum clnt_stat yppushproc_xfrresp_1(yppushresp_xfr *, void *, CLIENT *);
 extern  bool_t yppushproc_xfrresp_1_svc(yppushresp_xfr *, void *, struct svc_req *);
 extern int yppush_xfrrespprog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
-#else /* K&R C */
-#define YPPUSHPROC_NULL 0
-extern  enum clnt_stat yppushproc_null_1();
-extern  bool_t yppushproc_null_1_svc();
-#define YPPUSHPROC_XFRRESP 1
-extern  enum clnt_stat yppushproc_xfrresp_1();
-extern  bool_t yppushproc_xfrresp_1_svc();
-extern int yppush_xfrrespprog_1_freeresult ();
-#endif /* K&R C */
-
-#define YPBINDPROG 100007
-#define YPBINDVERS 2
-
-#if defined(__STDC__) || defined(__cplusplus)
-#define YPBINDPROC_NULL 0
-extern  enum clnt_stat ypbindproc_null_2(void *, void *, CLIENT *);
-extern  bool_t ypbindproc_null_2_svc(void *, void *, struct svc_req *);
-#define YPBINDPROC_DOMAIN 1
-extern  enum clnt_stat ypbindproc_domain_2(domainname *, ypbind_resp *, CLIENT *);
-extern  bool_t ypbindproc_domain_2_svc(domainname *, ypbind_resp *, struct svc_req *);
-#define YPBINDPROC_SETDOM 2
-extern  enum clnt_stat ypbindproc_setdom_2(ypbind_setdom *, void *, CLIENT *);
-extern  bool_t ypbindproc_setdom_2_svc(ypbind_setdom *, void *, struct svc_req *);
-extern int ypbindprog_2_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
-
-#else /* K&R C */
-#define YPBINDPROC_NULL 0
-extern  enum clnt_stat ypbindproc_null_2();
-extern  bool_t ypbindproc_null_2_svc();
-#define YPBINDPROC_DOMAIN 1
-extern  enum clnt_stat ypbindproc_domain_2();
-extern  bool_t ypbindproc_domain_2_svc();
-#define YPBINDPROC_SETDOM 2
-extern  enum clnt_stat ypbindproc_setdom_2();
-extern  bool_t ypbindproc_setdom_2_svc();
-extern int ypbindprog_2_freeresult ();
-#endif /* K&R C */
-
 extern  bool_t xdr_ypstat (XDR *, ypstat*);
 extern  bool_t xdr_ypxfrstat (XDR *, ypxfrstat*);
 extern  bool_t xdr_domainname (XDR *, domainname*);
 extern  bool_t xdr_mapname (XDR *, mapname*);
 extern  bool_t xdr_peername (XDR *, peername*);
-extern  bool_t xdr_keydat (XDR *, keydat*);
-extern  bool_t xdr_valdat (XDR *, valdat*);
+extern  bool_t xdr_keydat (XDR *, keydat_t*);
+extern  bool_t xdr_valdat (XDR *, valdat_t*);
 extern  bool_t xdr_ypmap_parms (XDR *, ypmap_parms*);
 extern  bool_t xdr_ypreq_key (XDR *, ypreq_key*);
 extern  bool_t xdr_ypreq_nokey (XDR *, ypreq_nokey*);
@@ -377,10 +182,6 @@ extern  bool_t xdr_ypmaplist (XDR *, ypmaplist*);
 extern  bool_t xdr_ypresp_maplist (XDR *, ypresp_maplist*);
 extern  bool_t xdr_yppush_status (XDR *, yppush_status*);
 extern  bool_t xdr_yppushresp_xfr (XDR *, yppushresp_xfr*);
-extern  bool_t xdr_ypbind_resptype (XDR *, ypbind_resptype*);
-extern  bool_t xdr_ypbind_binding (XDR *, ypbind_binding*);
-extern  bool_t xdr_ypbind_resp (XDR *, ypbind_resp*);
-extern  bool_t xdr_ypbind_setdom (XDR *, ypbind_setdom*);
 
 extern  bool_t ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp);
 

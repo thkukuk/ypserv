@@ -2,7 +2,7 @@
 # Copyright (C) 1999-2014 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([ypserv],[2.32.1],[kukuk@linux-nis.org])
+AC_INIT([ypserv],[2.99.1],[kukuk@linux-nis.org])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AC_CONFIG_HEADERS([config.h])
@@ -251,6 +251,7 @@ if test "$ac_cv_func_getrpcport" = no; then
 	             [ac_cv_func_getrpcport=yes; LIBS="-lrpcsvc $LIBS"])
 fi
 
+PKG_CHECK_MODULES([NIS], [libnis])
 PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 209], [USE_SD_NOTIFY=1], [USE_SD_NOTIFY=0])
 AC_SUBST(USE_SD_NOTIFY)
 
@@ -277,7 +278,6 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
 AC_C___ATTRIBUTE__
-TYPE_SOCKLEN_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
@@ -342,7 +342,7 @@ Configuration:
   Compiler flags:         ${CFLAGS}
   Preprocessor:		  ${CPP}
   Preprocessor flags:     ${CPPFLAGS}
-  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT} ${SYSTEMD_LIBS} ${TIRPC_LIBS}
+  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT} ${SYSTEMD_LIBS} ${TIRPC_LIBS} ${NIS_LIBS}
   Awk:                    ${AWK}
   Shell:		  ${BASH}
   NIS map dir:            ${YPMAPDIR}
