@@ -240,18 +240,12 @@ then
   exit
 fi
 
-PKG_CHECK_MODULES([TIRPC], [libtirpc], [USE_IPV6=1], [USE_IPV6=0])
 AC_CHECK_LIB(crypt,crypt,LIBCRYPT="-lcrypt",LIBCRYPT="")
 AC_CHECK_HEADERS(crypt.h)
 AC_SUBST(LIBCRYPT)
 
-AC_CHECK_FUNCS(getrpcport)
-if test "$ac_cv_func_getrpcport" = no; then
-	AC_CHECK_LIB([rpcsvc], [getrpcport],
-	             [ac_cv_func_getrpcport=yes; LIBS="-lrpcsvc $LIBS"])
-fi
-
 PKG_CHECK_MODULES([NIS], [libnis])
+PKG_CHECK_MODULES([TIRPC], [libtirpc])
 PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 209], [USE_SD_NOTIFY=1], [USE_SD_NOTIFY=0])
 AC_SUBST(USE_SD_NOTIFY)
 
@@ -265,48 +259,6 @@ else
 	AC_CHECK_LIB(resolv+, gethostbyname, RESOLV="-lresolv+", RESOLV="")
 fi
 AC_SUBST(RESOLV)
-
-dnl Checks for header files.
-AC_HEADER_DIRENT
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h paths.h sys/file.h sys/time.h syslog.h unistd.h)
-AC_CHECK_HEADERS(getopt.h shadow.h rpc/clnt_soc.h rpc/svc_soc.h)
-AC_CHECK_HEADERS(netinet/in.h alloca.h)
-
-dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
-AC_C_INLINE
-AC_C___ATTRIBUTE__
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_HEADER_TIME
-
-dnl Checks if resultproc_t has been defined
-AC_MSG_CHECKING(for resultproc_t in rpc/clnt.h)
-AC_EGREP_HEADER(resultproc_t,rpc/clnt.h,\
-	AC_DEFINE(HAVE_RESULTPROC_T, 1, [Define if the systems has the resultproc_t type.]) AC_MSG_RESULT(yes),\
-	AC_MSG_RESULT(no))
-AC_MSG_CHECKING(for resultproc_t in rpc/pmap_clnt.h)
-AC_EGREP_HEADER(resultproc_t,rpc/pmap_clnt.h,\
-	AC_DEFINE(HAVE_RESULTPROC_T) AC_MSG_RESULT(yes),\
-	AC_MSG_RESULT(no))
-
-dnl Checks for library functions.
-AC_FUNC_MEMCMP
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(setenv putenv)
-AC_CHECK_FUNCS(fgetpwent putpwent fgetgrent getspnam)
-AC_CHECK_FUNCS(inet_aton inet_pton vsyslog lckpwdf)
-AC_CHECK_FUNCS(strdup strndup strerror strstr strsep stpcpy)
-AC_CHECK_FUNCS(snprintf asprintf)
-AC_CHECK_FUNCS(gethostname gettimeofday select socket uname getopt_long)
-AC_CHECK_FUNCS(_rpc_dtablesize getdtablesize)
-AC_CHECK_FUNCS(svc_getcaller svc_getrpccaller getline getdelim)
-AC_CHECK_FUNCS(xdr_domainname xdr_ypxfrstat xdr_ypresp_xfr xdr_ypreq_xfr)
-AC_CHECK_FUNCS(xdr_ypmap_parms xdr_ypreq_nokey xdr_ypresp_master xdr_mapname)
-AC_CHECK_FUNCS(xdr_peername xdr_ypstat xdr_ypbind_binding xdr_yppushresp_xfr)
-AC_CHECK_FUNCS(xdr_yppush_status)
 
 dnl
 dnl Check for xsltproc

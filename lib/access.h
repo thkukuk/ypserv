@@ -1,4 +1,4 @@
-/* Copyright (c) 2000 Thorsten Kukuk
+/* Copyright (c) 2000, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -33,7 +33,8 @@ extern int is_valid (struct svc_req *rqstp, const char *map,
 
 /* securenets.c */
 extern void load_securenets (void);
-extern int securenet_host (const struct in_addr sin_addr);
+extern int securenet_host (struct netconfig *nconf, struct netbuf *nbuf);
+extern void dump_securenets (void);
 
 /* systemd */
 extern void announce_ready (void);

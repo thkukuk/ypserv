@@ -10,6 +10,7 @@
 #
 # Always allow access for localhost
 255.0.0.0	127.0.0.0
+host		::1
 
 # This line gives access to everybody. PLEASE ADJUST!
 0.0.0.0		0.0.0.0

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2006, 2008, 2011, 2013 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2006, 2008, 2011, 2013, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -26,14 +26,11 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
-#endif /* HAVE_ALLOCA_H */
 #include <unistd.h>
 
 #include "log_msg.h"
 #include "ypserv_conf.h"
-#include "compat.h"
 
 int dns_flag = 0;
 int slp_flag = 0;

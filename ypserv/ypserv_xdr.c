@@ -27,14 +27,14 @@
 xdr_ypall_cb_t xdr_ypall_cb;
 
 bool_t
-xdr_keydat (XDR *xdrs, keydat *objp)
+xdr_keydat (XDR *xdrs, keydat_t *objp)
 {
   return xdr_bytes (xdrs, (char **) &objp->keydat_val,
                     (u_int *) &objp->keydat_len, XDRMAXRECORD);
 }
 
 bool_t
-xdr_valdat (XDR *xdrs, valdat *objp)
+xdr_valdat (XDR *xdrs, valdat_t *objp)
 {
   return xdr_bytes (xdrs, (char **) &objp->valdat_val,
                     (u_int *) &objp->valdat_len, XDRMAXRECORD);
@@ -49,32 +49,32 @@ xdr_ypreq_key (XDR *xdrs, ypreq_key *objp)
     return FALSE;
   if (!xdr_mapname (xdrs, &objp->map))
     return FALSE;
-  return xdr_keydat (xdrs, &objp->key);
+  return xdr_keydat (xdrs, &objp->keydat);
 }
 
 bool_t
 xdr_ypresp_val (XDR *xdrs, ypresp_val *objp)
 {
-  if (!xdr_ypstat (xdrs, &objp->stat))
+  if (!xdr_ypstat (xdrs, &objp->status))
     return FALSE;
-  return xdr_valdat (xdrs, &objp->val);
+  return xdr_valdat (xdrs, &objp->valdat);
 }
 
 
 bool_t
 xdr_ypresp_key_val (XDR *xdrs, ypresp_key_val *objp)
 {
-  if (!xdr_ypstat (xdrs, &objp->stat))
+  if (!xdr_ypstat (xdrs, &objp->status))
     return FALSE;
-  if (!xdr_valdat (xdrs, &objp->val))
+  if (!xdr_valdat (xdrs, &objp->valdat))
     return FALSE;
-  return xdr_keydat (xdrs, &objp->key);
+  return xdr_keydat (xdrs, &objp->keydat);
 }
 
 bool_t
 xdr_ypresp_order (XDR *xdrs, ypresp_order *objp)
 {
-  if (!xdr_ypstat (xdrs, &objp->stat))
+  if (!xdr_ypstat (xdrs, &objp->status))
     return FALSE;
   return xdr_u_int (xdrs, &objp->ordernum);
 }
@@ -96,10 +96,10 @@ xdr_ypresp_maplist (XDR *xdrs, ypresp_maplist *objp)
 {
   char **tp;
 
-  if (!xdr_ypstat (xdrs, &objp->stat))
+  if (!xdr_ypstat (xdrs, &objp->status))
     return FALSE;
   /* Prevent gcc warning about alias violation.  */
-  tp = (void *) &objp->maps;
+  tp = (void *) &objp->list;
   return xdr_pointer (xdrs, tp, sizeof (ypmaplist), (xdrproc_t) xdr_ypmaplist);
 }
 
@@ -121,7 +121,7 @@ xdr_ypresp_all(XDR *xdrs, ypresp_all *objp)
 	      return FALSE;
 	    }
 	  
-	  if ((objp->ypresp_all_u.val.stat != YP_TRUE) ||
+	  if ((objp->ypresp_all_u.val.status != YP_TRUE) ||
 	      (*xdr_ypall_cb.u.encode)(&objp->ypresp_all_u.val,
 				       xdr_ypall_cb.data) != YP_TRUE)
 	    {

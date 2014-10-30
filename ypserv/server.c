@@ -1,4 +1,4 @@
-/* Copyright (c) 2000, 2001, 2002, 2003, 2005, 2006, 2009, 2011, 2013, 2014  Thorsten Kukuk
+/* Copyright (c) 2000-2014  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
+#include <netdb.h>
 #include <rpcsvc/yp_prot.h>
 #include "yp.h"
 #include "yp_db.h"
@@ -196,8 +197,8 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
           freenetconfigent (nconf);
 	  log_msg ("\t\tdomainname = \"%s\"", argp->domain);
 	  log_msg ("\t\tmapname = \"%s\"", argp->map);
-	  log_msg ("\t\tkeydat = \"%.*s\"", (int) argp->key.keydat_len,
-		   argp->key.keydat_val);
+	  log_msg ("\t\tkeydat = \"%.*s\"", (int) argp->keydat.keydat_len,
+		   argp->keydat.keydat_val);
         }
     }
 
@@ -237,7 +238,7 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
       return TRUE;
     }
 
-  if (argp->key.keydat_len == 0 || argp->key.keydat_val[0] == '\0')
+  if (argp->keydat.keydat_len == 0 || argp->keydat.keydat_val[0] == '\0')
     result->status = YP_BADARGS;
   else
     {
@@ -248,16 +249,16 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
         result->status = YP_NOMAP;
       else
         {
-          qdat.dsize = argp->key.keydat_len;
-          qdat.dptr = argp->key.keydat_val;
+          qdat.dsize = argp->keydat.keydat_len;
+          qdat.dptr = argp->keydat.keydat_val;
 
           rdat = ypdb_fetch (dbp, qdat);
 
           if (rdat.dptr != NULL)
             {
               result->status = YP_TRUE;
-              result->val.valdat_len = rdat.dsize;
-              result->val.valdat_val = rdat.dptr;
+              result->valdat.valdat_len = rdat.dsize;
+              result->valdat.valdat_val = rdat.dptr;
             }
           else
             result->status = YP_NOKEY;
@@ -270,7 +271,7 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
     {
       if (result->status == YP_TRUE)
         log_msg ("\t-> Value = \"%.*s\"",
-		 (int) result->val.valdat_len, result->val.valdat_val);
+		 (int) result->valdat.valdat_len, result->valdat.valdat_val);
       else
         log_msg ("\t-> Error #%d", result->status);
     }
@@ -368,11 +369,11 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
 	  datum dval = ypdb_fetch (dbp, dkey);
 	  result->status = YP_TRUE;
 
-	  result->key.keydat_len = dkey.dsize;
-	  result->key.keydat_val = dkey.dptr;
+	  result->keydat.keydat_len = dkey.dsize;
+	  result->keydat.keydat_val = dkey.dptr;
 
-	  result->val.valdat_len = dval.dsize;
-	  result->val.valdat_val = dval.dptr;
+	  result->valdat.valdat_len = dval.dsize;
+	  result->valdat.valdat_val = dval.dptr;
 	}
       else
 	result->status = YP_NOKEY;
@@ -383,8 +384,8 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
     {
       if (result->status == YP_TRUE)
         log_msg ("\t-> Key = \"%.*s\", Value = \"%.*s\"",
-		 (int) result->key.keydat_len, result->key.keydat_val,
-		 (int) result->val.valdat_len, result->val.valdat_val);
+		 (int) result->keydat.keydat_len, result->keydat.keydat_val,
+		 (int) result->valdat.valdat_len, result->valdat.valdat_val);
       else if (result->status == YP_NOMORE)
         log_msg ("\t-> No more entry's");
       else
@@ -419,8 +420,8 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
 	  log_msg ("\tdomainname = \"%s\"", argp->domain);
 	  log_msg ("\tmapname = \"%s\"", argp->map);
 	  log_msg ("\tkeydat = \"%.*s\"",
-		   (int) argp->key.keydat_len,
-		   argp->key.keydat_val);
+		   (int) argp->keydat.keydat_len,
+		   argp->keydat.keydat_val);
 	}
     }
 
@@ -467,8 +468,8 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
     {
       datum oldkey, dkey;
 
-      oldkey.dsize = argp->key.keydat_len;
-      oldkey.dptr = strndup (argp->key.keydat_val, oldkey.dsize);
+      oldkey.dsize = argp->keydat.keydat_len;
+      oldkey.dptr = strndup (argp->keydat.keydat_val, oldkey.dsize);
 
       dkey = ypdb_nextkey (dbp, oldkey);
       while (dkey.dptr != NULL && dkey.dptr[0] == 'Y' &&
@@ -490,11 +491,11 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
 	  datum dval = ypdb_fetch (dbp, dkey);
 
 	  result->status = YP_TRUE;
-	  result->key.keydat_len = dkey.dsize;
-	  result->key.keydat_val = dkey.dptr;
+	  result->keydat.keydat_len = dkey.dsize;
+	  result->keydat.keydat_val = dkey.dptr;
 
-	  result->val.valdat_len = dval.dsize;
-	  result->val.valdat_val = dval.dptr;
+	  result->valdat.valdat_len = dval.dsize;
+	  result->valdat.valdat_val = dval.dptr;
 	}
       ypdb_close (dbp);
     }
@@ -503,8 +504,8 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
     {
       if (result->status == YP_TRUE)
         log_msg ("\t-> Key = \"%.*s\", Value = \"%.*s\"",
-		 (int) result->key.keydat_len, result->key.keydat_val,
-		 (int) result->val.valdat_len, result->val.valdat_val);
+		 (int) result->keydat.keydat_len, result->keydat.keydat_val,
+		 (int) result->valdat.valdat_len, result->valdat.valdat_val);
       else if (result->status == YP_NOMORE)
         log_msg ("\t-> No more entry's");
       else
@@ -520,7 +521,6 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 		  struct svc_req *rqstp)
 {
   DB_FILE dbp;
-  const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
   int valid;
 
   if (debug_flag)
@@ -543,7 +543,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	  log_msg ("\t\tordernum = %u", argp->map_parms.ordernum);
 	  log_msg ("\t\towner    = \"%s\"", argp->map_parms.owner);
 	  log_msg ("\t\ttransid  = %u", argp->transid);
-	  log_msg ("\t\tprog     = %u", argp->prog);
+	  log_msg ("\t\tproto    = %u", argp->proto);
 	  log_msg ("\t\tport     = %u", argp->port);
 	}
     }
@@ -554,57 +554,87 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
   valid = is_valid (rqstp, argp->map_parms.map, argp->map_parms.domain);
   if (valid < 1 && valid != -4) /* Map does not exist has a special meaning */
     {
+      char namebuf6[INET6_ADDRSTRLEN];
+      struct netconfig *nconf = NULL;
+      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
+
+      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+        svcerr_systemerr (rqstp->rq_xprt);
+
       switch (valid)
 	{
 	case 0:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (forbidden by securenets)");
 	  else
-	    log_msg ("refuse to transfer map from %s",
-		     inet_ntoa (rqhost->sin_addr));
+	    log_msg ("refuse to transfer map from %s:%i",
+		     taddr2ipstr (nconf, rqhost,
+				  namebuf6, sizeof (namebuf6)),
+		     taddr2port (nconf, rqhost));
 	  result->xfrstat = YPXFR_REFUSED;
 	  break;
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
 	  else
-	    log_msg ("refuse to transfer map from %s",
-		     inet_ntoa (rqhost->sin_addr));
+	    log_msg ("refuse to transfer map from %s:%i",
+		     taddr2ipstr (nconf, rqhost,
+				  namebuf6, sizeof (namebuf6)),
+		     taddr2port (nconf, rqhost));
 	  result->xfrstat = YPXFR_REFUSED;
 	  break;
 	case -2:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (map contains \"/\"!)");
 	  else
-	    log_msg ("refuse to transfer map from %s, no valid mapname",
-		     inet_ntoa (rqhost->sin_addr));
+	    log_msg ("refuse to transfer map from %s:%i, no valid mapname",
+		     taddr2ipstr (nconf, rqhost,
+				  namebuf6, sizeof (namebuf6)),
+		     taddr2port (nconf, rqhost));
 	  result->xfrstat = YPXFR_REFUSED;
 	  break;
 	case -3:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid domain)");
 	  else
-	    log_msg ("refuse to transfer map from %s, no valid domain",
-		     inet_ntoa (rqhost->sin_addr));
+	    log_msg ("refuse to transfer map from %s%i, no valid domain",
+		     taddr2ipstr (nconf, rqhost,
+				  namebuf6, sizeof (namebuf6)),
+		     taddr2port (nconf, rqhost));
 	  result->xfrstat = YPXFR_NODOM;
 	  break;
 	}
+      if (nconf)
+	freenetconfigent (nconf);
       return TRUE;
     }
 
   if (xfr_check_port)
     {
-      if(ntohs(rqhost->sin_port) >= IPPORT_RESERVED)
+      char namebuf6[INET6_ADDRSTRLEN];
+      struct netconfig *nconf = NULL;
+      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
+
+      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+        svcerr_systemerr (rqstp->rq_xprt);
+
+      if(taddr2port (nconf, rqhost) >= IPPORT_RESERVED)
         {
           if (debug_flag)
             log_msg ("\t-> Ignored (no reserved port!)");
-          else /* XXX replace inet_ntoa! */
-            log_msg ("refuse to transfer %s from %s, no valid port",
-		     argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
-
+          else
+            log_msg ("refuse to transfer %s from %s:%i, no valid port",
+		     argp->map_parms.map,
+		     taddr2ipstr (nconf, rqhost,
+				  namebuf6, sizeof (namebuf6)),
+		     taddr2port (nconf, rqhost));
+	  if (nconf)
+	    freenetconfigent (nconf);
           result->xfrstat = YPXFR_REFUSED;
 	  return TRUE;
-        }
+	}
+      if (nconf)
+	freenetconfigent (nconf);
     }
 
   /* If we have the map, check, if the master name is the same as in
@@ -633,10 +663,24 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 		log_msg ("\t->Ignored (%s is not the master, master is %s)",
 			 argp->map_parms.owner, buf);
               else
-                log_msg ("refuse to transfer %s from %s, master is %s)",
-			 argp->map_parms.map, inet_ntoa (rqhost->sin_addr),
-			 buf);
+		{
+		  char namebuf6[INET6_ADDRSTRLEN];
+		  struct netconfig *nconf;
+		  struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
 
+		  if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid))
+		      == NULL)
+		    svcerr_systemerr (rqstp->rq_xprt);
+		  else
+		    {
+		      log_msg ("refuse to transfer %s from %s:%i, master is %s)",
+			       argp->map_parms.map,
+			       taddr2ipstr (nconf, rqhost,
+					namebuf6, sizeof (namebuf6)),
+			   taddr2port (nconf, rqhost), buf);
+		      freenetconfigent (nconf);
+		    }
+		}
 	      ypdb_close (dbp);
               result->xfrstat = YPXFR_NODOM;
               return TRUE;
@@ -664,10 +708,25 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	  if (debug_flag)
 	    log_msg ("\t->Ignored (%s is not a trusted master!)",
 		     argp->map_parms.owner);
-	  else /* XXX replace inet_ntoa! */
-	    log_msg ("refuse to transfer %s from %s, no trusted master",
-		     argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
+	  else
+	    {
+	      char namebuf6[INET6_ADDRSTRLEN];
+	      struct netconfig *nconf;
+	      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
 
+	      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+		svcerr_systemerr (rqstp->rq_xprt);
+	      else
+		{
+
+		  log_msg ("refuse to transfer %s from %s:%i, no trusted master",
+			   argp->map_parms.map,
+			   taddr2ipstr (nconf, rqhost,
+					namebuf6, sizeof (namebuf6)),
+                           taddr2port (nconf, rqhost));
+		  freenetconfigent (nconf);
+		}
+	    }
 	  result->xfrstat = YPXFR_NODOM;
 	  return TRUE;
 	}
@@ -676,9 +735,24 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	  if (debug_flag)
 	    log_msg ("\t->New map %s from %s (is a trusted master!)",
 		     argp->map_parms.map, argp->map_parms.owner);
-	  else /* XXX replace inet_ntoa! */
-	    log_msg ("New map %s from trusted master %s",
-		     argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
+	  else
+	    {
+	      char namebuf6[INET6_ADDRSTRLEN];
+	      struct netconfig *nconf;
+	      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
+
+	      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+		svcerr_systemerr (rqstp->rq_xprt);
+	      else
+		{
+		  log_msg ("New map %s from trusted master %s:%i",
+			   argp->map_parms.map,
+			   taddr2ipstr (nconf, rqhost,
+					namebuf6, sizeof (namebuf6)),
+                           taddr2port (nconf, rqhost));
+		  freenetconfigent (nconf);
+		}
+	    }
 	}
     }
   /* If you wish to allow the transfer of new maps, change the next
@@ -687,13 +761,26 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
   else
     {
       /* We doesn't have the map, refuse the transfer */
-      if (debug_flag)
-        log_msg ("\t->Ignored (transfer %s from %s, map doesn't exist local)",
-		 argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
-      else /* XXX replace inet_ntoa! */
-        log_msg ("refuse to transfer %s from %s, map doesn't exist local",
-		 argp->map_parms.map, inet_ntoa (rqhost->sin_addr));
+      char namebuf6[INET6_ADDRSTRLEN];
+      struct netconfig *nconf;
+      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
 
+      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+	svcerr_systemerr (rqstp->rq_xprt);
+      else
+	{
+	  if (debug_flag)
+	    log_msg ("\t->Ignored (transfer %s from %s, map doesn't exist local)",
+		     argp->map_parms.map,
+		     taddr2ipstr (nconf, rqhost,
+				  namebuf6, sizeof (namebuf6)));
+	  else
+	    log_msg ("refuse to transfer %s from %s, map doesn't exist local",
+		     argp->map_parms.map,
+		     taddr2ipstr (nconf, rqhost,
+				  namebuf6, sizeof (namebuf6)));
+	  freenetconfigent (nconf);
+	}
       result->xfrstat = YPXFR_REFUSED;
       return TRUE;
     }
@@ -703,9 +790,13 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     {
     case 0:
       {
+	char hostbuf[NI_MAXHOST];
+	const char *host;
         char *ypxfr_command = alloca (sizeof (YPBINDIR) + 8);
-        char g[30], t[30], p[30];
+        char proto[30], transid[30], port[30];
         int i;
+	struct netconfig *nconf;
+	struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
 
         umask (0);
         i = open ("/dev/null", O_RDWR);
@@ -722,19 +813,21 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	    exit (err);
 	  }
 
+	getnetconfigent (rqstp->rq_xprt->xp_netid);
+	host = taddr2host (nconf, rqhost, hostbuf, sizeof hostbuf);
+
         sprintf (ypxfr_command, "%s/ypxfr", YPBINDIR);
-        snprintf (t, sizeof (t), "%u", argp->transid);
-        snprintf (g, sizeof (g), "%u", argp->prog);
-        snprintf (p, sizeof (p), "%u", argp->port);
+        snprintf (transid, sizeof (transid), "%u", argp->transid);
+        snprintf (proto, sizeof (proto), "%u", argp->proto);
+        snprintf (port, sizeof (port), "%u", argp->port);
         if (debug_flag)
           execl (ypxfr_command, "ypxfr", "--debug", "-d",
                  argp->map_parms.domain, "-h", argp->map_parms.owner,
-		 "-C", t, g,
-                 inet_ntoa (rqhost->sin_addr), p, argp->map_parms.map, NULL);
+		 "-C", transid, proto, host, port, argp->map_parms.map, NULL);
         else
           execl (ypxfr_command, "ypxfr", "-d", argp->map_parms.domain, "-h",
-                 argp->map_parms.owner, "-C", t, g,
-                 inet_ntoa (rqhost->sin_addr), p, argp->map_parms.map, NULL);
+                 argp->map_parms.owner, "-C", transid, proto, host, port,
+		 argp->map_parms.map, NULL);
 
         log_msg ("ypxfr execl(): %s", strerror (errno));
         exit (0);
@@ -813,8 +906,8 @@ ypall_encode (ypresp_key_val *val, void *data)
 {
   datum oldkey;
 
-  oldkey.dsize = val->key.keydat_len;
-  oldkey.dptr = strndup (val->key.keydat_val, oldkey.dsize);
+  oldkey.dsize = val->keydat.keydat_len;
+  oldkey.dptr = strndup (val->keydat.keydat_val, oldkey.dsize);
   ypdb_free (((ypall_data_t) data)->dkey.dptr);
   ((ypall_data_t) data)->dkey.dptr = NULL;
   ypdb_free (((ypall_data_t) data)->dval.dptr);
@@ -850,11 +943,11 @@ ypall_encode (ypresp_key_val *val, void *data)
 
       val->status = YP_TRUE;
 
-      val->key.keydat_val = ((ypall_data_t) data)->dkey.dptr;
-      val->key.keydat_len = ((ypall_data_t) data)->dkey.dsize;
+      val->keydat.keydat_val = ((ypall_data_t) data)->dkey.dptr;
+      val->keydat.keydat_len = ((ypall_data_t) data)->dkey.dsize;
 
-      val->val.valdat_val = ((ypall_data_t) data)->dval.dptr;
-      val->val.valdat_len = ((ypall_data_t) data)->dval.dsize;
+      val->valdat.valdat_val = ((ypall_data_t) data)->dval.dptr;
+      val->valdat.valdat_len = ((ypall_data_t) data)->dval.dsize;
     }
   return val->status;
 }
@@ -904,27 +997,27 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	case 0:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (forbidden by securenets)");
-	  result->ypresp_all_u.valdat.stat = YP_NOMAP;
+	  result->ypresp_all_u.val.status = YP_NOMAP;
 	  break;
 	case -1:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
-	  result->ypresp_all_u.valdat.stat = YP_NOMAP;
+	  result->ypresp_all_u.val.status = YP_NOMAP;
 	  break;
 	case -2:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid map name)");
-	  result->ypresp_all_u.valdat.stat = YP_BADARGS;
+	  result->ypresp_all_u.val.status = YP_BADARGS;
 	  break;
 	case -3:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid domain)");
-	  result->ypresp_all_u.valdat.stat = YP_NODOM;
+	  result->ypresp_all_u.val.status = YP_NODOM;
 	  break;
 	case -4:
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (map does not exist)");
-	  result->ypresp_all_u.valdat.stat = YP_NOMAP;
+	  result->ypresp_all_u.val.status = YP_NOMAP;
 	  break;
 	}
       return TRUE;
@@ -940,7 +1033,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
     case -1:  /* parent, error */
       log_msg ("WARNING(ypproc_all_2_svc): cannot fork: %s",
 	       strerror (errno));
-      result->ypresp_all_u.valdat.stat = YP_YPERR;
+      result->ypresp_all_u.val.status = YP_YPERR;
       return TRUE;
     default: /* parent, default */
       return FALSE;
@@ -955,14 +1048,14 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
     {
       log_msg ("ERROR: could not allocate enough memory! [%s|%d]",
 	       __FILE__, __LINE__);
-      result->ypresp_all_u.valdat.stat = YP_YPERR;
+      result->ypresp_all_u.val.status = YP_YPERR;
       goto out;
     }
 
   data->dbm = ypdb_open (argp->domain, argp->map);
 
   if (data->dbm == NULL)
-    result->ypresp_all_u.valdat.stat = YP_NOMAP;
+    result->ypresp_all_u.val.status = YP_NOMAP;
   else
     {
       data->dkey = ypdb_firstkey (data->dbm);
@@ -979,13 +1072,13 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	{
 	  data->dval = ypdb_fetch (data->dbm, data->dkey);
 
-	  result->ypresp_all_u.valdat.stat = YP_TRUE;
+	  result->ypresp_all_u.val.status = YP_TRUE;
 
-	  result->ypresp_all_u.valdat.key.keydat_len = data->dkey.dsize;
-	  result->ypresp_all_u.valdat.key.keydat_val = data->dkey.dptr;
+	  result->ypresp_all_u.val.keydat.keydat_len = data->dkey.dsize;
+	  result->ypresp_all_u.val.keydat.keydat_val = data->dkey.dptr;
 
-	  result->ypresp_all_u.valdat.val.valdat_len = data->dval.dsize;
-	  result->ypresp_all_u.valdat.val.valdat_val = data->dval.dptr;
+	  result->ypresp_all_u.val.valdat.valdat_len = data->dval.dsize;
+	  result->ypresp_all_u.val.valdat.valdat_val = data->dval.dptr;
 
 	  xdr_ypall_cb.u.encode = ypall_encode;
 	  xdr_ypall_cb.u.close = ypall_close;
@@ -994,13 +1087,13 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
 	  if (debug_flag)
 	    log_msg ("\t -> First value returned.");
 
-	  if (result->ypresp_all_u.val.stat == YP_TRUE)
+	  if (result->ypresp_all_u.val.status == YP_TRUE)
 	    goto out; /* We return to commit the data.
 			 This also means, we don't give
 			 data free here */
 	}
       else
-	result->ypresp_all_u.val.stat = YP_NOMORE;
+	result->ypresp_all_u.val.status = YP_NOMORE;
 
       ypdb_close (data->dbm);
     }
@@ -1360,7 +1453,7 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
 	  /* ignore files starting with . */
 	  if (dep->d_name[0] == '.')
 	    continue;
-	  if (add_maplist (&result->maps, dep->d_name) < 0)
+	  if (add_maplist (&result->list, dep->d_name) < 0)
 	    {
 	      result->status = YP_YPERR;
 	      break;
@@ -1376,7 +1469,7 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
         {
           ypmaplist *p;
 
-          p = result->maps;
+          p = result->list;
           log_msg ("-> ");
           while (p)
             {

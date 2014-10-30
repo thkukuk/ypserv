@@ -19,9 +19,8 @@ XMLS = ypserv.8.xml
 sbin_PROGRAMS = ypserv
 
 ypserv_SOURCES = ypserv.c server.c ypserv_xdr.c
-
-ypserv_LDADD =  @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a @LIBDBM@ @SYSTEMD_LIBS@ @TIRPC_LIBS@
-ypserv_CFLAGS = @PIE_CFLAGS@ @SYSTEMD_CFLAGS@ @NIS_CFLAGS@ @TIRPC_CFLAGS@
+ypserv_CFLAGS = @PIE_CFLAGS@ @NIS_CFLAGS@ @SYSTEMD_CFLAGS@ @TIRPC_CFLAGS@
+ypserv_LDADD =  @PIE_LDFLAGS@ @NIS_LIBS@ @LIBDBM@ @SYSTEMD_LIBS@ @TIRPC_LIBS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml

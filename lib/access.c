@@ -1,4 +1,4 @@
-/* Copyright (C) 1997, 1998, 1999, 2000, 2002, 2003, 2009 Thorsten Kukuk
+/* Copyright (C) 1997-2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -21,9 +21,6 @@
 
 #include <netdb.h>
 #include <syslog.h>
-#ifndef LOG_DAEMON
-#include <sys/syslog.h>
-#endif
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -39,7 +36,6 @@
 #include "access.h"
 #include "yp_db.h"
 #include "yp.h"
-#include "compat.h"
 
 static conffile_t *conf = NULL;
 
@@ -134,10 +130,11 @@ is_valid_domain (const char *domain)
 int
 is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 {
-  const struct sockaddr_in *sin;
   int status;
-  static unsigned long int oldaddr = 0;		/* so we dont log multiple times */
+  static char *oldaddr = NULL;  /* so we dont log multiple times */
   static int oldstatus = -1;
+  struct netconfig *nconf;
+  struct netbuf *rqhost;
 
   if (domain && is_valid_domain (domain) == 0)
     return -3;
@@ -145,7 +142,8 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
   if (map && (map[0] == '\0' || strchr (map ,'/')))
     return -2;
 
-  sin = svc_getcaller (rqstp->rq_xprt);
+  rqhost = svc_getrpccaller (rqstp->rq_xprt);
+  nconf = getnetconfigent (rqstp->rq_xprt->xp_netid);
 
   status = securenet_host (sin->sin_addr);
 
@@ -213,6 +211,9 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 		ypproc_name (rqstp->rq_proc),
 		domain ? domain : "", map ? map : "", status);
     }
+
+  sin = svc_getrpccaller (rqstp->rq_xprt);
+
   oldaddr = sin->sin_addr.s_addr;
   oldstatus = status;
 
@@ -233,7 +234,7 @@ announce_ready()
                          "MAINPID=%lu", (unsigned long) getpid());
 
   /* Return code from sd_notifyf can be ignored, as per sd_notifyf(3).
-     However, if we use systemd's native unit file, we need to send 
+     However, if we use systemd's native unit file, we need to send
      this message to let systemd know that daemon is ready.
      Thus, we want to know that the call had some issues. */
   if (result < 0)

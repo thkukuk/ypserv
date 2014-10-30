@@ -1,3 +1,15 @@
+2014-10-30  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* lib/securenets.c: Implement IPv6 support.
+
+	* ypserv/server.c: Convert to TI-RPC/IPv6 enablement.
+	* ypserv/ypserv_xdr.c: Adjust for new yp_prot.h.
+
+	* lib/ypserv_conf.c: Remove compat header include.
+
+	* lib/compat.c: Removed.
+	* lib/compat.h: Removed.
+
 2014-03-06  Thorsten Kukuk  <kukuk@suse.de>
 
 	* release version 2.32.1

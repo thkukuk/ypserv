@@ -9,17 +9,20 @@ rpcsvcdir = ${prefix}/include/rpcsvc
 
 noinst_LIBRARIES = libyp.a
 noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h \
-		compat.h pidfile.h
+		pidfile.h
 
 rpcsvc_HEADERS = ypxfrd.x
 
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\" \
-	-DUSE_SD_NOTIFY=@USE_SD_NOTIFY@
+	-DYPMAPDIR=\"@YPMAPDIR@\" -DUSE_SD_NOTIFY=@USE_SD_NOTIFY@
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
-AM_CFLAGS = @PIE_CFLAGS@ @TIRPC_CFLAGS@
+AM_CFLAGS = @PIE_CFLAGS@ @NIS_CFLAGS@ @TIRPC_CFLAGS@ -Werror
 
 libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
 		ypproc_match_2.c securenets.c access.c yp_db.c \
-		compat.c pidfile.c
+		pidfile.c
+
+noinst_PROGRAMS = test-securenets
+test_securenets_LDADD = securenets.o log_msg.o @TIRPC_LIBS@
 
 CLEANFILES = *~
