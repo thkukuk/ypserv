@@ -31,7 +31,6 @@
 #include <string.h>
 #include "hash.h"
 #include <assert.h>
-#include "compat.h"
 
 #define TABLESIZE 997		/*Should be a prime */
 

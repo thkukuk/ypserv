@@ -39,16 +39,10 @@
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
-#if defined(HAVE_RPC_SVC_SOC_H)
-#include <rpc/svc_soc.h>
-#endif
 #include "yppasswd.h"
-#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
-#endif
 
 #include "log_msg.h"
-#include "compat.h"
 #include "pidfile.h"
 #include "access.h"
 
@@ -62,8 +56,6 @@ int x_flag = -1;
 
 static int foreground_flag = 0;
 
-#define xprt_addr(xprt)	(svc_getcaller(xprt)->sin_addr)
-#define xprt_port(xprt)	ntohs(svc_getcaller(xprt)->sin_port)
 void yppasswdprog_1 (struct svc_req *rqstp, SVCXPRT * transp);
 void reaper (int sig);
 
@@ -244,9 +236,7 @@ main (int argc, char **argv)
 	  if (solaris_mode == 1)
 	    usage (stderr, 1);
 	  solaris_mode = 0;
-#ifdef HAVE_GETSPNAM
 	  path_shadow = optarg;
-#endif
 	  break;
 	case 'D':
 	  if (solaris_mode == 0)
@@ -254,10 +244,8 @@ main (int argc, char **argv)
 	  solaris_mode = 1;
 	  path_passwd = malloc (strlen (optarg) + 8);
 	  sprintf (path_passwd, "%s/passwd", optarg);
-#ifdef HAVE_GETSPNAM
 	  path_shadow = malloc (strlen (optarg) + 8);
 	  sprintf (path_shadow, "%s/shadow", optarg);
-#endif
 	  break;
 	case 'E':
 	  external_update_program = strdup(optarg);
@@ -324,7 +312,6 @@ main (int argc, char **argv)
       exit (-1);
     }
   sprintf (path_passwd_old, "%s.OLD", path_passwd);
-#ifdef HAVE_GETSPNAM
   /* Create tmp and .OLD file names for "shadow" */
   path_shadow_tmp = malloc (strlen (path_shadow) + 5);
   if (path_shadow_tmp == NULL)
@@ -340,7 +327,6 @@ main (int argc, char **argv)
       exit (-1);
     }
   sprintf (path_shadow_old, "%s.OLD", path_shadow);
-#endif /* HAVE_GETSPNAM */
 
   if (debug_flag)
     {

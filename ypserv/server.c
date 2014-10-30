@@ -39,7 +39,6 @@
 #include "access.h"
 #include "ypserv_conf.h"
 #include "log_msg.h"
-#include "compat.h"
 
 bool_t
 ypproc_null_2_svc (void *argp UNUSED, void *result UNUSED,

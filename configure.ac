@@ -73,10 +73,10 @@ AC_PROG_RANLIB
 AM_PROG_CC_C_O
 AC_USE_SYSTEM_EXTENSIONS
 AC_GNU_SOURCE
+AC_C___ATTRIBUTE__
 
 if eval "test x$GCC = xyes"; then
   for flag in \
-      -pedantic \
       -W \
       -Wall \
       -Wbad-function-cast \
@@ -249,8 +249,6 @@ PKG_CHECK_MODULES([TIRPC], [libtirpc])
 PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 209], [USE_SD_NOTIFY=1], [USE_SD_NOTIFY=0])
 AC_SUBST(USE_SD_NOTIFY)
 
-AC_CHECK_LIB(nsl,gethostbyname, NSL_LIBS="-lnsl", NSL_LIBS="")
-AC_SUBST(NSL_LIBS)
 AC_CHECK_LIB(resolv, res_gethostbyname, RESOLV="-lresolv", RESOLV="")
 if test x$RESOLV != x
 then

@@ -101,41 +101,21 @@ char *create_domain_attr (void)
 
       if (str == NULL)
 	{
-#if defined(HAVE_ASPRINTF)
 	  if (asprintf (&str, "(domain=%s", dep->d_name) < 0)
 	    {
 	      log_msg ("Out of memory");
 	      return NULL;
 	    }
-#else
-	  str = malloc (9 + strlen (dep->d_name));
-	  if (str == NULL)
-	    {
-	      log_msg ("Out of memory");
-	      return NULL;
-	    }
-	  sprintf (str, "(domain=%s", dep->d_name);
-#endif
 	}
       else
 	{
 	  char *cp;
 
-#if defined(HAVE_ASPRINTF)
 	  if (asprintf (&cp, "%s,%s", str, dep->d_name) < 0)
 	    {
 	      log_msg ("Out of memory");
 	      return NULL;
 	    }
-#else
-	  cp = malloc (strlen (str) + strlen (dep->d_name) + 2);
-	  if (cp == NULL)
-	    {
-	      log_msg ("Out of memory");
-	      return NULL;
-	    }
-	  sprintf (cp, "%s,%s", str, dep->d_name);
-#endif
 	  free (str);
 	  str = cp;
 	}
@@ -145,21 +125,11 @@ char *create_domain_attr (void)
     {
       char *cp;
 
-#if defined(HAVE_ASPRINTF)
       if (asprintf (&cp, "%s)", str) < 0)
 	{
 	  log_msg ("Out of memory");
 	  return NULL;
 	}
-#else
-      cp = malloc (strlen (str) + 2);
-      if (cp == NULL)
-	{
-	  log_msg ("Out of memory");
-	  return NULL;
-	}
-      sprintf (cp, "%s)", str);
-#endif
       free (str);
       return cp;
     }
@@ -214,21 +184,11 @@ register_slp ()
   else
     timeout = slp_timeout;
 
-#if defined(HAVE_ASPRINTF)
   if (asprintf (&url, "service:ypserv://%s/", hname) < 0)
     {
       log_msg ("Out of memory");
       return -1;
     }
-#else
-  url = malloc(strlen(hname) + 19);
-  if (!url)
-    {
-      log_msg ("Out of memory");
-      return -1;
-    }
-  sprintf (url, "service:ypserv://%s/", hname) < 0;
-#endif
 
   err = SLPOpen ("en", SLP_FALSE, &hslp);
   if(err != SLP_OK)

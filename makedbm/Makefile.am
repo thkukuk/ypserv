@@ -9,7 +9,7 @@ DEFS = @DEFS@ -DLOCALEDIR=\"$(localedir)\" -DYPBINDIR=\"$(libexecdir)\" \
 	-DCONFDIR=\"$(sysconfdir)\" -DYPMAPDIR=\"@YPMAPDIR@\" \
 	-DUSE_FQDN=@USE_FQDN@
 AM_CPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir) -I$(top_builddir) \
-	-I$(srcdir) @TIRPC_CFLAGS@
+	-I$(srcdir) @NIS_CFLAGS@ @TIRPC_CFLAGS@
 
 CLEANFILES = *~
 

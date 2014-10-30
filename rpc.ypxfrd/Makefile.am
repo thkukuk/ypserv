@@ -24,7 +24,7 @@ rpc_ypxfrd_SOURCES = ypxfrd.c ypxfrd_server.c ypxfrd_svc.c
 
 rpc_ypxfrd_LDADD = @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a \
 	@LIBDBM@ @SYSTEMD_LIBS@ @TIRPC_LIBS@
-rpc_ypxfrd_CFLAGS = @PIE_CFLAGS@ @SYSTEMD_CFLAGS@ @TIRPC_CFLAGS@
+rpc_ypxfrd_CFLAGS = @PIE_CFLAGS@ @NIS_CFLAGS@ @SYSTEMD_CFLAGS@ @TIRPC_CFLAGS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml

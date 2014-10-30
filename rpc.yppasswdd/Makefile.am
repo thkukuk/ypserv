@@ -24,8 +24,8 @@ sbin_PROGRAMS = rpc.yppasswdd
 
 rpc_yppasswdd_SOURCES = update.c yppasswd_xdr.c yppasswdd.c
 
-rpc_yppasswdd_LDADD =  @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a $(LIBDBM) $(LIBCRYPT) @SYSTEMD_LIBS@ @TIRPC_LIBS@
-rpc_yppasswdd_CFLAGS = @PIE_CFLAGS@ @TIRPC_CFLAGS@
+rpc_yppasswdd_LDADD =  @PIE_LDFLAGS@ $(top_builddir)/lib/libyp.a $(LIBDBM) $(LIBCRYPT) @SYSTEMD_LIBS@ @NIS_LIBS@ @TIRPC_LIBS@
+rpc_yppasswdd_CFLAGS = @PIE_CFLAGS@ @NIS_CFLAGS@ @TIRPC_CFLAGS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml

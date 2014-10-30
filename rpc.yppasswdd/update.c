@@ -24,9 +24,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
-#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
-#endif /* HAVE_ALLOCA_H */
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -36,13 +34,8 @@
 #include <rpc/pmap_clnt.h>
 #include "yppasswd.h"
 #include "log_msg.h"
-#ifdef HAVE_CRYPT_H
 #include <crypt.h>
-#endif
-#ifdef HAVE_SHADOW_H
 #include <shadow.h>
-#endif
-#include "compat.h"
 
 #ifndef CHECKROOT
 /* Set to 0 if you don't want to check against the root password
@@ -53,10 +46,8 @@
 #ifndef _PATH_PASSWD
 #define _PATH_PASSWD            "/etc/passwd"
 #endif
-#ifdef HAVE_GETSPNAM
 #ifndef _PATH_SHADOW
 #define _PATH_SHADOW            "/etc/shadow"
-#endif
 #endif
 #ifndef _PATH_SHELLS
 #define _PATH_SHELLS            "/etc/shells"
@@ -68,11 +59,9 @@
 char *path_passwd = _PATH_PASSWD;
 char *path_passwd_tmp = NULL;
 char *path_passwd_old = NULL;
-#ifdef HAVE_GETSPNAM
 char *path_shadow = _PATH_SHADOW;
 char *path_shadow_tmp = NULL;
 char *path_shadow_old = NULL;
-#endif
 
 /* Will be set by the main function */
 char *external_update_program = NULL;
@@ -241,7 +230,6 @@ password_ok (char *plain, char *crypted, char *root, char *logbuf)
   return 0;
 }
 
-#ifdef HAVE_GETSPNAM
 static inline int
 is_allowed_to_change (const struct spwd *sp)
 {
@@ -262,7 +250,6 @@ is_allowed_to_change (const struct spwd *sp)
 
   return 1;
 }
-#endif
 
 /*********************************************************************
  * The Update Handler                                                *
@@ -368,7 +355,6 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
     }
   else
     {
-#ifdef HAVE_LCKPWDF
       /* Lock the passwd file. We retry several times. */
       retries = 0;
       while (lckpwdf () && retries < MAX_RETRIES)
@@ -383,14 +369,11 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 	  log_msg ("password file locked");
 	  return &res;
 	}
-#endif /* HAVE_LCKPWDF */
 
       res = update_files (yppw, logbuf, &shadow_changed, &passwd_changed,
 			  &chfn, &chsh);
 
-#ifdef HAVE_LCKPWDF
       ulckpwdf ();
-#endif /* HAVE_LCKPWDF */
     }
 
   /* Fork off process to rebuild NIS passwd.* maps. */
@@ -454,7 +437,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
     {
       if (strcmp (pw->pw_passwd, "x") == 0)
 	{
-#ifdef HAVE_GETSPNAM /* shadow password */
 	  struct spwd *spw;
 
 	  if ((spw = getspnam ("root")) != NULL)
@@ -462,7 +444,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	      rootpass = alloca (strlen (spw->sp_pwdp) + 1);
 	      strcpy (rootpass, spw->sp_pwdp);
 	    }
-#endif /* HAVE_GETSPNAM */
 	}
       else
 	{
@@ -507,7 +488,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       return 1;
     }
 
-#ifdef HAVE_GETSPNAM
   /* Open the shadow file for reading. */
   if ((oldsf = fopen (path_shadow, "r")) != NULL)
     {
@@ -544,7 +524,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	  return 1;
 	}
     }
-#endif /* HAVE_GETSPNAM */
 
   /* Loop over all passwd entries */
   while ((pw = fgetpwent (oldpf)) != NULL)
@@ -562,7 +541,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	      ((pw->pw_passwd[0] == 'x' && pw->pw_passwd[1] == '\0') ||
               (pw->pw_passwd[0] == '#' && pw->pw_passwd[1] == '#')))
 	    {
-#ifdef HAVE_GETSPNAM /* shadow password */
 	      /* Search for the shadow entry of this user */
 	      while ((spw = fgetspent_adjunct (oldsf)) != NULL)
 		{
@@ -584,7 +562,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		      goto error;
 		    }
 		}
-#endif /* HAVE_GETSPNAM */
 	    }
 
 	  /* We don't have a shadow password file or we don't find the
@@ -605,7 +582,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		yppw->newpw.pw_passwd[1] == '\0') &&
 	      yppw->newpw.pw_passwd[0] != '\0')
 	    {
-#ifdef HAVE_GETSPNAM /* shadow password */
 	      if (spw)
 		{
 		  /* test if password is expired */
@@ -648,7 +624,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		      }
 		}
 	      else /* No shadow entry */
-#endif /* HAVE_GETSPNAM */
 		{
 		  /* set the new passwd */
 		  pw->pw_passwd = yppw->newpw.pw_passwd;
@@ -719,12 +694,9 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
   if (pw || spw)
     {
       unlink (path_passwd_tmp);
-#ifdef HAVE_GETSPNAM
       unlink (path_shadow_tmp);
-#endif /* HAVE_GETSPNAM */
       return 1;
     }
-#ifdef HAVE_GETSPNAM
   if (*shadow_changed)
     {
       unlink (path_shadow_old);
@@ -740,7 +712,6 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
     }
   else
     unlink (path_shadow_tmp);
-#endif /* HAVE_GETSPNAM */
 
   if (*passwd_changed)
     {
@@ -778,15 +749,11 @@ external_update_env (yppasswd *yppw)
     }
   else
     { /* Child - run external update program */
-#if defined(HAVE_SETENV)
       setenv ("YP_PASSWD_OLD", yppw->oldpass, 1);
       setenv ("YP_PASSWD_NEW", yppw->newpw.pw_passwd, 1);
       setenv ("YP_USER", yppw->newpw.pw_name, 1);
       setenv ("YP_GECOS", yppw->newpw.pw_gecos, 1);
       setenv ("YP_SHELL", yppw->newpw.pw_shell, 1);
-#else
-#  error "Missing setenv(). Need porting."
-#endif
       execlp (external_update_program, external_update_program, NULL);
       _exit (1); /* fall-through */
     }

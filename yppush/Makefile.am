@@ -22,8 +22,8 @@ sbin_PROGRAMS = yppush
 yppush_SOURCES = yppush.c
 
 yppush_LDADD =  @PIE_LDFLAGS@ @LIBDBM@ $(top_builddir)/lib/libyp.a \
-	@TIRPC_LIBS@ @NSL_LIBS@
-yppush_CFLAGS = @PIE_CFLAGS@ @TIRPC_CFLAGS@
+	@TIRPC_LIBS@
+yppush_CFLAGS = @PIE_CFLAGS@ @NIS_CFLAGS@ @TIRPC_CFLAGS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml

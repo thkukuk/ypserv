@@ -48,44 +48,6 @@ securenet_t;
 static securenet_t *securenets = NULL;
 
 
-static void
-print_entry (int entry, struct securenet *sn)
-{
-  char host[INET6_ADDRSTRLEN];
-  char mask[INET6_ADDRSTRLEN];
-
-  switch (sn->family)
-    {
-    case AF_INET:
-      {
-	struct sockaddr_in *network = (struct sockaddr_in *)&(sn->network);
-	struct sockaddr_in *netmask = (struct sockaddr_in *)&(sn->netmask);
-
-	log_msg ("entry %d: %s %s", entry,
-		 inet_ntop (AF_INET, &network->sin_addr,
-			    host, sizeof (host)),
-		 inet_ntop (AF_INET, &netmask->sin_addr,
-			    mask, sizeof (mask)));
-      }
-      break;
-    case AF_INET6:
-      {
-	struct sockaddr_in6 *network = (struct sockaddr_in6 *)&(sn->network);
-	struct sockaddr_in6 *netmask = (struct sockaddr_in6 *)&(sn->netmask);
-
-	log_msg ("entry %d: %s %s", entry,
-		 inet_ntop (AF_INET6, &network->sin6_addr,
-			    host, sizeof (host)),
-		 inet_ntop (AF_INET6, &netmask->sin6_addr,
-			    mask, sizeof (mask)));
-      }
-      break;
-    default:
-      /* XXX do something here, error! */
-      break;
-    }
-}
-
 void
 dump_securenets (void)
 {
@@ -96,8 +58,45 @@ dump_securenets (void)
   sn = securenets;
   while (sn)
     {
+      char host[INET6_ADDRSTRLEN];
+      char mask[INET6_ADDRSTRLEN];
+
       i++;
-      print_entry (i, sn);
+
+      switch (sn->family)
+	{
+	case AF_INET:
+	  {
+	    struct sockaddr_in *network =
+	      (struct sockaddr_in *)&(sn->network);
+	    struct sockaddr_in *netmask =
+	      (struct sockaddr_in *)&(sn->netmask);
+
+	    log_msg ("entry %d: %s %s", i,
+		     inet_ntop (AF_INET, &network->sin_addr,
+				host, sizeof (host)),
+		     inet_ntop (AF_INET, &netmask->sin_addr,
+				mask, sizeof (mask)));
+	  }
+	  break;
+	case AF_INET6:
+	  {
+	    struct sockaddr_in6 *network =
+	      (struct sockaddr_in6 *)&(sn->network);
+	    struct sockaddr_in6 *netmask =
+	      (struct sockaddr_in6 *)&(sn->netmask);
+
+	    log_msg ("entry %d: %s %s", i,
+		     inet_ntop (AF_INET6, &network->sin6_addr,
+				host, sizeof (host)),
+		     inet_ntop (AF_INET6, &netmask->sin6_addr,
+				mask, sizeof (mask)));
+	  }
+	  break;
+	default:
+	  /* XXX do something here, error! */
+	  break;
+	}
       sn = sn->next;
     }
   log_msg ("--- securenets end ---");
@@ -335,11 +334,25 @@ securenet_host (struct netconfig *nconf, struct netbuf *nbuf)
 	      }
 	      break;
 	    case AF_INET6:
+	      {
+		int i;
+		struct sockaddr_in6 *sin1 = nbuf->buf;
+		struct sockaddr_in6 *sin2 =
+		  (struct sockaddr_in6 *)&(ptr->netmask);
+		struct sockaddr_in6 *sin3 =
+		  (struct sockaddr_in6 *)&(ptr->network);
+
+		for (i = 0; i < 16; i++)
+		  if ((sin1->sin6_addr.s6_addr[i] & sin2->sin6_addr.s6_addr[i])
+		      != sin3->sin6_addr.s6_addr[i])
+		    goto next;
+		return 1;
+	      }
 	      break;
 	    default:
-	      return 0; /* Something is wrong here, should not happen. */
+	      goto next; /* Something is wrong here, should not happen. */
 	    }
-
+      next:
 	ptr = ptr->next;
       }
   return 0;

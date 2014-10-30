@@ -22,12 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
-#endif
 
 #include "hash.h"
-#include "compat.h"
 
 #define PARSE_FOR_USERS 0
 #define PARSE_FOR_HOSTS 1

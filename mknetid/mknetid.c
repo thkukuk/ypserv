@@ -28,7 +28,6 @@
 #include <getopt.h>
 
 #include "mknetid.h"
-#include "compat.h"
 
 static int quiet_flag = 0;
 

@@ -126,15 +126,14 @@ is_valid_domain (const char *domain)
    return -2, if the map name is not valid
    return -3, if the domain is not valid
    return -4, if the map does not exist */
-
 int
 is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 {
-  int status;
-  static char *oldaddr = NULL;  /* so we dont log multiple times */
+  static struct netbuf *oldaddr = NULL;  /* so we dont log multiple times */
   static int oldstatus = -1;
   struct netconfig *nconf;
   struct netbuf *rqhost;
+  int status;
 
   if (domain && is_valid_domain (domain) == 0)
     return -3;
@@ -145,7 +144,7 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
   rqhost = svc_getrpccaller (rqstp->rq_xprt);
   nconf = getnetconfigent (rqstp->rq_xprt->xp_netid);
 
-  status = securenet_host (sin->sin_addr);
+  status = securenet_host (nconf, rqhost);
 
   if ((map != NULL) && status)
     {
@@ -154,7 +153,9 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
       work = conf;
       while (work)
 	{
+#if 0 /* XXX */
 	  if ((sin->sin_addr.s_addr & work->netmask.s_addr) == work->network.s_addr)
+#endif
 	    if (strcmp (work->domain, domain) == 0 ||
 		strcmp (work->domain, "*") == 0)
 	      if (strcmp (work->map, map) == 0 || strcmp (work->map, "*") == 0)
@@ -171,7 +172,7 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 	    status = -1;
 	    break;
 	  case SEC_PORT:
-	    if (ntohs (sin->sin_port) >= IPPORT_RESERVED)
+	    if (taddr2port (nconf, rqhost) >= IPPORT_RESERVED)
 	      status = -1;
 	    break;
 	  }
@@ -187,7 +188,7 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 	      key.dsize = sizeof ("YP_SECURE") - 1;
 	      key.dptr = "YP_SECURE";
 	      if (ypdb_exists (dbp, key))
-		if (ntohs (sin->sin_port) >= IPPORT_RESERVED)
+		if (taddr2port (nconf, rqhost) >= IPPORT_RESERVED)
 		  status = -1;
 	      ypdb_close (dbp);
 	    }
@@ -198,23 +199,29 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 
   if (debug_flag)
     {
+      char host[INET6_ADDRSTRLEN];
+
       log_msg ("%sconnect from %s", status ? "" : "refused ",
-	       inet_ntoa (sin->sin_addr));
+	       taddr2ipstr (nconf, rqhost, host, sizeof (host)));
     }
   else
     {
       if ((status < 1 && status != -4) &&
-	  ((sin->sin_addr.s_addr != oldaddr) || (status != oldstatus)))
-	syslog (LOG_WARNING,
-		"refused connect from %s:%d to procedure %s (%s,%s;%d)\n",
-		inet_ntoa (sin->sin_addr), ntohs (sin->sin_port),
-		ypproc_name (rqstp->rq_proc),
-		domain ? domain : "", map ? map : "", status);
+	  (/* XXX (sin->sin_addr.s_addr != oldaddr) ||*/ (status != oldstatus)))
+	{
+	  char host[INET6_ADDRSTRLEN];
+
+	  syslog (LOG_WARNING,
+		  "refused connect from %s:%d to procedure %s (%s,%s;%d)\n",
+		  taddr2ipstr (nconf, rqhost, host, sizeof (host)),
+		  taddr2port (nconf, rqhost), ypproc_name (rqstp->rq_proc),
+		  domain ? domain : "", map ? map : "", status);
+	}
     }
 
-  sin = svc_getrpccaller (rqstp->rq_xprt);
-
-  oldaddr = sin->sin_addr.s_addr;
+  /* XXX We need to create a copy of the new netbuf,
+     but before we need to free the old one */
+  oldaddr = svc_getrpccaller (rqstp->rq_xprt);
   oldstatus = status;
 
   return status;

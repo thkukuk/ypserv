@@ -19,23 +19,17 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
-#endif /* HAVE_ALLOCA_H */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#ifdef HAVE_GETOPT_H
 #include <getopt.h>
-#endif /* HAVE_GETOPT_H */
 #include <fcntl.h>
 #include <ctype.h>
 #include <netdb.h>
 #include <rpc/rpc.h>
-
-#include "yp.h"
-#include "compat.h"
+#include <rpcsvc/yp_prot.h>
 
 #if defined (__NetBSD__) || (defined(__GLIBC__) && (__GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 /* <rpc/rpc.h> is missing the prototype */
@@ -241,25 +235,7 @@ create_file (char *fileName, char *dbmName, char *masterName,
     {
       char *cptr;
 
-#ifdef HAVE_GETLINE
       ssize_t n = getline (&key, &keylen, input);
-#elif HAVE_GETDELIM
-      ssize_t n = getdelim (&key, &keylen, '\n', input);
-#else
-      ssize_t n;
-
-      if (key == NULL)
-	{
-	  keylen = 8096;
-	  key = malloc (keylen);
-	}
-      key[0] = '\0';
-      fgets (key, keylen - 1, input);
-      if (key != NULL)
-	n = strlen (key);
-      else
-	n = 0;
-#endif
       if (n < 1)
 	break;
       if (key[n - 1] == '\n' || key[n - 1] == '\r')
@@ -297,17 +273,8 @@ create_file (char *fileName, char *dbmName, char *masterName,
 	    {
 	      char *nkey = NULL;
 	      size_t nkeylen = 0;
-#ifdef HAVE_GETLINE
 	      if (getline (&nkey, &nkeylen, input) == -1)
 		break;
-#elif HAVE_GETDELIM
-	      getdelim (&nkey, &nkeylen, '\n', input);
-#else
-	      nkeylen = 8096;
-	      nkey = malloc (nkeylen);
-	      nkey[0] = '\0';
-	      fgets (nkey, nkeylen - 1, input);
-#endif
 
 	      cptr = nkey;
 	      while ((*cptr == ' ') || (*cptr == '\t'))
@@ -342,22 +309,8 @@ create_file (char *fileName, char *dbmName, char *masterName,
 	  {
 	    char *nkey;
 	    size_t nkeylen = 0;
-#ifdef HAVE_GETLINE
 	    ssize_t n = getline (&nkey, &nkeylen, input);
-#elif HAVE_GETDELIM
-	    ssize_t n = getdelim (&nkey, &nkeylen, '\n', input);
-#else
-	    ssize_t n;
 
-	    nkeylen = 8096;
-	    nkey = malloc (nkeylen);
-	    nkey[0] = '\0';
-	    fgets (nkey, nkeylen - 1, input);
-	    if (nkey != NULL)
-	      n = strlen (nkey);
-	    else
-	      n = 0;
-#endif
 	    if (n < 1)
 	      break;
 	    if (nkey[n - 1] == '\n' || nkey[n - 1] == '\r')
@@ -729,7 +682,7 @@ main (int argc, char *argv[])
 	    {
 	      if (gethostname (masterName, sizeof (masterName)) < 0)
 		perror ("gethostname");
-#if USE_FQDN
+#if USE_FQDN /* XXX don't use gethostbyname */
 	      else
 		{
 		  struct hostent *hp;

@@ -42,7 +42,6 @@
 #include "access.h"
 #include "log_msg.h"
 #include "ypserv_conf.h"
-#include "compat.h"
 #include "pidfile.h"
 
 #define _YPSERV_PIDFILE _PATH_VARRUN"ypserv.pid"
@@ -185,12 +184,12 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
 
       struct sockaddr *sap = (struct sockaddr *)(rqhost->buf);
 
-      error = getnameinfo (sap, sizeof (struct sockaddr), 
+      error = getnameinfo (sap, sizeof (struct sockaddr),
                            host, sizeof(host), serv, sizeof(serv),
                            NI_NUMERICHOST | NI_NUMERICSERV);
       if (error)
         {
-          log_msg ("ypprog_2: getnameinfo(): %s", 
+          log_msg ("ypprog_2: getnameinfo(): %s",
                    gai_strerror(error));
         }
       else
@@ -198,7 +197,7 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
           log_msg ("ERROR: Cannot decode arguments for %d from %s:%s",
                    rqstp->rq_proc, host, serv);
 	}
-      
+
       /* try to free already allocated memory during decoding.
 	 bnc#471924 */
       svc_freeargs (transp, _xdr_argument, (caddr_t) &argument);
@@ -317,7 +316,7 @@ main (int argc, char **argv)
 	  my_port = atoi (optarg);
 	  if (my_port <= 0 || my_port > 0xffff) {
 	    /* Invalid port number */
-	    fprintf (stdout, "Warning: ypserv: Invalid port %d (0x%x)\n", 
+	    fprintf (stdout, "Warning: ypserv: Invalid port %d (0x%x)\n",
 			my_port, my_port);
 	    my_port = -1;
 	  }
@@ -437,9 +436,9 @@ main (int argc, char **argv)
   signal (SIGCHLD, sig_child);
 
   /* XXX my_port handling missing! */
-  
+
 #if 0 /* XXX */
-  if (!__rpcbind_is_up()) 
+  if (!__rpcbind_is_up())
     {
       log_msg ("terminating: rpcbind is not running");
       return 1;
@@ -448,51 +447,51 @@ main (int argc, char **argv)
 
   /* Set non-blocking mode and maximum record size for
      connection oriented RPC transports. */
-  if (!rpc_control(RPC_SVC_CONNMAXREC_SET, &connmaxrec)) 
+  if (!rpc_control(RPC_SVC_CONNMAXREC_SET, &connmaxrec))
     log_msg ("unable to set maximum RPC record size");
-  
+
   rpcb_unset (YPPROG, YPVERS, NULL);
   rpcb_unset (YPPROG, YPOLDVERS, NULL);
 
   nc_handle = __rpc_setconf ("netpath");   /* open netconfig file */
-  if (nc_handle == NULL) 
+  if (nc_handle == NULL)
     {
       log_msg("could not read /etc/netconfig, exiting..");
       return 1;
     }
-  
-  while ((nconf = __rpc_getconf (nc_handle))) 
+
+  while ((nconf = __rpc_getconf (nc_handle)))
     {
       SVCXPRT *xprt;
-      
+
       if (debug_flag)
 	log_msg ("Call svc_tp_create for %s", nconf->nc_protofmly);
-      
-      if ((xprt = svc_tp_create (ypprog_2, YPPROG, YPVERS, nconf)) == NULL) 
+
+      if ((xprt = svc_tp_create (ypprog_2, YPPROG, YPVERS, nconf)) == NULL)
 	{
 	  log_msg ("terminating: cannot create rpcbind handle");
 	  return 1;
 	}
 
       /* support ypserv V1, but only on udp/tcp transports */
-      if (strcmp(nconf->nc_protofmly, NC_INET) == 0) 
+      if (strcmp(nconf->nc_protofmly, NC_INET) == 0)
 	{
 	  (void) rpcb_unset(YPPROG, YPOLDVERS, nconf);
-	  if (!svc_reg(xprt, YPPROG, YPOLDVERS, ypprog_2, nconf)) 
+	  if (!svc_reg(xprt, YPPROG, YPOLDVERS, ypprog_2, nconf))
 	    {
 	      log_msg ("unable to register (YPPROG, YPOLDVERS).");
 	      continue;
               }
-            
+
           }
     }
-  
-  __rpc_endconf (nc_handle);    
-  
-  /* If we use systemd as an init system, we may want to give it 
+
+  __rpc_endconf (nc_handle);
+
+  /* If we use systemd as an init system, we may want to give it
      a message, that this daemon is ready to accept connections.
-     At this time, sockets for receiving connections are already 
-     created, so we can say we're ready now. It is a nop if we 
+     At this time, sockets for receiving connections are already
+     created, so we can say we're ready now. It is a nop if we
      don't use systemd. */
   announce_ready();
 
