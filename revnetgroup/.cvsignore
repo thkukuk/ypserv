@@ -1,5 +1,5 @@
 .deps
 Makefile
-Makefile.am
+Makefile.in
 revnetgroup
 revnetgroup.8
