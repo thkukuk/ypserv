@@ -20,6 +20,7 @@
 #endif
 
 #include <netdb.h>
+#include <unistd.h>
 #include <syslog.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,7 +28,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#if defined(HAVE_SYSTEMD_SD_DAEMON_H)
+#if USE_SD_NOTIFY
 #include <systemd/sd-daemon.h>
 #endif
 
@@ -112,6 +113,47 @@ is_valid_domain (const char *domain)
     return 0;
 
   if (stat (domain, &sbuf) < 0 || !S_ISDIR (sbuf.st_mode))
+    return 0;
+
+  return 1;
+}
+
+static struct netbuf *
+copy_netbuf (struct netbuf *src)
+{
+  struct netbuf *dst;
+
+  if (src == NULL)
+    return NULL;
+
+  dst = calloc (1, sizeof (struct netbuf));
+  if (dst == NULL)
+    return NULL;
+
+  dst->buf = malloc (src->len);
+  if (dst->buf == NULL)
+    {
+      free (dst);
+      return NULL;
+    }
+
+  dst->len = src->len;
+  dst->maxlen = src->len;
+  memcpy (dst->buf, src->buf, src->len);
+
+  return dst;
+}
+
+/* return values:
+   0: both IP addresses are identical
+   1: the IP addresses are not identical */
+static int
+cmp_netbuf (struct netbuf *nbuf1, struct netbuf *nbuf2)
+{
+  if (nbuf1->len != nbuf2->len)
+    return 1;
+
+  if (memcmp (nbuf1->buf, nbuf2->buf, nbuf1->len) == 0)
     return 0;
 
   return 1;
@@ -207,7 +249,7 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
   else
     {
       if ((status < 1 && status != -4) &&
-	  (/* XXX (sin->sin_addr.s_addr != oldaddr) ||*/ (status != oldstatus)))
+	  (cmp_netbuf (oldaddr, rqhost) || (status != oldstatus)))
 	{
 	  char host[INET6_ADDRSTRLEN];
 
@@ -219,9 +261,14 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 	}
     }
 
-  /* XXX We need to create a copy of the new netbuf,
-     but before we need to free the old one */
-  oldaddr = svc_getrpccaller (rqstp->rq_xprt);
+  /* Create a copy of the netbuf and free the old one */
+  if (oldaddr)
+    {
+      if (oldaddr->buf)
+	free (oldaddr->buf);
+      free (oldaddr);
+    }
+  oldaddr = copy_netbuf (rqhost);
   oldstatus = status;
 
   return status;

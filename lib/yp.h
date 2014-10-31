@@ -16,26 +16,6 @@ extern "C" {
 #define YPMAXRECORD 1024
 #define YPMAXMAP 64
 
-enum ypxfrstat {
-	YPXFR_SUCC = 1,
-	YPXFR_AGE = 2,
-	YPXFR_NOMAP = -1,
-	YPXFR_NODOM = -2,
-	YPXFR_RSRC = -3,
-	YPXFR_RPC = -4,
-	YPXFR_MADDR = -5,
-	YPXFR_YPERR = -6,
-	YPXFR_BADARGS = -7,
-	YPXFR_DBM = -8,
-	YPXFR_FILE = -9,
-	YPXFR_SKEW = -10,
-	YPXFR_CLEAR = -11,
-	YPXFR_FORCE = -12,
-	YPXFR_XFRERR = -13,
-	YPXFR_REFUSED = -14
-};
-typedef enum ypxfrstat ypxfrstat;
-
 typedef char *domainname;
 
 typedef char *mapname;
@@ -60,12 +40,6 @@ typedef struct
     } u;
     void *data;
 } xdr_ypall_cb_t;
-
-struct ypresp_xfr {
-	u_int transid;
-	ypxfrstat xfrstat;
-};
-typedef struct ypresp_xfr ypresp_xfr;
 
 #define YPBIND_ERR_ERR 1
 #define YPBIND_ERR_NOSERV 2

@@ -44,10 +44,6 @@
 #include "ypxfr.h"
 #include "ypxfrd.h"
 #include <rpcsvc/ypclnt.h>
-#if defined(HAVE_RPC_CLNT_SOC_H)
-#include <rpc/clnt_soc.h> /* for clntudp_create() */
-#endif /* HAVE_RPC_CLNT_SOC_H */
-#include "compat.h"
 
 #if defined(HAVE_COMPAT_LIBGDBM)
 #if defined(HAVE_LIBGDBM)
@@ -336,16 +332,9 @@ error:
   return 1;
 }
 
-/* NetBSD has a different prototype in struct ypall_callback */
-#if defined(__NetBSD__)
-static int
-ypxfr_foreach (u_long status, char *key, int keylen,
-               char *val, int vallen, void *data UNUSED)
-#else
 static int
 ypxfr_foreach (int status, char *key, int keylen,
                char *val, int vallen, char *data UNUSED)
-#endif
 {
   datum outKey, outData;
 
