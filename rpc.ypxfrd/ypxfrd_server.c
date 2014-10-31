@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2009 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2002, 2009, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -31,14 +31,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
-#ifdef HAVE_RPC_SVC_SOC_H
-#include <rpc/svc_soc.h>
-#endif /* HAVE_RPC_SVC_SOC_H */
 #include "log_msg.h"
 #include "ypxfrd.h"
 #include "access.h"
 #include "yp_db.h"
-#include "compat.h"
 
 static int file = 0;
 
@@ -96,20 +92,29 @@ ypxfrd_getmap_1_svc (ypxfr_mapname *argp, struct svc_req *rqstp)
 {
   static struct xfr result;
   char buf[MAXPATHLEN];
-  const struct sockaddr_in *rqhost;
   int valid;
 
   if (debug_flag)
     {
-      rqhost = svc_getcaller (rqstp->rq_xprt);
-      log_msg ("ypproc_null() [From: %s:%d]",
-	      inet_ntoa (rqhost->sin_addr),
-	      ntohs (rqhost->sin_port));
-      log_msg ("\txfrdomain=%s", argp->xfrdomain);
-      log_msg ("\txfrmap=%s", argp->xfrmap);
-      log_msg ("\txfrmap_filename=%s", argp->xfrmap_filename);
-    }
+      struct netconfig *nconf;
+      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
 
+      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+        svcerr_systemerr (rqstp->rq_xprt);
+      else
+        {
+	  char namebuf6[INET6_ADDRSTRLEN];
+
+	  log_msg ("ypproc_null() [From: %s port: %d]",
+		   taddr2ipstr (nconf, rqhost,
+                                namebuf6, sizeof (namebuf6)),
+                   taddr2port (nconf, rqhost));
+	  log_msg ("\txfrdomain=%s", argp->xfrdomain);
+	  log_msg ("\txfrmap=%s", argp->xfrmap);
+	  log_msg ("\txfrmap_filename=%s", argp->xfrmap_filename);
+	  freenetconfigent (nconf);
+	}
+    }
   result.ok = FALSE;
   result.xfr_u.xfrstat = XFR_DENIED;
 

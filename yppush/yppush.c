@@ -49,7 +49,6 @@
 #include <tcbdb.h>
 #endif
 #include <getopt.h>
-#include "compat.h"
 
 #include "log_msg.h"
 
@@ -113,6 +112,8 @@ yppush_err_string (enum yppush_status status)
       return "ypxfr error";
     case YPPUSH_REFUSED:
       return "Transfer request refused by ypserv";
+    case YPPUSH_NOALIAS:
+      return "Alias not found for map or domain";
     }
   return "YPPUSH: Unknown Error, this should not happen!";
 }
@@ -135,27 +136,28 @@ bool_t
 yppushproc_xfrresp_1_svc (yppushresp_xfr *req,
 			  void *resp UNUSED, struct svc_req *rqstp)
 {
-  struct sockaddr_in *sin;
-  char *h;
-  struct hostent *hp;
+  char hostbuf[NI_MAXHOST];
+  struct netconfig *nconf;
+  struct netbuf *nbuf;
 
   if (verbose_flag > 1)
     log_msg ("yppushproc_xfrresp_1_svc");
 
-  sin = svc_getcaller (rqstp->rq_xprt);
-
-  hp = gethostbyaddr ((char *) &sin->sin_addr.s_addr,
-		      sizeof (sin->sin_addr.s_addr), AF_INET);
-  h = (hp && hp->h_name) ? hp->h_name : inet_ntoa (sin->sin_addr);
+  nbuf = svc_getrpccaller (rqstp->rq_xprt);
+  nconf = getnetconfigent (rqstp->rq_xprt->xp_netid);
 
   if (verbose_flag)
     {
-      log_msg ("Status received from ypxfr on %s:", h);
-      log_msg ("\tTransfer %sdone: %s", req->status == YPPUSH_SUCC ? "" : "not ",
-	      yppush_err_string (req->status));
+      log_msg ("Status received from ypxfr on %s:",
+	       taddr2host (nconf, nbuf, hostbuf, sizeof (hostbuf)));
+      log_msg ("\tTransfer %sdone: %s",
+	       req->status == YPPUSH_SUCC ? "" : "not ",
+	       yppush_err_string (req->status));
     }
   else if (req->status != YPPUSH_SUCC)
-    log_msg ("%s: %s", h, yppush_err_string (req->status));
+    log_msg ("%s: %s", taddr2host (nconf, nbuf, hostbuf, sizeof (hostbuf)),
+	     yppush_err_string (req->status));
+  freenetconfigent (nconf);
 
   return TRUE;
 }
@@ -193,13 +195,18 @@ yppush_xfrrespprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
   memset ((char *)&argument, 0, sizeof (argument));
   if (!svc_getargs (transp, _xdr_argument, (caddr_t) &argument))
     {
-      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+      char hostbuf[NI_MAXHOST];
+      struct netconfig *nconf;
+      struct netbuf *nbuf = svc_getrpccaller (rqstp->rq_xprt);
+
+      nconf = getnetconfigent (rqstp->rq_xprt->xp_netid);
 
       log_msg ("cannot decode arguments for %d from %s",
-              rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+	       rqstp->rq_proc,
+	       taddr2host (nconf, nbuf, hostbuf, sizeof (hostbuf)));
       /* try to free already allocated memory during decoding */
       svc_freeargs (transp, _xdr_argument, (caddr_t) &argument);
-
+      freenetconfigent (nconf);
       svcerr_decode (transp);
       return;
     }
@@ -433,7 +440,6 @@ yppush_foreach (const char *host)
   u_int transid;
   char server[YPMAXPEER + 2];
   int sock;
-  struct sockaddr_in s_in;
   struct sigaction sa;
 
   if (verbose_flag > 1)
@@ -466,8 +472,8 @@ yppush_foreach (const char *host)
       if (svc_register (CallbackXprt, CallbackProg, 1,
 			yppush_xfrrespprog_1, IPPROTO_UDP))
 	break;
-    }        
-  if (CallbackProg == 0x5FFFFFFF) 
+    }
+  if (CallbackProg == 0x5FFFFFFF)
     {
       log_msg ("can't register yppush_xfrrespprog_1");
       exit (1);
@@ -486,10 +492,10 @@ yppush_foreach (const char *host)
       req.map_parms.map = (char *) current_map;
       /* local_hostname is correct since we have compared it
 	 with YP_MASTER_NAME.  */
-      req.map_parms.peer = local_hostname;
+      req.map_parms.owner = local_hostname;
       req.map_parms.ordernum = MapOrderNum;
       req.transid = transid;
-      req.prog = CallbackProg;
+      req.proto = CallbackProg;
       req.port = CallbackXprt->xp_port;
 
       if (verbose_flag)
@@ -501,8 +507,8 @@ yppush_foreach (const char *host)
 	      log_msg ("\t->domain: %s", req.map_parms.domain);
 	      log_msg ("\t->map: %s", req.map_parms.map);
 	      log_msg ("\t->tarnsid: %d", req.transid);
-	      log_msg ("\t->prog: %d", req.prog);
-	      log_msg ("\t->master: %s", req.map_parms.peer);
+	      log_msg ("\t->proto: %d", req.proto);
+	      log_msg ("\t->master: %s", req.map_parms.owner);
 	      log_msg ("\t->ordernum: %d", req.map_parms.ordernum);
 	    }
 	}
@@ -605,7 +611,7 @@ main (int argc, char **argv)
 	case 'j':
 	case 'p':
 	  maxchildren = atoi (optarg);
-	  if (my_port >= 0)
+	  if (my_port >= 0) /* XXX option does nothing */
 	    {
 	      log_msg ("yppush cannot run in parallel with a fixed port");
 	      return 1;
@@ -638,7 +644,7 @@ main (int argc, char **argv)
 	    }
 	  if (my_port <= 0 || my_port > 0xffff) {
 	    /* Invalid port number */
-	    fprintf (stdout, "Warning: yppush: Invalid port %d (0x%x)\n", 
+	    fprintf (stdout, "Warning: yppush: Invalid port %d (0x%x)\n",
 			my_port, my_port);
 	    my_port = -1;
 	  }

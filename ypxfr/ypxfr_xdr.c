@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1999, 2001, 2003  Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1999, 2001, 2003, 2014  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -35,90 +35,6 @@ struct {
   char *data;
 } *xdr_ypall_callback;
 
-
-bool_t
-xdr_keydat (XDR *xdrs, keydat *objp)
-{
-  if (!xdr_bytes (xdrs, (char **) &objp->keydat_val,
-		  (u_int *) &objp->keydat_len, ~0))
-    return FALSE;
-  return TRUE;
-}
-
-bool_t
-xdr_valdat (XDR *xdrs, valdat *objp)
-{
-  if (!xdr_bytes (xdrs, (char **) &objp->valdat_val,
-		  (u_int *) &objp->valdat_len, ~0))
-    return FALSE;
-  return TRUE;
-}
-
-bool_t
-xdr_ypresp_val (XDR *xdrs, ypresp_val *objp)
-{
-  if (!xdr_ypstat (xdrs, &objp->stat))
-    return FALSE;
-  if (!xdr_valdat (xdrs, &objp->val))
-    return FALSE;
-  return TRUE;
-}
-
-bool_t
-xdr_ypresp_key_val (XDR *xdrs, ypresp_key_val *objp)
-{
-  if (!xdr_ypstat (xdrs, &objp->stat))
-    return FALSE;
-
-  if (!xdr_valdat (xdrs, &objp->val))
-    return FALSE;
-
-  if (!xdr_keydat (xdrs, &objp->key))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_ypresp_order (XDR *xdrs, ypresp_order *objp)
-{
-  if (!xdr_ypstat (xdrs, &objp->stat))
-    return FALSE;
-  if (!xdr_u_int (xdrs, &objp->ordernum))
-    return FALSE;
-  return TRUE;
-}
-
-bool_t
-xdr_ypbind_setdom (XDR *xdrs, ypbind_setdom *objp)
-{
-  if (!xdr_domainname (xdrs, &objp->ypsetdom_domain))
-    return FALSE;
-
-  if (!xdr_ypbind_binding (xdrs, &objp->ypsetdom_binding))
-    return FALSE;
-
-  if (!xdr_u_int (xdrs, &objp->ypsetdom_vers))
-    return FALSE;
-
-  return TRUE;
-}
-
-bool_t
-xdr_ypreq_key (XDR *xdrs, ypreq_key *objp)
-{
-  if (!xdr_domainname (xdrs, &objp->domain))
-    return FALSE;
-
-  if (!xdr_mapname (xdrs, &objp->map))
-    return FALSE;
-
-  if (!xdr_keydat (xdrs, &objp->key))
-    return FALSE;
-
-  return TRUE;
-}
-
 bool_t
 ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
 {
@@ -128,9 +44,9 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
     {
       while (1)
 	{
-	  int s = objp->ypresp_all_u.val.stat;
+	  int s = objp->ypresp_all_u.val.status;
 	  memset (objp, '\0', sizeof (*objp));
-	  objp->ypresp_all_u.val.stat = s;
+	  objp->ypresp_all_u.val.status = s;
 	  if (!xdr_bool (xdrs, &objp->more))
 	    return FALSE;
 
@@ -146,11 +62,11 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
 	      if (CallAgain == 0)
 		{
 		  CallAgain = (*(xdr_ypall_callback->foreach.decoder))
-		    (objp->ypresp_all_u.val.stat,
-		     objp->ypresp_all_u.val.key.keydat_val,
-		     objp->ypresp_all_u.val.key.keydat_len,
-		     objp->ypresp_all_u.val.val.valdat_val,
-		     objp->ypresp_all_u.val.val.valdat_len,
+		    (objp->ypresp_all_u.val.status,
+		     objp->ypresp_all_u.val.keydat.keydat_val,
+		     objp->ypresp_all_u.val.keydat.keydat_len,
+		     objp->ypresp_all_u.val.valdat.valdat_val,
+		     objp->ypresp_all_u.val.valdat.valdat_len,
 		     xdr_ypall_callback->data);
 		}
 	      break;
@@ -172,7 +88,7 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
 	      printf ("xdr_ypresp_key_val failed\n");
 	      return FALSE;
 	    }
-	  if (objp->ypresp_all_u.val.stat != YP_TRUE)
+	  if (objp->ypresp_all_u.val.status != YP_TRUE)
 	    {
 	      objp->more = FALSE;
 	      if (!xdr_bool (xdrs, &(objp->more)))
@@ -180,14 +96,14 @@ ypxfr_xdr_ypresp_all (XDR *xdrs, ypresp_all *objp)
 
 	      return TRUE;
 	    }
-	  objp->ypresp_all_u.val.stat =
+	  objp->ypresp_all_u.val.status =
 	    (*(xdr_ypall_callback->foreach.encoder))
-	    (objp->ypresp_all_u.val.key.keydat_val,
-	     objp->ypresp_all_u.val.key.keydat_len,
-	     &(objp->ypresp_all_u.val.key.keydat_val),
-	     (int *) &(objp->ypresp_all_u.val.key.keydat_len),
-	     &(objp->ypresp_all_u.val.val.valdat_val),
-	     (int *) &(objp->ypresp_all_u.val.val.valdat_len));
+	    (objp->ypresp_all_u.val.keydat.keydat_val,
+	     objp->ypresp_all_u.val.keydat.keydat_len,
+	     &(objp->ypresp_all_u.val.keydat.keydat_val),
+	     (int *) &(objp->ypresp_all_u.val.keydat.keydat_len),
+	     &(objp->ypresp_all_u.val.valdat.valdat_val),
+	     (int *) &(objp->ypresp_all_u.val.valdat.valdat_len));
 	}
     }
   else

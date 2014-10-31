@@ -23,7 +23,7 @@
     <arg choice='opt'>-d <replaceable>target</replaceable> <replaceable>domain</replaceable></arg>
     <arg choice='opt'>-h <replaceable>source</replaceable> <replaceable>host</replaceable></arg>
     <arg choice='opt'>-s <replaceable>source</replaceable> <replaceable>domain</replaceable></arg>
-    <arg choice='opt'>-C <replaceable>taskid</replaceable> <replaceable>program-number</replaceable> <replaceable>ipaddr</replaceable> <replaceable>port</replaceable></arg>
+    <arg choice='opt'>-C <replaceable>taskid</replaceable> <replaceable>program-number</replaceable> <replaceable>host</replaceable> <replaceable>port</replaceable></arg>
     <arg choice='opt'>-p <replaceable>yp_path</replaceable></arg>
     <arg choice='plain' rep='repeat'><replaceable>mapname</replaceable></arg>
 
@@ -164,7 +164,7 @@ across domains.</para>
   </listitem>
   </varlistentry>
   <varlistentry>
-  <term><option>-C</option><replaceable> taskid progam-number ipaddr port</replaceable></term>
+  <term><option>-C</option><replaceable> taskid progam-number host port</replaceable></term>
   <listitem>
 <para>This option is
 <emphasis remap='B'>only</emphasis>
@@ -180,8 +180,8 @@ should call back a
 <emphasis remap='B'>yppush</emphasis>
 process at the host with
 <acronym>IP</acronym>
-address
-<emphasis remap='I'>ipaddr</emphasis>,
+address or name
+<emphasis remap='I'>host</emphasis>,
 registered as program number
 <emphasis remap='I'>progam-number</emphasis>,
 listening on port

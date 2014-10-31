@@ -1,4 +1,4 @@
-/* Copyright (c) 2000-2005, 2011  Thorsten Kukuk
+/* Copyright (c) 2000-2005, 2011, 2014  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -21,9 +21,7 @@
 
 #include <unistd.h>
 #include <syslog.h>
-#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
-#endif /* HAVE_GETOPT_H */
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -33,9 +31,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
-#endif /* HAVE_ALLOCA_H */
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -92,13 +88,13 @@ static datum
 ypdb_fetch (TCBDB *bdb, datum key)
 {
   datum res;
-  
+
   if (!(res.dptr = tcbdbget(bdb, key.dptr, key.dsize, &res.dsize)))
     {
       res.dptr = NULL;
       res.dsize = 0;
     }
-  
+
   return res;
 }
 
@@ -390,19 +386,17 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   char dbName_orig[MAXPATHLEN + 1];
   char dbName_temp[MAXPATHLEN + 1];
   char *master_host = NULL;
+  char *server = NULL;
   struct ypreq_key req_key;
   struct ypresp_val resp_val;
   struct ypresp_all resp_all;
   datum outKey, outData;
-  struct timeval TIMEOUT = {25, 0};
   CLIENT *clnt_udp;
-  struct sockaddr_in sockaddr, sockaddr_udp;
   struct ypresp_order resp_order;
   struct ypresp_master resp_master;
   struct ypreq_nokey req_nokey;
   time_t masterOrderNum;
-  struct hostent *h;
-  int sock, result;
+  int result;
 
   /* Name of the map file */
   if (strlen (path_ypdb) + strlen (target_domain) + strlen (map) + 3 < MAXPATHLEN)
@@ -424,14 +418,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 
   /* Build a connection to the host with the master map, not to
      the nearest ypserv, because this map could be out of date. */
-  memset (&sockaddr, '\0', sizeof (sockaddr));
-  sockaddr.sin_family = AF_INET;
   if (source_host)
-    {
-      h = gethostbyname (source_host);
-      if (!h)
-	return YPXFR_RSRC;
-    }
+    server = source_host;
   else
     {
       /* Get the Master hostname for the map, if no explicit
@@ -440,17 +428,10 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 
       if (yp_master (source_domain, map, &master_name))
         return YPXFR_MADDR;
-      h = gethostbyname (master_name);
+      server = strdupa (master_name);
       free (master_name);
-      if (!h)
-	return YPXFR_RSRC;
     }
-  memcpy (&sockaddr.sin_addr, h->h_addr, sizeof sockaddr.sin_addr);
-  memcpy (&sockaddr_udp, &sockaddr, sizeof (sockaddr));
-
-  /* Create a udp socket to the server */
-  sock = RPC_ANYSOCK;
-  clnt_udp = clntudp_create (&sockaddr_udp, YPPROG, YPVERS, TIMEOUT, &sock);
+  clnt_udp = clnt_create (server, YPPROG, YPVERS, "udp");
   if (clnt_udp == NULL)
     {
       log_msg (clnt_spcreateerror ("YPXFR"));
@@ -469,10 +450,10 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       clnt_destroy (clnt_udp);
       return YPXFR_YPERR;
     }
-  else if (resp_master.stat != YP_TRUE)
+  else if (resp_master.status != YP_TRUE)
     {
       clnt_destroy (clnt_udp);
-      switch (resp_master.stat)
+      switch (resp_master.status)
 	{
 	case YP_NOMAP:
 	  return YPXFR_NOMAP;
@@ -485,14 +466,14 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 	case YP_BADARGS:
 	  return YPXFR_BADARGS;
 	default:
-	  log_msg ("ERROR: not expected value: %s", resp_master.stat);
+	  log_msg ("ERROR: not expected value: %s", resp_master.status);
 	  return YPXFR_XFRERR;
 	}
     }
   else
     {
-      master_host = alloca (strlen (resp_master.peer) + 1);
-      strcpy (master_host, resp_master.peer);
+      master_host = alloca (strlen (resp_master.master) + 1);
+      strcpy (master_host, resp_master.master);
       xdr_free ((xdrproc_t) xdr_ypresp_master, (caddr_t) &resp_master);
     }
 
@@ -508,10 +489,10 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       masterOrderNum = time (NULL); /* We set it to the current time.
                                        So a new map will be always newer. */
     }
-  else if (resp_order.stat != YP_TRUE)
+  else if (resp_order.status != YP_TRUE)
     {
       clnt_destroy (clnt_udp);
-      switch (resp_order.stat)
+      switch (resp_order.status)
 	{
 	case YP_NOMAP:
 	  return YPXFR_NOMAP;
@@ -524,7 +505,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 	case YP_BADARGS:
 	  return YPXFR_BADARGS;
 	default:
-	  log_msg ("ERROR: not expected value: %s", resp_order.stat);
+	  log_msg ("ERROR: not expected value: %s", resp_order.status);
 	  return YPXFR_XFRERR;
 	}
     }
@@ -657,8 +638,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
 	 a NIS slave server and request the map from us. */
       req_key.domain = source_domain;
       req_key.map = map;
-      req_key.key.keydat_val = "YP_INTERDOMAIN";
-      req_key.key.keydat_len = strlen ("YP_INTERDOMAIN");
+      req_key.keydat.keydat_val = "YP_INTERDOMAIN";
+      req_key.keydat.keydat_len = strlen ("YP_INTERDOMAIN");
       memset (&resp_val, 0, sizeof (resp_val));
       if (ypproc_match_2 (&req_key, &resp_val, clnt_udp) != RPC_SUCCESS)
         {
@@ -670,7 +651,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
         }
       else
         {
-          if (resp_val.stat == YP_TRUE)
+          if (resp_val.status == YP_TRUE)
             {
               outKey.dptr = "YP_INTERDOMAIN";
               outKey.dsize = strlen (outKey.dptr);
@@ -691,8 +672,8 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       /* Get the YP_SECURE field. */
       req_key.domain = source_domain;
       req_key.map = map;
-      req_key.key.keydat_val = "YP_SECURE";
-      req_key.key.keydat_len = strlen ("YP_SECURE");
+      req_key.keydat.keydat_val = "YP_SECURE";
+      req_key.keydat.keydat_len = strlen ("YP_SECURE");
       memset (&resp_val, 0, sizeof (resp_val));
       if (ypproc_match_2 (&req_key, &resp_val, clnt_udp) != RPC_SUCCESS)
         {
@@ -704,7 +685,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
         }
       else
         {
-          if (resp_val.stat == YP_TRUE)
+          if (resp_val.status == YP_TRUE)
             {
               outKey.dptr = "YP_SECURE";
               outKey.dsize = strlen (outKey.dptr);
@@ -725,8 +706,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       /* We don't need clnt_udp any longer, give it free */
       clnt_destroy (clnt_udp);
       /* Create a tcp socket to the server */
-      sock = RPC_ANYSOCK;
-      clnt_tcp = clnttcp_create (&sockaddr, YPPROG, YPVERS, &sock, 0, 0);
+      clnt_tcp = clnt_create (server, YPPROG, YPVERS, "tcp");
       if (clnt_tcp == NULL)
 	{
 	  clnt_pcreateerror ("YPXFR");
@@ -749,14 +729,14 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
           }
         else
           {
-            switch (resp_all.ypresp_all_u.val.stat)
+            switch (resp_all.ypresp_all_u.val.status)
               {
               case YP_TRUE:
               case YP_NOMORE:
                 result = 0;
                 break;
               default:
-                result = ypprot_err (resp_all.ypresp_all_u.val.stat);
+                result = ypprot_err (resp_all.ypresp_all_u.val.status);
               }
             clnt_freeres (clnt_tcp, (xdrproc_t) ypxfr_xdr_ypresp_all,
 			  (caddr_t) &resp_all);
@@ -799,7 +779,7 @@ int
 main (int argc, char **argv)
 {
   char *source_host = NULL, *target_domain = NULL, *source_domain = NULL;
-  struct in_addr remote_addr;
+  const char *remote_addr = NULL;
   unsigned int transid = 0;
   unsigned short int remote_port = 0;
   unsigned long program_number = 0;
@@ -813,8 +793,6 @@ main (int argc, char **argv)
     openlog ("ypxfr", LOG_PID, LOG_DAEMON);
   else
     debug_flag = 1;
-
-  memset (&remote_addr, 0, sizeof (remote_addr));
 
   while (1)
     {
@@ -873,7 +851,7 @@ main (int argc, char **argv)
 	    }
 	  transid = atoi (optarg);
 	  program_number = atoi (argv[optind++]);
-	  remote_addr.s_addr = inet_addr (argv[optind++]);
+	  remote_addr = argv[optind++];
 	  remote_port = atoi (argv[optind++]);
 	  break;
 	case 'u':
@@ -928,20 +906,12 @@ main (int argc, char **argv)
       /* Now send the status to the yppush program, so it can display a
 	 message for the sysop and do not timeout. */
       if (transid)
-        {
-          struct sockaddr_in addr;
+	{
+	  struct timeval tv = {10, 0};
           CLIENT *clnt;
-          int s;
           ypresp_xfr resp;
-          static struct timeval tv = {10, 0};
 
-          memset (&addr, '\0', sizeof addr);
-          addr.sin_addr = remote_addr;
-          addr.sin_port = htons (remote_port);
-          addr.sin_family = AF_INET;
-          s = RPC_ANYSOCK;
-
-          clnt = clntudp_create (&addr, program_number, 1, tv, &s);
+          clnt = clnt_create (remote_addr, program_number, YPPUSHVERS, "udp");
           if (!clnt)
             {
               clnt_pcreateerror ("ypxfr_callback");
@@ -950,7 +920,8 @@ main (int argc, char **argv)
 	  resp.transid = transid;
           resp.xfrstat = res;
 
-          if (clnt_call (clnt, 1, (xdrproc_t) xdr_ypresp_xfr, (caddr_t) &resp,
+          if (clnt_call (clnt, YPPUSHPROC_XFRRESP,
+			 (xdrproc_t) xdr_ypresp_xfr, (caddr_t) &resp,
                          (xdrproc_t) xdr_void, (caddr_t)&res, tv)
 	      != RPC_SUCCESS)
             clnt_perror (clnt, "ypxfr_callback");

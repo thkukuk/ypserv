@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-1999, 2001-2003, 2005, 2006, 2010 Thorsten Kukuk
+/* Copyright (c) 1996-1999, 2001-2003, 2005, 2006, 2010, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -30,22 +30,14 @@
 #include <memory.h>
 #include <unistd.h>
 #include <syslog.h>
-#ifndef LOG_DAEMON
-#include <sys/syslog.h>
-#endif
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
-#ifdef HAVE_RPC_SVC_SOC_H
-#include <rpc/svc_soc.h>
-#endif /* HAVE_RPC_SVC_SOC_H */
 #include <rpc/pmap_clnt.h>
-#ifdef HAVE_GETOPT_H
 #include <getopt.h>
-#endif /* HAVE_GETOPT_H */
 #include "ypxfrd.h"
 #include "access.h"
 #include "ypserv_conf.h"
@@ -55,7 +47,6 @@
 #endif
 
 #include "log_msg.h"
-#include "compat.h"
 #include "pidfile.h"
 
 #define _YPXFRD_PIDFILE _PATH_VARRUN"ypxfrd.pid"
@@ -94,7 +85,7 @@ closedown (int sig)
       if (_rpcfdtype == SOCK_DGRAM)
 	exit(0);
       if (size == 0)
-	size = _rpc_dtablesize();
+	size = svc_maxfd+1;
 
       for (i = 0, openfd = 0; i < size && openfd < 2; ++i)
 	if (FD_ISSET(i, &svc_fdset))
@@ -155,11 +146,7 @@ main (int argc, char **argv)
   struct sockaddr_in socket_address;
   int result;
   struct sigaction sa;
-#if defined(__hpux)
-  int socket_size;
-#else /* not __hpux */
   socklen_t socket_size;
-#endif
 
   progname = strrchr (argv[0], '/');
   if (progname == (char *) NULL)
@@ -206,7 +193,7 @@ main (int argc, char **argv)
 	  my_port = atoi(optarg);
 	  if (my_port <= 0 || my_port > 0xffff) {
 	    /* Invalid port number */
-	    fprintf (stdout, "Warning: rpc.ypxfrd: Invalid port %d (0x%x)\n", 
+	    fprintf (stdout, "Warning: rpc.ypxfrd: Invalid port %d (0x%x)\n",
 			my_port, my_port);
 	    my_port = -1;
 	  }
@@ -231,7 +218,7 @@ main (int argc, char **argv)
 
   if (debug_flag)
     log_msg("[Welcome to the rpc.ypxfrd Daemon, version %s]\n", VERSION);
-  else 
+  else
     if (!_rpcpmstart && !foreground_flag)
       {
 	int i;
@@ -352,15 +339,13 @@ main (int argc, char **argv)
 
   pmap_unset(YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS);
 
+  /* XXX */
   socket_size = sizeof(socket_address);
   _rpcfdtype = 0;
   if (getsockname(0, (struct sockaddr *)&socket_address, &socket_size) == 0)
     {
-#if defined(__hpux)
-      int int_size = sizeof (int);
-#else /* not __hpux */
-      socklen_t  int_size = sizeof (int);
-#endif
+      socklen_t int_size = sizeof (int);
+
       if (socket_address.sin_family != AF_INET)
 	return 1;
       if (getsockopt(0, SOL_SOCKET, SO_TYPE, (void*)&_rpcfdtype,
@@ -456,10 +441,10 @@ main (int argc, char **argv)
       alarm (_RPCSVC_CLOSEDOWN);
     }
 
-  /* If we use systemd as an init system, we may want to give it 
+  /* If we use systemd as an init system, we may want to give it
      a message, that this daemon is ready to accept connections.
-     At this time, sockets for receiving connections are already 
-     created, so we can say we're ready now. It is a nop if we 
+     At this time, sockets for receiving connections are already
+     created, so we can say we're ready now. It is a nop if we
      don't use systemd. */
   announce_ready();
 

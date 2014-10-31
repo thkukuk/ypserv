@@ -160,7 +160,6 @@ load_securenets (void)
 	    {
 	      log_msg ("securenets (%d) badly formated: %s",
 		       line, gai_strerror(error));
-	      freeaddrinfo (res0);
 	      continue;
 	    }
 
@@ -197,7 +196,6 @@ load_securenets (void)
 	    {
 	      log_msg ("securenets (%d) badly formated: %s",
 		       line, gai_strerror(error));
-	      freeaddrinfo (res0);
 	      free (tmp);
 	      continue;
 	    }
@@ -225,7 +223,6 @@ load_securenets (void)
 		{
 		  log_msg ("securenets (%d) badly formated: %s",
 			   line, gai_strerror(error));
-		  freeaddrinfo (res0);
 		  continue;
 		}
 	    }
@@ -269,7 +266,6 @@ load_securenets (void)
 	      log_msg ("securenets(%d): unsupported address family: %i",
 		       line, tmp->family);
 	      free (tmp);
-	      freeaddrinfo (res0);
 	      continue;
 	      break;
 	    }

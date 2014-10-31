@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2001, 2002, 2011, 2013 Thorsten Kukuk
+/* Copyright (c) 1999, 2001, 2002, 2011, 2013, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -31,13 +31,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <ctype.h>
-#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
-#endif /* HAVE_ALLOCA_H */
 #include <stdlib.h>
-#if defined(HAVE_GETOPT_H)
 #include <getopt.h>
-#endif
 #if defined(HAVE_LIBGDBM)
 #include <gdbm.h>
 #elif defined(HAVE_LIBQDBM)
@@ -48,13 +44,8 @@
 #include <tcbdb.h>
 #endif
 #include "yp.h"
-#include "compat.h"
 #include <rpcsvc/ypclnt.h>
-#if defined(HAVE_RPC_CLNT_SOC_H)
-#include <rpc/clnt_soc.h> /* for clntudp_create() */
-#endif /* HAVE_RPC_CLNT_SOC_H */
 #include <arpa/nameser.h>
-#ifdef HAVE_SHADOW_H
 #include <shadow.h>
 
 struct __sgrp {
@@ -62,7 +53,6 @@ struct __sgrp {
   char *sg_passwd;     /* group password */
 };
 
-#endif
 
 #ifndef YPERR_SUCCESS
 #define YPERR_SUCCESS   0
@@ -106,10 +96,10 @@ _yp_maplist (const char *server, char *indomain,
 
   if (result != YPERR_SUCCESS)
     return result;
-  if (resp.stat != YP_TRUE)
-    return ypprot_err (resp.stat);
+  if (resp.status != YP_TRUE)
+    return ypprot_err (resp.status);
 
-  *outmaplist = resp.maps;
+  *outmaplist = resp.list;
   /* We give the list not free, this will be done by ypserv
      xdr_free((xdrproc_t)xdr_ypresp_maplist, (char *)&resp); */
 
@@ -156,10 +146,10 @@ _yp_master (const char *server, char *indomain, char *inmap, char **outname)
 
   if (result != YPERR_SUCCESS)
     return result;
-  if (resp.stat != YP_TRUE)
-    return ypprot_err (resp.stat);
+  if (resp.status != YP_TRUE)
+    return ypprot_err (resp.status);
 
-  *outname = strdup (resp.peer);
+  *outname = strdup (resp.master);
   xdr_free ((xdrproc_t) xdr_ypresp_master, (char *) &resp);
 
   return *outname == NULL ? YPERR_YPERR : YPERR_SUCCESS;
@@ -170,7 +160,8 @@ print_hostname (char *param)
 {
   char hostname[MAXHOSTNAMELEN + 1];
 #if USE_FQDN
-  struct hostent *hp = NULL;
+  struct addrinfo hints, *res0;
+  int error;
 #endif
 
   if (param == NULL)
@@ -181,23 +172,24 @@ print_hostname (char *param)
       hostname[sizeof (hostname) - 1] = '\0';
     }
 #if !USE_FQDN
-  fputs (hostname, stdout);
+  printf ("%s\n", hostname);
 #else
-  if (isdigit (hostname[0]))
-    {
-      char addr[INADDRSZ];
-      if (inet_pton (AF_INET, hostname, &addr))
-	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
-    }
-  else
-    hp = gethostbyname (hostname);
+  memset (&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+  hints.ai_flags = AI_CANONNAME;  /* get the official name of the host */
 
-  if (hp == NULL)
-    fputs (hostname, stdout);
+  if ((error = getaddrinfo (hostname, NULL, &hints, &res0)))
+    {
+      printf ("%s\n", hostname);
+      return;
+    }
+
+  if (res0 && res0->ai_canonname)
+    printf ("%s\n", res0->ai_canonname);
   else
-    fputs (hp->h_name, stdout);
+    printf ("%s\n", hostname);
+  freeaddrinfo (res0);
 #endif
-  fputs ("\n", stdout);
 
   exit (0);
 }
@@ -324,7 +316,6 @@ merge_passwd (char *passwd, char *shadow)
 	  (pwd->pw_passwd[0] == 'x' || pwd->pw_passwd[0] == '*'))
 	{
 	  pass = NULL;
-#ifdef HAVE_GETSPNAM /* shadow password */
 	  spd = fgetspent (s_input);
 	  if (spd != NULL)
 	    {
@@ -343,7 +334,6 @@ merge_passwd (char *passwd, char *shadow)
 		    }
 		}
 	    }
-#endif /* HAVE_GETSPNAM */
 	  if (pass == NULL)
 	    pass = pwd->pw_passwd;
 	}
@@ -361,7 +351,6 @@ merge_passwd (char *passwd, char *shadow)
   exit (0);
 }
 
-#ifdef HAVE_GETSPNAM /* shadow password */
 static struct __sgrp *
 fgetsgent (FILE *fp)
 {
@@ -392,7 +381,6 @@ fgetsgent (FILE *fp)
     }
   return 0;
 }
-#endif /* HAVE_GETSPNAM */
 
 static void
 merge_group (char *group, char *gshadow)
@@ -437,7 +425,7 @@ merge_group (char *group, char *gshadow)
 	  (grp->gr_passwd[0] == 'x' || grp->gr_passwd[0] == '*'))
 	{
 	  pass = NULL;
-#ifdef HAVE_GETSPNAM /* shadow password */
+
 	  spd = fgetsgent (s_input);
 	  if (spd != NULL)
 	    {
@@ -456,7 +444,7 @@ merge_group (char *group, char *gshadow)
 		    }
 		}
 	    }
-#endif /* HAVE_GETSPNAM */
+
 	  if (pass == NULL)
 	    pass = grp->gr_passwd;
 	}
