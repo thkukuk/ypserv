@@ -58,7 +58,6 @@ struct __sgrp {
 #define YPERR_SUCCESS   0
 #endif
 
-static struct timeval RPCTIMEOUT = {25, 0};
 static struct timeval UDPTIMEOUT = {5, 0};
 
 static int
@@ -68,31 +67,18 @@ _yp_maplist (const char *server, char *indomain,
   CLIENT *clnt;
   struct ypresp_maplist resp;
   enum clnt_stat result;
-  int sock;
-  struct sockaddr_in saddr;
 
   if (indomain == NULL || indomain[0] == '\0')
     return YPERR_BADARGS;
 
   memset (&resp, '\0', sizeof (resp));
-  sock = RPC_ANYSOCK;
-  memset (&saddr, 0, sizeof saddr);
-  saddr.sin_family = AF_INET;
-  saddr.sin_addr.s_addr = inet_addr (server);
-  if (saddr.sin_addr.s_addr == (in_addr_t) -1)
-    {
-      struct hostent *hent = gethostbyname (server);
-      if (hent == NULL)
-	exit (1);
-      bcopy ((char *) hent->h_addr_list[0],
-	     (char *) &saddr.sin_addr, sizeof saddr.sin_addr);
-    }
-  clnt = clntudp_create (&saddr, YPPROG, YPVERS, UDPTIMEOUT, &sock);
+  clnt = clnt_create (server, YPPROG, YPVERS, "udp");
   if (clnt == NULL)
     exit (1);
+
   result = clnt_call (clnt, YPPROC_MAPLIST, (xdrproc_t) xdr_domainname,
 		      (caddr_t) & indomain, (xdrproc_t) xdr_ypresp_maplist,
-		      (caddr_t) & resp, RPCTIMEOUT);
+		      (caddr_t) & resp, UDPTIMEOUT);
 
   if (result != YPERR_SUCCESS)
     return result;
@@ -110,8 +96,6 @@ static int
 _yp_master (const char *server, char *indomain, char *inmap, char **outname)
 {
   CLIENT *clnt;
-  int sock;
-  struct sockaddr_in saddr;
   ypreq_nokey req;
   ypresp_master resp;
   enum clnt_stat result;
@@ -123,26 +107,13 @@ _yp_master (const char *server, char *indomain, char *inmap, char **outname)
   req.domain = indomain;
   req.map = inmap;
 
-  memset (&resp, '\0', sizeof (ypresp_master));
   memset (&resp, '\0', sizeof (resp));
-  sock = RPC_ANYSOCK;
-  memset (&saddr, 0, sizeof saddr);
-  saddr.sin_family = AF_INET;
-  saddr.sin_addr.s_addr = inet_addr (server);
-  if (saddr.sin_addr.s_addr == (in_addr_t) -1)
-    {
-      struct hostent *hent = gethostbyname (server);
-      if (hent == NULL)
-	exit (1);
-      bcopy ((char *) hent->h_addr_list[0],
-	     (char *) &saddr.sin_addr, sizeof saddr.sin_addr);
-    }
-  clnt = clntudp_create (&saddr, YPPROG, YPVERS, UDPTIMEOUT, &sock);
+  clnt = clnt_create (server, YPPROG, YPVERS, "udp");
   if (clnt == NULL)
     exit (1);
   result = clnt_call (clnt, YPPROC_MASTER, (xdrproc_t) xdr_ypreq_nokey,
 		      (caddr_t) & req, (xdrproc_t) xdr_ypresp_master,
-		      (caddr_t) & resp, RPCTIMEOUT);
+		      (caddr_t) & resp, UDPTIMEOUT);
 
   if (result != YPERR_SUCCESS)
     return result;
@@ -155,14 +126,64 @@ _yp_master (const char *server, char *indomain, char *inmap, char **outname)
   return *outname == NULL ? YPERR_YPERR : YPERR_SUCCESS;
 }
 
+static char *
+get_canonical_hostname (const char *hostname)
+{
+#if USE_FQDN
+  struct addrinfo hints, *res0, *res1;
+  int error;
+  char *host = NULL;
+
+  memset (&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+#if 0
+  hints.ai_flags = AI_CANONNAME;  /* get the official name of the host */
+#endif
+
+  if ((error = getaddrinfo (hostname, NULL, &hints, &res0)))
+    {
+#if 0
+      printf ("getaddrinfo: %s\n", gai_strerror (error));
+#endif
+      return strdup (hostname);
+    }
+
+  res1 = res0;
+
+  while (res1)
+    {
+      char hostbuf[NI_MAXHOST];
+
+      if ((error = getnameinfo (res1->ai_addr, res1->ai_addrlen,
+				(char *)&hostbuf, sizeof (hostbuf),
+				NULL, 0, NI_NAMEREQD)) == 0)
+	{
+	  host = strdup (hostbuf);
+	  break;
+	}
+#if 0
+      else
+	printf ("getnameinfo: %s\n", gai_strerror (error));
+#endif
+
+      res1 = res1->ai_next;
+    }
+
+  if (host == NULL)
+    host = strdup (res0->ai_canonname);
+
+  freeaddrinfo (res0);
+
+  return host;
+#else
+  return strdup (hostname);
+#endif
+}
+/* print theofficial name of the host as returned by DNS */
 static void
 print_hostname (char *param)
 {
   char hostname[MAXHOSTNAMELEN + 1];
-#if USE_FQDN
-  struct addrinfo hints, *res0;
-  int error;
-#endif
 
   if (param == NULL)
     gethostname (hostname, sizeof (hostname));
@@ -171,25 +192,8 @@ print_hostname (char *param)
       strncpy (hostname, param, sizeof (hostname));
       hostname[sizeof (hostname) - 1] = '\0';
     }
-#if !USE_FQDN
-  printf ("%s\n", hostname);
-#else
-  memset (&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
-  hints.ai_flags = AI_CANONNAME;  /* get the official name of the host */
 
-  if ((error = getaddrinfo (hostname, NULL, &hints, &res0)))
-    {
-      printf ("%s\n", hostname);
-      return;
-    }
-
-  if (res0 && res0->ai_canonname)
-    printf ("%s\n", res0->ai_canonname);
-  else
-    printf ("%s\n", hostname);
-  freeaddrinfo (res0);
-#endif
+  printf ("%s\n", get_canonical_hostname (hostname));
 
   exit (0);
 }
@@ -198,9 +202,6 @@ print_hostname (char *param)
 static void
 print_maps (char *server, char *domain)
 {
-#if USE_FQDN
-  struct hostent *hp = NULL;
-#endif
   char *master = NULL, *domainname;
   struct ypmaplist *ypmap = NULL, *y, *old;
   int ret;
@@ -215,21 +216,7 @@ print_maps (char *server, char *domain)
 	exit (1);
       }
 
-#if USE_FQDN
-  if (isdigit (server[0]))
-    {
-      char addr[INADDRSZ];
-      if (inet_pton (AF_INET, server, &addr))
-	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
-    }
-  else
-    hp = gethostbyname (server);
-  if (hp != NULL)
-    {
-      server = alloca (strlen (hp->h_name) + 1);
-      strcpy (server, hp->h_name);
-    }
-#endif
+  server = get_canonical_hostname (server);
 
   ret = _yp_maplist (server, domainname, &ypmap);
   switch (ret)
@@ -240,25 +227,9 @@ print_maps (char *server, char *domain)
 	  ret = _yp_master (server, domainname, y->map, &master);
 	  if (ret == YPERR_SUCCESS)
 	    {
-	      int is_same = 0;
-#if USE_FQDN
-	      hp = gethostbyname (master);
-	      if (hp != NULL)
-		{
-		  if (strcasecmp (server, hp->h_name) == 0)
-		    is_same = 1;
-		}
-	      else
-#endif
-		{
-		  if (strcasecmp (server, master) == 0)
-		    is_same = 1;
-		}
-	      if (is_same)
-		{
-		  fputs (y->map, stdout);
-		  fputs ("\n", stdout);
-		}
+	      if (strcasecmp (server, master) == 0)
+		printf ("%s\n", y->map);
+
 	      free (master);
 	    }
 	  old = y;
@@ -267,9 +238,13 @@ print_maps (char *server, char *domain)
 	}
       break;
     default:
+#if 0
+      printf ("_yp_maplist %s\n", yperr_string (ret));
+#endif
       exit (1);
     }
 
+  free (server);
   exit (0);
 }
 
@@ -539,53 +514,29 @@ get_dbm_entry (char *key, char *map, char *domainname)
 
 /* Show the master for all maps */
 static void
-is_master (char *map, char *domain, char *host)
+is_master (char *map, char *domainname, char *host)
 {
-#if USE_FQDN
-  struct hostent *hp = NULL;
-#endif
-  char *hostname, *domainname, *val;
+  char h_tmp[MAXHOSTNAMELEN+1];
+  char *hostname, *val;
   int ret;
-
-  if (domain != NULL)
-    domainname = domain;
-  else if ((ret = yp_get_default_domain (&domainname)) != 0)
-    {
-      fprintf (stderr, "can't get local yp domain: %s\n",
-	       yperr_string (ret));
-      exit (1);
-    }
 
   if (host)
     hostname = host;
   else
     {
-      char h_tmp[MAXHOSTNAMELEN+1];
-
       if (gethostname (h_tmp, sizeof (h_tmp)) != 0)
 	{
 	  perror ("gethostname");
 	  exit (1);
 	}
-      hostname = strdup (h_tmp);
+      hostname = h_tmp;
     }
 
-#if USE_FQDN
-  if (isdigit (hostname[0]))
-    {
-      char addr[INADDRSZ];
-      if (inet_pton (AF_INET, hostname, &addr))
-	hp = gethostbyaddr (addr, sizeof (addr), AF_INET);
-    }
-  else
-    hp = gethostbyname (hostname);
-
-  if (hp != NULL)
-    hostname = strdup (hp->h_name);
-#endif
+  hostname = get_canonical_hostname (hostname);
 
   if (strcasecmp (hostname,
-	  (val = get_dbm_entry ("YP_MASTER_NAME", map, domainname))) == 0)
+		  (val = get_dbm_entry ("YP_MASTER_NAME", map, domainname)))
+      == 0)
     ret = 0;
   else
     ret = 1;
@@ -675,14 +626,26 @@ main (int argc, char *argv[])
 	print_hostname (argv[0]);
     }
 
-  if (master != NULL)
-    print_maps (master, domainname);
-
   if (merge_pwd && argc == 2)
     merge_passwd (argv[0], argv[1]);
 
   if (merge_grp && argc == 2)
     merge_group (argv[0], argv[1]);
+
+  if (domainname == NULL)
+    {
+      int ret;
+
+      if ((ret = yp_get_default_domain (&domainname)) != 0)
+	{
+	  fprintf (stderr, "can't get local yp domain: %s\n",
+		   yperr_string (ret));
+	  exit (1);
+	}
+    }
+
+  if (master != NULL)
+    print_maps (master, domainname);
 
   if (map)
     is_master (map, domainname, NULL);

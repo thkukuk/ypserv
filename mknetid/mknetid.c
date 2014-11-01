@@ -23,6 +23,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -137,7 +138,7 @@ main (int argc, char *argv[])
     Usage (1);
 
   if (domain == NULL)
-    {      
+    {
       if (getdomainname (domainbuf, sizeof (domainbuf)) != 0)
 	{
 	  fprintf (stderr, "YPPUSH: Cannot get default domain\n");

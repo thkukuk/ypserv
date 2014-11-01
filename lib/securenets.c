@@ -159,7 +159,7 @@ load_securenets (void)
 	  if ((error = getaddrinfo (col_host, NULL, &hints, &res0)))
 	    {
 	      log_msg ("securenets (%d) badly formated: %s",
-		       line, gai_strerror(error));
+		       line, gai_strerror (error));
 	      continue;
 	    }
 
@@ -195,7 +195,7 @@ load_securenets (void)
 	  if ((error = getaddrinfo (col_mask, NULL, &hints, &res0)))
 	    {
 	      log_msg ("securenets (%d) badly formated: %s",
-		       line, gai_strerror(error));
+		       line, gai_strerror (error));
 	      free (tmp);
 	      continue;
 	    }
@@ -222,7 +222,7 @@ load_securenets (void)
 	      if ((error = getaddrinfo (col_host, NULL, &hints, &res0)))
 		{
 		  log_msg ("securenets (%d) badly formated: %s",
-			   line, gai_strerror(error));
+			   line, gai_strerror (error));
 		  continue;
 		}
 	    }
