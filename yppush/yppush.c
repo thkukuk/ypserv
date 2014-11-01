@@ -535,6 +535,60 @@ yppush_foreach (const char *host)
   return 0;
 }
 
+static char *
+get_canonical_hostname (const char *hostname)
+{
+#if USE_FQDN
+  struct addrinfo hints, *res0, *res1;
+  int error;
+  char *host = NULL;
+
+  memset (&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+#if 0
+  hints.ai_flags = AI_CANONNAME;  /* get the official name of the host */
+#endif
+
+  if ((error = getaddrinfo (hostname, NULL, &hints, &res0)))
+    {
+#if 0
+      printf ("getaddrinfo: %s\n", gai_strerror (error));
+#endif
+      return strdup (hostname);
+    }
+
+  res1 = res0;
+
+  while (res1)
+    {
+      char hostbuf[NI_MAXHOST];
+
+      if ((error = getnameinfo (res1->ai_addr, res1->ai_addrlen,
+                                (char *)&hostbuf, sizeof (hostbuf),
+                                NULL, 0, NI_NAMEREQD)) == 0)
+        {
+          host = strdup (hostbuf);
+          break;
+        }
+#if 0
+      else
+        printf ("getnameinfo: %s\n", gai_strerror (error));
+#endif
+
+      res1 = res1->ai_next;
+    }
+
+  if (host == NULL)
+    host = strdup (res0->ai_canonname);
+
+  freeaddrinfo (res0);
+
+  return host;
+#else
+  return strdup (hostname);
+#endif
+}
+
 static void
 sig_child (int sig UNUSED)
 {
@@ -680,23 +734,14 @@ main (int argc, char **argv)
       log_msg ("YPPUSH: Cannot determine local hostname");
       return 1;
     }
-#if USE_FQDN
   else
     {
-      struct hostent *hp;
+      char *cp;
 
-      if (!(hp = gethostbyname (local_hostname)))
-	{
-	  perror ("YPPUSH: gethostbyname()");
-	  log_msg ("YPPUSH: using not FQDN name");
-	}
-      else
-	{
-	  strncpy (local_hostname, hp->h_name, MAXHOSTNAMELEN);
-	  local_hostname[MAXHOSTNAMELEN] = '\0';
-	}
+      cp = get_canonical_hostname (local_hostname);
+      strncpy (local_hostname, cp, sizeof (local_hostname) -1);
     }
-#endif
+
 
   if (hostliste == NULL)
     {
