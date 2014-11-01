@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2006, 2011 Thorsten Kukuk
+/* Copyright (c) 1996-2006, 2011, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -520,11 +520,11 @@ dump_file (char *dbmName)
 	        perror (dbmName);
 	        exit (1);
               }
-            
+
             printf ("%.*s\t%.*s\n",
                   key.dsize, key.dptr,
                   data.dsize, data.dptr);
-	  
+
             if (!tcbdbcurnext (cur))
               break;
           }
@@ -549,6 +549,61 @@ send_clear (void)
 	       clnt_sperrno ((enum clnt_stat) stat));
     }
 }
+
+static char *
+get_canonical_hostname (const char *hostname)
+{
+#if USE_FQDN
+  struct addrinfo hints, *res0, *res1;
+  int error;
+  char *host = NULL;
+
+  memset (&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+#if 0
+  hints.ai_flags = AI_CANONNAME;  /* get the official name of the host */
+#endif
+
+  if ((error = getaddrinfo (hostname, NULL, &hints, &res0)))
+    {
+#if 0
+      printf ("getaddrinfo: %s\n", gai_strerror (error));
+#endif
+      return strdup (hostname);
+    }
+
+  res1 = res0;
+
+  while (res1)
+    {
+      char hostbuf[NI_MAXHOST];
+
+      if ((error = getnameinfo (res1->ai_addr, res1->ai_addrlen,
+                                (char *)&hostbuf, sizeof (hostbuf),
+                                NULL, 0, NI_NAMEREQD)) == 0)
+        {
+          host = strdup (hostbuf);
+          break;
+        }
+#if 0
+      else
+        printf ("getnameinfo: %s\n", gai_strerror (error));
+#endif
+
+      res1 = res1->ai_next;
+    }
+
+  if (host == NULL)
+    host = strdup (res0->ai_canonname);
+
+  freeaddrinfo (res0);
+
+  return host;
+#else
+  return strdup (hostname);
+#endif
+}
+
 
 static void
 Usage (int exit_code)
@@ -680,23 +735,15 @@ main (int argc, char *argv[])
 	{
 	  if (strlen (masterName) == 0)
 	    {
+	      char *cp;
+
 	      if (gethostname (masterName, sizeof (masterName)) < 0)
 		perror ("gethostname");
-#if USE_FQDN /* XXX don't use gethostbyname */
-	      else
-		{
-		  struct hostent *hp;
 
-		  if (!(hp = gethostbyname (masterName)))
-		    perror ("gethostbyname()");
-		  else
-		    {
-		      strncpy (masterName, hp->h_name, MAXHOSTNAMELEN);
-		      masterName[MAXHOSTNAMELEN] = '\0';
-		    }
-		}
-#endif
+	      cp = get_canonical_hostname (masterName);
+	      strncpy (masterName, cp, sizeof (masterName) -1);
 	    }
+
 	  create_file (argv[0], argv[1], masterName, domainName,
 		       inputName, outputName, aliases, shortline,
 		       b_flag, s_flag, remove_comments, check_limit);

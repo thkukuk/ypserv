@@ -179,6 +179,7 @@ get_canonical_hostname (const char *hostname)
   return strdup (hostname);
 #endif
 }
+
 /* print theofficial name of the host as returned by DNS */
 static void
 print_hostname (char *param)
