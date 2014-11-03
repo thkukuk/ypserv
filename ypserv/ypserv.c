@@ -463,29 +463,126 @@ main (int argc, char **argv)
   while ((nconf = __rpc_getconf (nc_handle)))
     {
       SVCXPRT *xprt;
+      struct sockaddr *sa;
+      struct sockaddr_in sin;
+      struct sockaddr_in6 sin6;
+      int sock;
+      sa_family_t family; /* AF_INET, AF_INET6 */
+      int type; /* SOCK_DGRAM (udp), SOCK_STREAM (tcp) */
+      int proto; /* IPPROTO_UDP, IPPROTO_TCP */
 
       if (debug_flag)
-	log_msg ("Call svc_tp_create for %s", nconf->nc_protofmly);
+	log_msg ("Register ypserv for %s,%s",
+		 nconf->nc_protofmly, nconf->nc_proto);
 
-      if ((xprt = svc_tp_create (ypprog_2, YPPROG, YPVERS, nconf)) == NULL)
+      if (strcmp (nconf->nc_protofmly, "inet6") == 0)
+	family = AF_INET6;
+      else if (strcmp (nconf->nc_protofmly, "inet") == 0)
+	family = AF_INET;
+      else
+	continue; /* we don't support nconf->nc_protofmly */
+
+      if (strcmp (nconf->nc_proto, "udp") == 0)
+	{
+	  type = SOCK_DGRAM;
+	  proto = IPPROTO_UDP;
+	}
+      else if (strcmp (nconf->nc_proto, "tcp") == 0)
+	{
+	  type = SOCK_STREAM;
+	  proto = IPPROTO_TCP;
+	}
+      else
+	continue; /* We don't support nconf->nc_proto */
+
+      if ((sock = socket (family, type, proto)) < 0)
+	{
+	  log_msg ("Cannot create socket for %s,%s: %s",
+		   nconf->nc_protofmly, nconf->nc_proto,
+		   strerror (errno));
+	  continue;
+	}
+
+      if (family == AF_INET6)
+	{
+	  /* Disallow v4-in-v6 to allow host-based access checks */
+	  int i;
+
+	  if (setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY,
+			  &i, sizeof(i)) == -1)
+	    {
+	      log_msg ("ERROR: cannot disable v4-in-v6 on %s6 socket",
+		       nconf->nc_proto);
+	      return 1;
+	    }
+	}
+
+      switch (family)
+	{
+	case AF_INET:
+	  memset (&sin, 0, sizeof(sin));
+	  sin.sin_family = AF_INET;
+	  if (my_port > 0)
+	    sin.sin_port = htons (my_port);
+	  sa = (struct sockaddr *)(void *)&sin;
+	  break;
+	case AF_INET6:
+	  memset (&sin6, 0, sizeof (sin6));
+	  sin6.sin6_family = AF_INET6;
+	  if (my_port > 0)
+	    sin6.sin6_port = htons (my_port);
+	  sa = (struct sockaddr *)(void *)&sin6;
+	  break;
+	default:
+	  log_msg ("Unsupported address family %d", family);
+	  return -1;
+	}
+
+      if (bindresvport_sa (sock, sa) == -1)
+	{
+	  if (my_port > 0)
+	    log_msg ("Cannot bind to reserved port %d (%s)",
+		     my_port, strerror (errno));
+	  else
+	    log_msg ("bindresvport failed: %s",
+		     strerror (errno));
+	  return 1;
+	}
+
+      if (type == SOCK_STREAM)
+	{
+	  listen (sock, SOMAXCONN);
+	  xprt = svc_vc_create (sock, 0, 0);
+	}
+      else
+	xprt = svc_dg_create (sock, 0, 0);
+
+      if (xprt == NULL)
 	{
 	  log_msg ("terminating: cannot create rpcbind handle");
 	  return 1;
 	}
 
-      /* support ypserv V1, but only on udp/tcp transports */
-      if (strcmp(nconf->nc_protofmly, NC_INET) == 0)
+      rpcb_unset (YPPROG, YPVERS, nconf);
+      if (!svc_reg (xprt, YPPROG, YPVERS, ypprog_2, nconf))
 	{
-	  (void) rpcb_unset(YPPROG, YPOLDVERS, nconf);
-	  if (!svc_reg(xprt, YPPROG, YPOLDVERS, ypprog_2, nconf))
+	  log_msg ("unable to register (YPPROG, 2) for %s, %s.",
+		   nconf->nc_protofmly, nconf->nc_proto);
+	  continue;
+	}
+
+      if (family == AF_INET)
+	{
+	  rpcb_unset (YPPROG, YPVERS_ORIG, nconf);
+	  if (!svc_reg (xprt, YPPROG, YPVERS_ORIG,
+			ypprog_2, nconf))
 	    {
-	      log_msg ("unable to register (YPPROG, YPOLDVERS).");
+	      log_msg ("unable to register (YPPROG, 1) [%s]",
+		       nconf->nc_netid);
 	      continue;
-              }
-
-          }
+	    }
+	}
     }
-
   __rpc_endconf (nc_handle);
 
   /* If we use systemd as an init system, we may want to give it
