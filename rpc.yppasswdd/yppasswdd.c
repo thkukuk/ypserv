@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996-2006, 2010, 2011, 2012 Thorsten Kukuk, <kukuk@thkukuk.de>
+   Copyright (c) 1996-2006, 2010, 2011, 2012, 2014 Thorsten Kukuk, <kukuk@thkukuk.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <pwd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -38,10 +39,12 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
-#include <rpc/pmap_clnt.h>
-#include "yppasswd.h"
+#include <rpc/nettype.h>
+#include <rpcsvc/yp_prot.h>
+#include <rpcsvc/yppasswd.h>
 #include <getopt.h>
 
+#include "yppwd_local.h"
 #include "log_msg.h"
 #include "pidfile.h"
 #include "access.h"
@@ -87,14 +90,20 @@ yppasswdprog_1 (struct svc_req *rqstp, SVCXPRT * transp)
   memset ((char *) &argument, 0, sizeof (argument));
   if (!svc_getargs (transp, xdr_argument, (caddr_t) &argument))
     {
-      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+      char namebuf6[INET6_ADDRSTRLEN];
+      struct netconfig *nconf;
+      const struct netbuf *rqhost = svc_getrpccaller (rqstp->rq_xprt);
+
+      nconf = getnetconfigent (rqstp->rq_xprt->xp_netid);
 
       log_msg ("cannot decode arguments for %d from %s",
-              rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+	       rqstp->rq_proc, taddr2ipstr (nconf, rqhost,
+					    namebuf6, sizeof (namebuf6)));
       /* try to free already allocated memory during decoding */
       svc_freeargs (transp, xdr_argument, (caddr_t) &argument);
-
       svcerr_decode (transp);
+      freenetconfigent (nconf);
+
       return;
     }
   result = yppasswdproc_pwupdate_1 (&argument, rqstp);
@@ -135,7 +144,7 @@ sig_child (int sig UNUSED)
 static void
 sig_quit (int sig UNUSED)
 {
-  pmap_unset (YPPASSWDPROG, YPPASSWDVERS);
+  rpcb_unset (YPPASSWDPROG, YPPASSWDVERS, NULL);
   unlink (_YPPASSWDD_PIDFILE);
   exit (0);
 }
@@ -186,8 +195,9 @@ install_sighandler (void)
 int
 main (int argc, char **argv)
 {
-  SVCXPRT *transp;
-  int my_port = -1, my_socket;
+  struct netconfig *nconf;
+  int my_port = -1;
+  void *nc_handle;
   int c;
 
   /* Initialize logging. */
@@ -408,54 +418,143 @@ main (int argc, char **argv)
   /* Register a signal handler to reap children after they terminated */
   install_sighandler ();
 
+#if 0 /* XXX */
+  if (!__rpcbind_is_up())
+    {
+      log_msg ("terminating: rpcbind is not running");
+      return 1;
+    }
+#endif
+
   /* Create the RPC server */
-  pmap_unset (YPPASSWDPROG, YPPASSWDVERS);
+  rpcb_unset (YPPASSWDPROG, YPPASSWDVERS, NULL);
 
-  if (my_port >= 0)
+  nc_handle = __rpc_setconf ("netpath");   /* open netconfig file */
+  if (nc_handle == NULL)
     {
-      struct sockaddr_in s_in;
-      int result;
+      log_msg ("could not read /etc/netconfig, exiting..");
+      return 1;
+    }
 
-      my_socket = socket (AF_INET, SOCK_DGRAM, 0);
-      if (my_socket < 0)
+
+  while ((nconf = __rpc_getconf (nc_handle)))
+    {
+      SVCXPRT *xprt;
+      struct sockaddr *sa;
+      struct sockaddr_in sin;
+      struct sockaddr_in6 sin6;
+      int sock;
+      sa_family_t family; /* AF_INET, AF_INET6 */
+      int type; /* SOCK_DGRAM (udp), SOCK_STREAM (tcp) */
+      int proto; /* IPPROTO_UDP, IPPROTO_TCP */
+
+      if (debug_flag)
+        log_msg ("Register ypserv for %s,%s",
+                 nconf->nc_protofmly, nconf->nc_proto);
+
+      if (strcmp (nconf->nc_protofmly, "inet6") == 0)
+        family = AF_INET6;
+      else if (strcmp (nconf->nc_protofmly, "inet") == 0)
+        family = AF_INET;
+      else
+        continue; /* we don't support nconf->nc_protofmly */
+
+      if (strcmp (nconf->nc_proto, "udp") == 0)
         {
-          log_msg ("can not create UDP: %s", strerror (errno));
-          exit (1);
+          type = SOCK_DGRAM;
+          proto = IPPROTO_UDP;
+        }
+      else if (strcmp (nconf->nc_proto, "tcp") == 0)
+        {
+          type = SOCK_STREAM;
+          proto = IPPROTO_TCP;
+        }
+      else
+        continue; /* We don't support nconf->nc_proto */
+
+      if ((sock = socket (family, type, proto)) < 0)
+        {
+          log_msg ("Cannot create socket for %s,%s: %s",
+                   nconf->nc_protofmly, nconf->nc_proto,
+                   strerror (errno));
+          continue;
         }
 
-      memset ((char *) &s_in, 0, sizeof (s_in));
-      s_in.sin_family = AF_INET;
-      s_in.sin_addr.s_addr = htonl (INADDR_ANY);
-      s_in.sin_port = htons (my_port);
-
-      result = bind (my_socket, (struct sockaddr *) &s_in,
-                     sizeof (s_in));
-      if (result < 0)
+      if (family == AF_INET6)
         {
-          log_msg ("rpc.yppasswdd: can not bind UDP: %s ", strerror (errno));
-          exit (1);
+          /* Disallow v4-in-v6 to allow host-based access checks */
+
+          int i;
+
+          if (setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY,
+                          &i, sizeof(i)) == -1)
+            {
+              log_msg ("ERROR: cannot disable v4-in-v6 on %s6 socket",
+                       nconf->nc_proto);
+              return 1;
+            }
+        }
+
+      switch (family)
+        {
+        case AF_INET:
+          memset (&sin, 0, sizeof(sin));
+          sin.sin_family = AF_INET;
+          if (my_port > 0)
+            sin.sin_port = htons (my_port);
+          sa = (struct sockaddr *)(void *)&sin;
+          break;
+        case AF_INET6:
+          memset (&sin6, 0, sizeof (sin6));
+          sin6.sin6_family = AF_INET6;
+          if (my_port > 0)
+            sin6.sin6_port = htons (my_port);
+          sa = (struct sockaddr *)(void *)&sin6;
+          break;
+        default:
+          log_msg ("Unsupported address family %d", family);
+          return -1;
+        }
+
+      if (bindresvport_sa (sock, sa) == -1)
+        {
+          if (my_port > 0)
+            log_msg ("Cannot bind to reserved port %d (%s)",
+                     my_port, strerror (errno));
+          else
+            log_msg ("bindresvport failed: %s",
+                     strerror (errno));
+          return 1;
+        }
+
+      if (type == SOCK_STREAM)
+        {
+          listen (sock, SOMAXCONN);
+          xprt = svc_vc_create (sock, 0, 0);
+        }
+      else
+        xprt = svc_dg_create (sock, 0, 0);
+
+      if (xprt == NULL)
+        {
+          log_msg ("terminating: cannot create rpcbind handle");
+          return 1;
+        }
+
+      rpcb_unset (YPPASSWDPROG, YPPASSWDVERS, nconf);
+      if (!svc_reg (xprt, YPPASSWDPROG, YPPASSWDVERS, yppasswdprog_1, nconf))
+        {
+          log_msg ("unable to register (YPPASSWDPROG, 1) for %s, %s.",
+                   nconf->nc_protofmly, nconf->nc_proto);
+          continue;
         }
     }
-  else
-    my_socket = RPC_ANYSOCK;
+  __rpc_endconf (nc_handle);
 
-  transp = svcudp_create (my_socket);
-  if (transp == NULL)
-    {
-      log_msg ("cannot create udp service.\n");
-      exit (1);
-    }
-  if (!svc_register (transp, YPPASSWDPROG, YPPASSWDVERS, yppasswdprog_1,
-		     IPPROTO_UDP))
-    {
-      log_msg ("unable to register yppaswdd udp service.\n");
-      exit (1);
-    }
-
-  /* If we use systemd as an init system, we may want to give it 
+  /* If we use systemd as an init system, we may want to give it
      a message, that this daemon is ready to accept connections.
-     At this time, sockets for receiving connections are already 
-     created, so we can say we're ready now. It is a nop if we 
+     At this time, sockets for receiving connections are already
+     created, so we can say we're ready now. It is a nop if we
      don't use systemd. */
   announce_ready();
 

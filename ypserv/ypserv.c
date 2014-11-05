@@ -249,8 +249,8 @@ sig_usr1 (int sig UNUSED)
 static void
 sig_quit (int sig UNUSED)
 {
-  pmap_unset (YPPROG, YPVERS);
-  pmap_unset (YPPROG, YPOLDVERS);
+  rpcb_unset (YPPROG, YPVERS, NULL);
+  rpcb_unset (YPPROG, YPOLDVERS, NULL);
   unlink (_YPSERV_PIDFILE);
 
   exit (0);
@@ -434,8 +434,6 @@ main (int argc, char **argv)
    * resources.
    */
   signal (SIGCHLD, sig_child);
-
-  /* XXX my_port handling missing! */
 
 #if 0 /* XXX */
   if (!__rpcbind_is_up())

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2004, 2012 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2004, 2012, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -35,26 +35,18 @@
 #include <netinet/in.h>
 #include <syslog.h>
 #include <arpa/inet.h>
+#include <rpcsvc/yp_prot.h>
 #include "ypxfrd.h"
 #include "log_msg.h"
 
 #define _RPCSVC_CLOSEDOWN 120
 
-extern int _rpcpmstart;		/* Started by a port monitor ? */
-extern int _rpcfdtype;		/* Whether Stream or Datagram ? */
 extern int _rpcsvcdirty;	/* Still serving ? */
 
 static
 void _msgout(char* msg)
 {
-#ifdef RPC_SVC_FG
-  if (_rpcpmstart)
-    log_msg ("%s", msg);
-  else
-    fprintf (stderr, "%s\n", msg);
-#else
   log_msg ("%s", msg);
-#endif
 }
 
 void
@@ -89,13 +81,19 @@ ypxfrd_freebsd_prog_1 (struct svc_req *rqstp, SVCXPRT *transp)
   memset(&argument, 0, sizeof (argument));
   if (!svc_getargs(transp, xdr_argument, (caddr_t) &argument))
     {
-      const struct sockaddr_in *sin = svc_getcaller (rqstp->rq_xprt);
+      char namebuf6[INET6_ADDRSTRLEN];
+      struct netconfig *nconf;
+      const struct netbuf *nbuf = svc_getrpccaller (rqstp->rq_xprt);
+
+      nconf = getnetconfigent (rqstp->rq_xprt->xp_netid);
 
       log_msg ("cannot decode arguments for %d from %s",
-              rqstp->rq_proc, inet_ntoa (sin->sin_addr));
+              rqstp->rq_proc, taddr2ipstr (nconf, nbuf,
+					   namebuf6, sizeof (namebuf6)));
       /* try to free already allocated memory during decoding */
       svc_freeargs (transp, xdr_argument, (caddr_t) &argument);
 
+      freenetconfigent (nconf);
       svcerr_decode(transp);
       _rpcsvcdirty = 0;
       return;

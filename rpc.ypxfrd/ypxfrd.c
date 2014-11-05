@@ -37,6 +37,7 @@
 #include <sys/stat.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
+#include <rpc/nettype.h>
 #include <getopt.h>
 #include "ypxfrd.h"
 #include "access.h"
@@ -51,7 +52,7 @@
 
 #define _YPXFRD_PIDFILE _PATH_VARRUN"ypxfrd.pid"
 
-extern void ypxfrd_freebsd_prog_1(struct svc_req *, SVCXPRT *);
+extern void ypxfrd_freebsd_prog_1 (struct svc_req *, SVCXPRT *);
 
 int _rpcpmstart = 0;
 int _rpcfdtype = 0;
@@ -140,13 +141,10 @@ usage (int exitcode)
 int
 main (int argc, char **argv)
 {
-  SVCXPRT *main_transp;
+  struct netconfig *nconf;
+  void *nc_handle;
   int my_port = -1;
-  int my_socket;
-  struct sockaddr_in socket_address;
-  int result;
   struct sigaction sa;
-  socklen_t socket_size;
 
   progname = strrchr (argv[0], '/');
   if (progname == (char *) NULL)
@@ -337,103 +335,128 @@ main (int argc, char **argv)
   sigemptyset(&sa.sa_mask);
   sigaction(SIGHUP, &sa, NULL);
 
-  pmap_unset(YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS);
-
-  /* XXX */
-  socket_size = sizeof(socket_address);
-  _rpcfdtype = 0;
-  if (getsockname(0, (struct sockaddr *)&socket_address, &socket_size) == 0)
+  rpcb_unset(YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS, NULL);
+  nc_handle = __rpc_setconf ("netpath");   /* open netconfig file */
+  if (nc_handle == NULL)
     {
-      socklen_t int_size = sizeof (int);
-
-      if (socket_address.sin_family != AF_INET)
-	return 1;
-      if (getsockopt(0, SOL_SOCKET, SO_TYPE, (void*)&_rpcfdtype,
-		     &int_size) == -1)
-	return 1;
-      _rpcpmstart = 1;
-      my_socket = 0;
+      log_msg ("could not read /etc/netconfig, exiting..");
+      return 1;
     }
-  else
-    my_socket = RPC_ANYSOCK;
 
-  if ((_rpcfdtype == 0) || (_rpcfdtype == SOCK_DGRAM))
+  while ((nconf = __rpc_getconf (nc_handle)))
     {
-      if (_rpcfdtype == 0 && my_port > 0)
+      SVCXPRT *xprt;
+      struct sockaddr *sa;
+      struct sockaddr_in sin;
+      struct sockaddr_in6 sin6;
+      int sock;
+      sa_family_t family; /* AF_INET, AF_INET6 */
+      int type; /* SOCK_DGRAM (udp), SOCK_STREAM (tcp) */
+      int proto; /* IPPROTO_UDP, IPPROTO_TCP */
+
+      if (debug_flag)
+        log_msg ("Register ypserv for %s,%s",
+                 nconf->nc_protofmly, nconf->nc_proto);
+
+      if (strcmp (nconf->nc_protofmly, "inet6") == 0)
+        family = AF_INET6;
+      else if (strcmp (nconf->nc_protofmly, "inet") == 0)
+        family = AF_INET;
+      else
+        continue; /* we don't support nconf->nc_protofmly */
+
+      if (strcmp (nconf->nc_proto, "udp") == 0)
+        {
+          type = SOCK_DGRAM;
+          proto = IPPROTO_UDP;
+        }
+      else if (strcmp (nconf->nc_proto, "tcp") == 0)
+        {
+          type = SOCK_STREAM;
+          proto = IPPROTO_TCP;
+        }
+      else
+        continue; /* We don't support nconf->nc_proto */
+
+      if ((sock = socket (family, type, proto)) < 0)
+        {
+          log_msg ("Cannot create socket for %s,%s: %s",
+                   nconf->nc_protofmly, nconf->nc_proto,
+                   strerror (errno));
+          continue;
+        }
+
+      if (family == AF_INET6)
+        {
+          /* Disallow v4-in-v6 to allow host-based access checks */
+
+          int i;
+
+          if (setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY,
+                          &i, sizeof(i)) == -1)
+            {
+              log_msg ("ERROR: cannot disable v4-in-v6 on %s6 socket",
+                       nconf->nc_proto);
+              return 1;
+            }
+        }
+
+      switch (family)
+        {
+        case AF_INET:
+          memset (&sin, 0, sizeof(sin));
+          sin.sin_family = AF_INET;
+          if (my_port > 0)
+            sin.sin_port = htons (my_port);
+          sa = (struct sockaddr *)(void *)&sin;
+          break;
+        case AF_INET6:
+          memset (&sin6, 0, sizeof (sin6));
+          sin6.sin6_family = AF_INET6;
+          if (my_port > 0)
+            sin6.sin6_port = htons (my_port);
+          sa = (struct sockaddr *)(void *)&sin6;
+          break;
+        default:
+          log_msg ("Unsupported address family %d", family);
+          return -1;
+        }
+
+      if (bindresvport_sa (sock, sa) == -1)
+        {
+          if (my_port > 0)
+            log_msg ("Cannot bind to reserved port %d (%s)",
+                     my_port, strerror (errno));
+          else
+            log_msg ("bindresvport failed: %s",
+                     strerror (errno));
+          return 1;
+        }
+
+      if (type == SOCK_STREAM)
+        {
+          listen (sock, SOMAXCONN);
+          xprt = svc_vc_create (sock, 0, 0);
+        }
+      else
+        xprt = svc_dg_create (sock, 0, 0);
+
+      if (xprt == NULL)
+        {
+          log_msg ("terminating: cannot create rpcbind handle");
+          return 1;
+        }
+
+      rpcb_unset (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS, nconf);
+      if (!svc_reg (xprt, YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
+		    ypxfrd_freebsd_prog_1, nconf))
 	{
-	  my_socket = socket (AF_INET, SOCK_DGRAM, 0);
-	  if (my_socket < 0)
-	    {
-	      log_msg("can not create UDP: %s",strerror(errno));
-	      return 1;
-	    }
-
-	  memset((char *) &socket_address, 0, sizeof(socket_address));
-	  socket_address.sin_family = AF_INET;
-	  socket_address.sin_addr.s_addr = htonl (INADDR_ANY);
-	  socket_address.sin_port = htons (my_port);
-
-	  result = bind (my_socket, (struct sockaddr *) &socket_address,
-			 sizeof (socket_address));
-	  if (result < 0)
-	    {
-	      log_msg("%s: can not bind UDP: %s ", progname,strerror(errno));
-	      return 1;
-	    }
-	}
-
-      main_transp = svcudp_create(my_socket);
-      if (main_transp == NULL)
-	{
-	  log_msg("cannot create udp service.");
+	  log_msg ("unable to register (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS) for %s, %s.",
+		   nconf->nc_protofmly, nconf->nc_proto);
 	  return 1;
 	}
-      if (!svc_register(main_transp, YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
-			ypxfrd_freebsd_prog_1, IPPROTO_UDP))
-	{
-	  log_msg("unable to register (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS, udp).");
-	  return 1;
-	}
     }
-
-  if ((_rpcfdtype == 0) || (_rpcfdtype == SOCK_STREAM))
-    {
-      if (_rpcfdtype == 0 && my_port >= 0)
-	{
-	  my_socket = socket (AF_INET, SOCK_STREAM, 0);
-	  if (my_socket < 0)
-	    {
-	      log_msg ("%s: can not create TCP ",progname);
-	      return 1;
-	    }
-
-	  memset((char *) &socket_address, 0, sizeof(socket_address));
-	  socket_address.sin_family = AF_INET;
-	  socket_address.sin_addr.s_addr = htonl (INADDR_ANY);
-	  socket_address.sin_port = htons (my_port);
-
-	  result = bind (my_socket, (struct sockaddr *) &socket_address,
-			 sizeof (socket_address));
-	  if (result < 0)
-	    {
-	      log_msg("%s: can not bind TCP ",progname);
-	      return 1;
-	    }
-	}
-      main_transp = svctcp_create(my_socket, 0, 0);
-      if (main_transp == NULL)
-	{
-	  log_msg("%s: cannot create tcp service\n", progname);
-	  exit(1);
-	}
-      if (!svc_register(main_transp, YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
-			ypxfrd_freebsd_prog_1, IPPROTO_TCP))
-	{
-	  log_msg("%s: unable to register (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS, tcp)\n",
-		 progname);
-	  exit(1);
-	}
-    }
+  __rpc_endconf (nc_handle);
 
   if (_rpcpmstart)
     {

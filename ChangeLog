@@ -1,9 +1,23 @@
+2014-11-05  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.0
+
+	* rpc.yppasswdd/yppasswdd.c: Port to TI-RPC.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+
+2014-11-04  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* rpc.yppasswdd/yppasswd_xdr.c: Use header file from libnis.
+
+	* rpc.yppasswdd/update.c: Adjust for TI-RPC.
+
 2014-10-31  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* ypxfr/ypxfr_xdr.c: Remove duplicate/unused functions.
 
 	* ypxfr/ypxfr.c: Convert to TI-RPC/IPv6 enablement.
 	* yppush/yppush.c: Likewise.
+	* ypserv/ypserv.c: Likewise.
 	* rpc.ypxfrd/ypxfrd_server.c: Likewise.
 
 2014-10-30  Thorsten Kukuk  <kukuk@thkukuk.de>

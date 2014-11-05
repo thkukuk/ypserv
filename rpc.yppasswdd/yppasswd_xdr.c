@@ -1,23 +1,24 @@
-/* 
+/*
  * yppasswdd
  * Copyright 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
  *
  * This program is covered by the GNU General Public License, version 2.
  * It is provided in the hope that it is useful. However, the author
  * disclaims ALL WARRANTIES, expressed or implied. See the GPL for details.
- * 
+ *
  * This file was generated automatically by rpcgen from yppasswd.x, and
  * editied manually.
  */
 
+#include <pwd.h>
 #include <rpc/rpc.h>
 #include <rpcsvc/yp_prot.h>
 #include <rpcsvc/ypclnt.h>
-#include "yppasswd.h"
+#include <rpcsvc/yppasswd.h>
 
 
 bool_t
-xdr_xpasswd(XDR *xdrs, xpasswd *objp)
+xdr_passwd(XDR *xdrs, struct passwd *objp)
 {
 	return xdr_string(xdrs, &objp->pw_name, ~0)
 	    && xdr_string(xdrs, &objp->pw_passwd, ~0)
@@ -33,7 +34,5 @@ bool_t
 xdr_yppasswd(XDR *xdrs, yppasswd *objp)
 {
 	return xdr_string(xdrs, &objp->oldpass, ~0)
-	    && xdr_xpasswd(xdrs, &objp->newpw);
+	    && xdr_passwd(xdrs, &objp->newpw);
 }
-
-

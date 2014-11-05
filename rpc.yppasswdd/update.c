@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011, 2012 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011, 2012, 2014 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -26,16 +26,18 @@
 #include <string.h>
 #include <alloca.h>
 #include <stdlib.h>
+#include <crypt.h>
+#include <shadow.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
-#include "yppasswd.h"
+#include <rpcsvc/yp_prot.h>
+#include <rpcsvc/yppasswd.h>
+#include "yppwd_local.h"
 #include "log_msg.h"
-#include <crypt.h>
-#include <shadow.h>
 
 #ifndef CHECKROOT
 /* Set to 0 if you don't want to check against the root password
@@ -69,8 +71,8 @@ char *external_update_program = NULL;
 static bool_t adjuct_used = FALSE;
 
 static int external_update_env (yppasswd *yppw);
-static int external_update_pipe (yppasswd *yppw, char *logbuf);
-static int update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
+static int external_update_pipe (yppasswd *yppw);
+static int update_files (yppasswd *yppw, int *shadow_changed,
 			 int *passwd_changed, int *chfn, int *chsh);
 
 /* Argument validation. Avoid \n... (ouch).
@@ -93,7 +95,7 @@ validate_string (char *what, char *str)
 /* Check that nobody tries to change special NIS entries beginning
    with +/- and that all chracters are allowed. */
 static inline int
-validate_args (struct xpasswd *pw)
+validate_args (struct passwd *pw)
 {
   if (pw->pw_name[0] == '-' || pw->pw_name[0] == '+')
     {
@@ -203,7 +205,7 @@ putspent_adjunct (const struct spwd *p, FILE *stream)
 
 /* Check if the password the user supplied matches the old one */
 static int
-password_ok (char *plain, char *crypted, char *root, char *logbuf)
+password_ok (char *plain, char *crypted, char *root)
 {
   char *crypted_new;
   if (crypted[0] == '\0')
@@ -211,7 +213,7 @@ password_ok (char *plain, char *crypted, char *root, char *logbuf)
   crypted_new = crypt (plain, crypted);
   if (crypted_new == NULL)
     {
-      log_msg ("crypt() call failed.", logbuf);
+      log_msg ("crypt() call failed.");
       return 0;
     }
   if (strcmp (crypted_new, crypted) == 0)
@@ -220,7 +222,7 @@ password_ok (char *plain, char *crypted, char *root, char *logbuf)
   crypted_new = crypt (plain, root);
   if (crypted_new == NULL)
     {
-      log_msg ("crypt() call failed.", logbuf);
+      log_msg ("crypt() call failed.");
       return 0;
     }
   if (strcmp (crypted_new, root) == 0)
@@ -258,20 +260,24 @@ is_allowed_to_change (const struct spwd *sp)
 int *
 yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 {
+  char namebuf6[INET6_ADDRSTRLEN];
   int shadow_changed = 0, passwd_changed = 0, chsh = 0, chfn = 0;
   int retries;
   static int res;                /* I hate static variables */
-  char *logbuf;
-  const struct sockaddr_in *rqhost = svc_getcaller (rqstp->rq_xprt);
+  struct netconfig *nconf;
+  const struct netbuf *rqhost = svc_getrpccaller (rqstp->rq_xprt);
+
+  nconf = getnetconfigent (rqstp->rq_xprt->xp_netid);
 
   /* Be careful here with the debug option. You can see the old
      and new password in clear text !! */
   if (debug_flag)
     {
-      log_msg ("yppasswdproc_pwupdate(\"%s\") [From: %s:%d]",
-              yppw->newpw.pw_name,
-              inet_ntoa (rqhost->sin_addr),
-              ntohs (rqhost->sin_port));
+      log_msg ("yppasswdproc_pwupdate(\"%s\") [From: %s port %d]",
+	       yppw->newpw.pw_name,
+	       taddr2ipstr (nconf, rqhost,
+			    namebuf6, sizeof (namebuf6)),
+	       taddr2port (nconf, rqhost));
       log_msg ("\toldpass..: %s", yppw->oldpass);
       log_msg ("\tpw_name..: %s", yppw->newpw.pw_name);
       log_msg ("\tpw_passwd: %s", yppw->newpw.pw_passwd);
@@ -282,22 +288,14 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 
   res = 1; /* res = 1 means no success */
 
-  logbuf = alloca (60 + strlen (yppw->newpw.pw_name) +
-                   strlen (inet_ntoa (rqhost->sin_addr)));
-  if (logbuf == NULL)
-    {
-      log_msg ("rpc.yppasswdd: out of memory");
-      return &res;
-    }
-
-  sprintf (logbuf, "update %.12s (uid=%d) from host %s",
-           yppw->newpw.pw_name, yppw->newpw.pw_uid,
-	   inet_ntoa (rqhost->sin_addr));
-
   /* Check if somebody tries to make trouble with not allowed characters */
   if (!validate_args (&yppw->newpw))
     {
-      log_msg ("%s failed", logbuf);
+      log_msg ("update %.12s (uid=%d) from host %s failed",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid,
+	       taddr2ipstr (nconf, rqhost,
+			    namebuf6, sizeof (namebuf6)));
+      freenetconfigent (nconf);
       return &res;
     }
 
@@ -309,6 +307,7 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
       if ((pw = getpwnam (yppw->newpw.pw_name)) == NULL)
 	{
 	  log_msg ("user %s not found", yppw->newpw.pw_name);
+	  freenetconfigent (nconf);
 	  return &res;
 	}
       /* Do we need to update the GECOS information and are we allowed
@@ -316,8 +315,12 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
       chfn = (strcmp (pw->pw_gecos, yppw->newpw.pw_gecos) != 0);
       if (chfn && !allow_chfn)
 	{
-	  log_msg ("%s rejected", logbuf);
+	  log_msg ("update %.12s (uid=%d) from host %s rejected",
+		   yppw->newpw.pw_name, yppw->newpw.pw_uid,
+		   taddr2ipstr (nconf, rqhost,
+				namebuf6, sizeof (namebuf6)));
 	  log_msg ("chfn not permitted");
+	  freenetconfigent (nconf);
 	  return &res;
 	}
 
@@ -327,28 +330,40 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 	{
 	  if (!allow_chsh)
 	    {
-	      log_msg ("%s rejected", logbuf);
+	      log_msg ("update %.12s (uid=%d) from host %s rejected",
+		       yppw->newpw.pw_name, yppw->newpw.pw_uid,
+		       taddr2ipstr (nconf, rqhost,
+				    namebuf6, sizeof (namebuf6)));
 	      log_msg ("chsh not permitted");
+	      freenetconfigent (nconf);
 	      return &res;
 	    }
 	  if (!shell_ok (yppw->newpw.pw_shell))
 	    {
-	      log_msg ("%s rejected", logbuf);
+	      log_msg ("update %.12s (uid=%d) from host %s rejected",
+		       yppw->newpw.pw_name, yppw->newpw.pw_uid,
+		       taddr2ipstr (nconf, rqhost,
+				    namebuf6, sizeof (namebuf6)));
 	      log_msg ("invalid shell: %s", yppw->newpw.pw_shell);
+	      freenetconfigent (nconf);
 	      return &res;
 	    }
 	}
 
       if (x_flag)
         {
-          res = external_update_pipe (yppw, logbuf);
+          res = external_update_pipe (yppw);
+	  freenetconfigent (nconf);
           return &res;
         }
       else
         {
           res = external_update_env (yppw);
           if (res >= 2)
-            return &res;
+	    {
+	      freenetconfigent (nconf);
+	      return &res;
+	    }
         }
       passwd_changed = 1; /* We don't know exactly what was changed. */
       shadow_changed = 1; /* So build everything new. */
@@ -365,12 +380,16 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
 
       if (retries == MAX_RETRIES)
 	{
-	  log_msg ("%s failed", logbuf);
+	  log_msg ("update %.12s (uid=%d) from host %s failed",
+		   yppw->newpw.pw_name, yppw->newpw.pw_uid,
+		   taddr2ipstr (nconf, rqhost,
+				namebuf6, sizeof (namebuf6)));
 	  log_msg ("password file locked");
+	  freenetconfigent (nconf);
 	  return &res;
 	}
 
-      res = update_files (yppw, logbuf, &shadow_changed, &passwd_changed,
+      res = update_files (yppw, &shadow_changed, &passwd_changed,
 			  &chfn, &chsh);
 
       ulckpwdf ();
@@ -388,8 +407,12 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
         {
           /* Do NOT restore old password file. Someone else may already
            * be using the new one. */
-          log_msg ("%s failed", logbuf);
+	  log_msg ("update %.12s (uid=%d) from host %s failed",
+		   yppw->newpw.pw_name, yppw->newpw.pw_uid,
+		   taddr2ipstr (nconf, rqhost,
+				namebuf6, sizeof (namebuf6)));
           log_msg ("Couldn't fork map update process: %s", strerror (errno));
+	  freenetconfigent (nconf);
           return &res;
         }
 
@@ -404,15 +427,19 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
           exit (1);
         }
 
-      log_msg ("%s successful.", logbuf);
+      log_msg ("update %.12s (uid=%d) from host %s successful",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid,
+	       taddr2ipstr (nconf, rqhost,
+			    namebuf6, sizeof (namebuf6)));
       if (chsh || chfn)
 	{
 	  log_msg ("Shell %schanged (%s), GECOS %schanged (%s).",
-		  chsh ? "" : "un", yppw->newpw.pw_shell,
-		  chfn ? "" : "un", yppw->newpw.pw_gecos);
+		   chsh ? "" : "un", yppw->newpw.pw_shell,
+		   chfn ? "" : "un", yppw->newpw.pw_gecos);
 	}
     }
 
+  freenetconfigent (nconf);
   return &res;
 }
 
@@ -422,7 +449,7 @@ yppasswdproc_pwupdate_1 (yppasswd *yppw, struct svc_req *rqstp)
   1: error
 */
 static int
-update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
+update_files (yppasswd *yppw, int *shadow_changed,
 	      int *passwd_changed, int *chfn, int *chsh)
 {
   struct passwd *pw;
@@ -457,14 +484,16 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
      friends here. */
   if ((oldpf = fopen (path_passwd, "r")) == NULL)
     {
-      log_msg ("%s failed", logbuf);
+      log_msg ("update %.12s (uid=%d) failed",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid);
       log_msg ("Can't open %s: %m", path_passwd);
       return 1;
     }
 
   if (fstat (fileno (oldpf), &passwd_stat) < 0)
     {
-      log_msg ("%s failed", logbuf);
+      log_msg ("update %.12s (uid=%d) failed",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid);
       log_msg ("Can't stat %s: %m", path_passwd);
       fclose (oldpf);
       return 1;
@@ -473,7 +502,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
   /* Open a temp passwd file */
   if ((newpf = fopen (path_passwd_tmp, "w+")) == NULL)
     {
-      log_msg ("%s failed", logbuf);
+      log_msg ("update %.12s (uid=%d) failed",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid);
       log_msg ("Can't open %s: %m", path_passwd_tmp);
       fclose (oldpf);
       return 1;
@@ -493,7 +523,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
     {
       if (fstat (fileno (oldsf), &shadow_stat) < 0)
 	{
-	  log_msg ("%s failed", logbuf);
+	  log_msg ("update %.12s (uid=%d) failed",
+		   yppw->newpw.pw_name, yppw->newpw.pw_uid);
 	  log_msg ("Can't stat %s: %m", path_shadow);
 	  fclose (oldpf);
 	  fclose (newpf);
@@ -504,7 +535,9 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       if ((newsf = fopen (path_shadow_tmp, "w+")) == NULL)
 	{
 	  int err = errno;
-	  log_msg ("%s failed", logbuf);
+
+	  log_msg ("update %.12s (uid=%d) failed",
+		   yppw->newpw.pw_name, yppw->newpw.pw_uid);
 	  log_msg ("Can't open %s.tmp: %s",
 		   path_passwd, strerror (err));
 	  fclose (oldsf);
@@ -546,9 +579,10 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		{
 		  if (strcmp (yppw->newpw.pw_name, spw->sp_namp) == 0)
 		    {
-		      if (!password_ok (yppw->oldpass, spw->sp_pwdp, rootpass, logbuf))
+		      if (!password_ok (yppw->oldpass, spw->sp_pwdp, rootpass))
 			{
-			  log_msg ("%s rejected", logbuf);
+			  log_msg ("update %.12s (uid=%d) failed",
+				   yppw->newpw.pw_name, yppw->newpw.pw_uid);
 			  log_msg ("Invalid password.");
 			  goto error;
 			}
@@ -557,7 +591,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		    }
 		  else if (putspent_adjunct (spw, newsf) < 0)
 		    {
-		      log_msg ("%s failed", logbuf);
+		      log_msg ("update %.12s (uid=%d) failed",
+			       yppw->newpw.pw_name, yppw->newpw.pw_uid);
 		      log_msg ("Error while writing new shadow file: %m");
 		      goto error;
 		    }
@@ -567,9 +602,10 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	  /* We don't have a shadow password file or we don't find the
 	     user in it. */
 	  if (spw == NULL &&
-	      !password_ok (yppw->oldpass, pw->pw_passwd, rootpass, logbuf))
+	      !password_ok (yppw->oldpass, pw->pw_passwd, rootpass))
 	    {
-	      log_msg ("%s rejected", logbuf);
+	      log_msg ("update %.12s (uid=%d) rekected",
+		       yppw->newpw.pw_name, yppw->newpw.pw_uid);
 	      log_msg ("Invalid password.");
 	      goto error;
 	    }
@@ -599,7 +635,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 			}
 		      else
 			{
-			  log_msg ("%s rejected", logbuf);
+			  log_msg ("update %.12s (uid=%d) rejected",
+				   yppw->newpw.pw_name, yppw->newpw.pw_uid);
 			  log_msg ("now < minimum age for `%s'",
 				  spw->sp_namp);
 			  goto error;
@@ -607,7 +644,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		    }
 		  if (putspent_adjunct (spw, newsf) < 0)
 		    {
-		      log_msg ("%s failed", logbuf);
+		      log_msg ("update %.12s (uid=%d) failed",
+			       yppw->newpw.pw_name, yppw->newpw.pw_uid);
 		      log_msg ("Error while writing new shadow file: %m");
 		      *shadow_changed = 0;
 		      goto error;
@@ -617,7 +655,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 		  while ((spw = fgetspent_adjunct (oldsf)) != NULL)
 		    if (putspent_adjunct (spw, newsf) < 0)
 		      {
-			log_msg ("%s failed", logbuf);
+			log_msg ("update %.12s (uid=%d) failed",
+				 yppw->newpw.pw_name, yppw->newpw.pw_uid);
 			log_msg ("Error while writing new shadow file: %m");
 			*shadow_changed = 0;
 			goto error;
@@ -641,7 +680,8 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	    {
 	      if (!allow_chfn)
 		{
-		  log_msg ("%s rejected", logbuf);
+		  log_msg ("update %.12s (uid=%d) rejected",
+			   yppw->newpw.pw_name, yppw->newpw.pw_uid);
 		  log_msg ("chfn not permitted");
 		  *passwd_changed = 0;
 		  goto error;
@@ -656,14 +696,16 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
 	    {
 	      if (!allow_chsh)
 		{
-		  log_msg ("%s rejected", logbuf);
+		  log_msg ("update %.12s (uid=%d) rejected",
+			   yppw->newpw.pw_name, yppw->newpw.pw_uid);
 		  log_msg ("chsh not permitted");
 		  *passwd_changed = 0;
 		  goto error;
 		}
 	      if (!shell_ok (yppw->newpw.pw_shell))
 		{
-		  log_msg ("%s rejected", logbuf);
+		  log_msg ("update %.12s (uid=%d) rejected",
+			   yppw->newpw.pw_name, yppw->newpw.pw_uid);
 		  log_msg ("invalid shell: %s", yppw->newpw.pw_shell);
 		  *passwd_changed = 0;
 		  goto error;
@@ -677,7 +719,9 @@ update_files (yppasswd *yppw, char *logbuf, int *shadow_changed,
       if (putpwent (pw, newpf) < 0)
 	{
 	  int err = errno;
-	  log_msg ("%s failed", logbuf);
+
+	  log_msg ("update %.12s (uid=%d) failed",
+		   yppw->newpw.pw_name, yppw->newpw.pw_uid);
 	  log_msg ("Error while writing new password file: %s",
 		   strerror (err));
 	  *passwd_changed = 0;
@@ -825,9 +869,9 @@ remove_password (char *str)
 }
 
 static int
-external_update_pipe (yppasswd *yppw, char *logbuf)
+external_update_pipe (yppasswd *yppw)
 {
-  struct xpasswd *newpw;       /* passwd struct passed by the client */
+  struct passwd *newpw;       /* passwd struct passed by the client */
   int res, pid, tochildpipe[2], toparentpipe[2];
   FILE *fp;
   char childresponse[1024];
@@ -859,7 +903,8 @@ external_update_pipe (yppasswd *yppw, char *logbuf)
 
   if (!password && !shell && !gcos)
     {
-      log_msg ("%s failed - no information to change", logbuf);
+      log_msg ("update %.12s (uid=%d) failed - no information to change",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid);
       return res;
     }
 
@@ -870,19 +915,22 @@ external_update_pipe (yppasswd *yppw, char *logbuf)
 
   if (pipe(tochildpipe) < 0)
     {
-      log_msg ("%s failed - couldn't create child pipe", logbuf);
+      log_msg ("update %.12s (uid=%d) failed - could not create child pipe",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid);
       return res;
     }
 
   if (pipe(toparentpipe) < 0)
     {
-      log_msg ("%s failed - couldn't create parent pipe", logbuf);
+      log_msg ("update %.12s (uid=%d) failed - could not create parent pipe",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid);
       return res;
     }
 
   if ((pid = fork()) < 0)
     {
-      log_msg ("%s failed - couldn't fork", logbuf);
+      log_msg ("update %.12s (uid=%d) failed - could not fork",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid);
       return res;
     }
 
@@ -1003,13 +1051,15 @@ external_update_pipe (yppasswd *yppw, char *logbuf)
 
   if (strspn(childresponse, "OK") < 2)
     {
-      log_msg ("%s failed.  Change request: %s", logbuf, parentmsg);
+      log_msg ("update %.12s (uid=%d) failed. Change request: %s",
+	       yppw->newpw.pw_name, yppw->newpw.pw_uid, parentmsg);
       log_msg ("Response was '%s'", childresponse);
       free (parentmsg);
       return res;
     }
 
-  log_msg ("%s successful. Change request: %s", logbuf, parentmsg);
+  log_msg ("update %.12s (uid=%d) successful. Change request: %s",
+	   yppw->newpw.pw_name, yppw->newpw.pw_uid, parentmsg);
 
   free (parentmsg);
   res = 0;
