@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2001, 2003, 2007 Thorsten Kukuk <kukuk@linux-nis.org>
+# Copyright (c) 2001, 2003, 2007, 2014 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 AUTOMAKE_OPTIONS = 1.7 gnits
 #
@@ -8,7 +8,7 @@ CLEANFILES = *~ ${SCRIPTS}
 
 EXTRA_DIST = ${MANS} ${XMLS}
 
-varypdir = /var/yp
+varypdir = @YPMAPDIR@
 
 man_MANS = pwupdate.8 ypinit.8
 XMLS = pwupdate.8.xml ypinit.8.xml

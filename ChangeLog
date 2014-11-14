@@ -1,3 +1,8 @@
+2014-11-14  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* scripts/Makefile.am (varypdir): Replace hardcoded value with
+	configure option.
+
 2014-11-05  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* release version 3.0
