@@ -281,7 +281,6 @@ main (int argc, char **argv)
 {
   struct netconfig *nconf;
   void *nc_handle;
-  int connmaxrec = RPC_MAXDATASIZE;
   int my_port = -1;
 
   openlog ("ypserv", LOG_PID, LOG_DAEMON);
@@ -442,11 +441,6 @@ main (int argc, char **argv)
       return 1;
     }
 #endif
-
-  /* Set non-blocking mode and maximum record size for
-     connection oriented RPC transports. */
-  if (!rpc_control(RPC_SVC_CONNMAXREC_SET, &connmaxrec))
-    log_msg ("unable to set maximum RPC record size");
 
   rpcb_unset (YPPROG, YPVERS, NULL);
   rpcb_unset (YPPROG, YPOLDVERS, NULL);

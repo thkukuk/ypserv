@@ -22,8 +22,6 @@
 #include <rpc/rpc.h>
 #include "yp.h"
 
-#define XDRMAXRECORD (16 * 1024 * 1024)
-
 xdr_ypall_cb_t xdr_ypall_cb;
 
 bool_t

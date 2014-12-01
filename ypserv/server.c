@@ -812,7 +812,11 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	    exit (err);
 	  }
 
-	getnetconfigent (rqstp->rq_xprt->xp_netid);
+	if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+	  {
+	    int err = ENOENT;
+	    exit (err);
+	  }
 	host = taddr2host (nconf, rqhost, hostbuf, sizeof hostbuf);
 
         sprintf (ypxfr_command, "%s/ypxfr", YPBINDIR);

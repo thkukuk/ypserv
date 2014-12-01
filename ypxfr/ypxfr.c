@@ -102,10 +102,6 @@ static TCBDB *dbm;
 
 #endif
 
-#ifndef YPMAPDIR
-#define YPMAPDIR "/var/yp"
-#endif
-
 static char *path_ypdb = YPMAPDIR;
 
 static void

@@ -52,10 +52,6 @@
 
 #include "log_msg.h"
 
-#ifndef YPMAPDIR
-#define YPMAPDIR "/var/yp"
-#endif
-
 struct hostlist {
   char *hostname;
   struct hostlist *next;

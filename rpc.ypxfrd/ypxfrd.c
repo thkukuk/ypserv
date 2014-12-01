@@ -62,11 +62,7 @@ int _rpcsvcdirty = 0;
 #define _RPCSVC_CLOSEDOWN       120
 #endif
 
-#ifndef YPMAPDIR
-#define YPMAPDIR   "/var/yp"
-#endif
 char *path_ypdb = YPMAPDIR;
-
 char *progname;
 
 static int foreground_flag = 0;

@@ -1,3 +1,14 @@
+2014-12-01  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* revnetgroup/Makefile.am (DEFS): Replace hardcoded /var/yp value.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+
+	* ypserv/server.c (ypproc_xfr_2_svc): initialize nconf.
+	* ypserv/ypserv.c (main): Don't set RPC_SVC_CONNMAXREC_SET.
+	* ypserv/ypserv_xdr.c: Remove unused define XDRMAXRECORD.
+
 2014-11-14  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* scripts/Makefile.am (varypdir): Replace hardcoded value with
