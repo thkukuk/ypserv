@@ -271,6 +271,8 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
   oldaddr = copy_netbuf (rqhost);
   oldstatus = status;
 
+  freenetconfigent (nconf);
+
   return status;
 }
 

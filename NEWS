@@ -5,6 +5,9 @@ Copyright (C) 1998-2014 Thorsten Kukuk
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
 
+Version 3.2
+* Fix memory leak in access library
+
 Version 3.1
 * ypserv: Don't increase RPC buffer
 
