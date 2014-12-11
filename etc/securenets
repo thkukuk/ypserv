@@ -14,3 +14,4 @@ host		::1
 
 # This line gives access to everybody. PLEASE ADJUST!
 0.0.0.0		0.0.0.0
+::/0
