@@ -1,6 +1,13 @@
+2014-12-12  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.2.1
+
+	* ypserv/ypserv.8.xml: Enhance securenet documentation
+	with new IPv6 and network/netmask features.
+
 2014-12-11  Thorsten Kukuk  <kukuk@thkukuk.de>
 
-	* etc/securenets (host): Fix catch all allow all rule for IPv6
+	* etc/securenets (host): Fix catch all allow all rule for IPv6.
 
 2014-12-02  Thorsten Kukuk  <kukuk@thkukuk.de>
 

@@ -8,10 +8,10 @@
 #		255.255.255.255. Only IP addresses are allowed in this
 #		file, not hostnames.
 #
-# Always allow access for localhost
+# Always allow access for localhost, IPv4 and IPv6
 255.0.0.0	127.0.0.0
 host		::1
 
-# This line gives access to everybody. PLEASE ADJUST!
+# This lines gives access to everybody. PLEASE ADJUST!
 0.0.0.0		0.0.0.0
 ::/0

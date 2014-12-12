@@ -115,7 +115,8 @@ will attempt to load the securenets information from a file
 called
 <filename>/var/yp/securenets .</filename>
 This file contains entries that consist of a netmask
-and a network pair separated by white spaces.
+and a network pair separated by white spaces or network/number of bits
+of netmask entries. One per line.
 Lines starting with &ldquo;#&rdquo; are considered to be comments.</para>
 <variablelist remap='TP'>
   <varlistentry>
@@ -126,6 +127,7 @@ Lines starting with &ldquo;#&rdquo; are considered to be comments.</para>
 <programlisting>
 # allow connections from local host -- necessary
 host 127.0.0.1
+host ::1
 # same as 255.255.255.255 127.0.0.1
 #
 # allow connections from any host
@@ -134,6 +136,10 @@ host 127.0.0.1
 # allow connections from any host
 # between 131.234.214.0 and 131.234.215.255
 255.255.254.0   131.234.214.0
+# allow some IPv6 connections
+FE80::0202:B3FF::/96
+# allow IPv6 connections from all machines
+::/0
 </programlisting>
 </para>
   </listitem>
