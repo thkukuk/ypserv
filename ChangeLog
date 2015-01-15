@@ -1,3 +1,8 @@
+2015-01-15  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* rpc.yppasswdd/yppasswdd.c (main): Fix -v/--version
+	option handling.
+
 2014-12-12  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* release version 3.2.1

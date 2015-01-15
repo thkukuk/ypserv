@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996-2006, 2010, 2011, 2012, 2014 Thorsten Kukuk, <kukuk@thkukuk.de>
+   Copyright (c) 1996-2006, 2010, 2011, 2012, 2014, 2015 Thorsten Kukuk, <kukuk@thkukuk.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
@@ -209,7 +209,7 @@ main (int argc, char **argv)
       int option_index = 0;
       static struct option long_options[] =
       {
-	{"version", no_argument, NULL, '\255'},
+	{"version", no_argument, NULL, 'v'},
 	{"usage", no_argument, NULL, 'h'},
 	{"help", no_argument, NULL, 'h'},
 	{"execute", required_argument, NULL, 'x'},
@@ -286,7 +286,7 @@ main (int argc, char **argv)
           if (debug_flag)
             log_msg ("Using port %d\n", my_port);
           break;
-	case '\255':
+	case 'v':
 #if CHECKROOT
 	  fprintf (stdout, "rpc.yppasswdd - YP server version %s (with CHECKROOT)\n",
 		   VERSION);
