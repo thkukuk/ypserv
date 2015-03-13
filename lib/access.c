@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2014 Thorsten Kukuk
+/* Copyright (C) 1997-2015 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -243,8 +243,11 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
     {
       char host[INET6_ADDRSTRLEN];
 
-      log_msg ("%sconnect from %s", status ? "" : "refused ",
-	       taddr2ipstr (nconf, rqhost, host, sizeof (host)));
+      log_msg ("%sconnect from %s port %d to procedure %s (%s,%s;%d)",
+	       status ? "" : "refused ",
+	       taddr2ipstr (nconf, rqhost, host, sizeof (host)),
+	       taddr2port (nconf, rqhost), ypproc_name (rqstp->rq_proc),
+	       domain ? domain : "", map ? map : "", status);
     }
   else
     {
@@ -254,7 +257,7 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 	  char host[INET6_ADDRSTRLEN];
 
 	  syslog (LOG_WARNING,
-		  "refused connect from %s:%d to procedure %s (%s,%s;%d)\n",
+		  "refused connect from %s port %d to procedure %s (%s,%s;%d)",
 		  taddr2ipstr (nconf, rqhost, host, sizeof (host)),
 		  taddr2port (nconf, rqhost), ypproc_name (rqstp->rq_proc),
 		  domain ? domain : "", map ? map : "", status);

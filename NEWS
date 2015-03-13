@@ -1,8 +1,12 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2014 Thorsten Kukuk
+Copyright (C) 1998-2015 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
+
+Version 3.3
+* Adjust debug output for IPv6 addresses
+* Fix yppush
 
 Version 3.2.1
 * ypserv.8 docu enhancements about securenets

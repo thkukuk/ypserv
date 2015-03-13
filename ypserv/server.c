@@ -1,4 +1,4 @@
-/* Copyright (c) 2000-2014  Thorsten Kukuk
+/* Copyright (c) 2000-2015  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -54,7 +54,7 @@ ypproc_null_2_svc (void *argp UNUSED, void *result UNUSED,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_null_2 from %s:%i",
+          log_msg ("ypproc_null_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -83,7 +83,7 @@ ypproc_domain_2_svc (domainname *argp, bool_t *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_domain_2(%s) from %s:%i", *argp,
+          log_msg ("ypproc_domain_2(%s) from %s port %d", *argp,
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -134,7 +134,7 @@ ypproc_domain_nonack_2_svc (domainname *argp, bool_t *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_domain_nonack_2(%s) from %s:%i", *argp,
+          log_msg ("ypproc_domain_nonack_2(%s) from %s port %d", *argp,
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -189,7 +189,7 @@ ypproc_match_2_svc (ypreq_key *argp, ypresp_val *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_match_2 from %s:%i",
+          log_msg ("ypproc_match_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -296,7 +296,7 @@ ypproc_first_2_svc (ypreq_nokey *argp, ypresp_key_val *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_first_2 from %s:%i",
+          log_msg ("ypproc_first_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -411,7 +411,7 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_next_2 from %s:%i",
+          log_msg ("ypproc_next_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -532,7 +532,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_xfr_2 from %s:%i",
+          log_msg ("ypproc_xfr_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -566,7 +566,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (forbidden by securenets)");
 	  else
-	    log_msg ("refuse to transfer map from %s:%i",
+	    log_msg ("refuse to transfer map from %s port %d",
 		     taddr2ipstr (nconf, rqhost,
 				  namebuf6, sizeof (namebuf6)),
 		     taddr2port (nconf, rqhost));
@@ -576,7 +576,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (not a valid source host)");
 	  else
-	    log_msg ("refuse to transfer map from %s:%i",
+	    log_msg ("refuse to transfer map from %s port %d",
 		     taddr2ipstr (nconf, rqhost,
 				  namebuf6, sizeof (namebuf6)),
 		     taddr2port (nconf, rqhost));
@@ -586,7 +586,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	  if (debug_flag)
 	    log_msg ("\t-> Ignored (map contains \"/\"!)");
 	  else
-	    log_msg ("refuse to transfer map from %s:%i, no valid mapname",
+	    log_msg ("refuse to transfer map from %s port %d, no valid mapname",
 		     taddr2ipstr (nconf, rqhost,
 				  namebuf6, sizeof (namebuf6)),
 		     taddr2port (nconf, rqhost));
@@ -622,7 +622,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
           if (debug_flag)
             log_msg ("\t-> Ignored (no reserved port!)");
           else
-            log_msg ("refuse to transfer %s from %s:%i, no valid port",
+            log_msg ("refuse to transfer %s from %s port %d, no valid port",
 		     argp->map_parms.map,
 		     taddr2ipstr (nconf, rqhost,
 				  namebuf6, sizeof (namebuf6)),
@@ -672,7 +672,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 		    svcerr_systemerr (rqstp->rq_xprt);
 		  else
 		    {
-		      log_msg ("refuse to transfer %s from %s:%i, master is %s)",
+		      log_msg ("refuse to transfer %s from %s port %d, master is %s)",
 			       argp->map_parms.map,
 			       taddr2ipstr (nconf, rqhost,
 					namebuf6, sizeof (namebuf6)),
@@ -718,7 +718,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	      else
 		{
 
-		  log_msg ("refuse to transfer %s from %s:%i, no trusted master",
+		  log_msg ("refuse to transfer %s from %s port %d, no trusted master",
 			   argp->map_parms.map,
 			   taddr2ipstr (nconf, rqhost,
 					namebuf6, sizeof (namebuf6)),
@@ -744,7 +744,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 		svcerr_systemerr (rqstp->rq_xprt);
 	      else
 		{
-		  log_msg ("New map %s from trusted master %s:%i",
+		  log_msg ("New map %s from trusted master %s port %d",
 			   argp->map_parms.map,
 			   taddr2ipstr (nconf, rqhost,
 					namebuf6, sizeof (namebuf6)),
@@ -860,7 +860,7 @@ bool_t ypproc_clear_2_svc (void *argp UNUSED, void *result UNUSED,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_clear_2 from %s:%i",
+          log_msg ("ypproc_clear_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -973,7 +973,7 @@ ypproc_all_2_svc (ypreq_nokey *argp, ypresp_all *result, struct svc_req *rqstp)
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_all_2_svc from %s:%i",
+          log_msg ("ypproc_all_2_svc from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -1131,7 +1131,7 @@ ypproc_master_2_svc (ypreq_nokey *argp, ypresp_master *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_master_2 from %s:%i",
+          log_msg ("ypproc_master_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -1259,7 +1259,7 @@ ypproc_order_2_svc (ypreq_nokey *argp, ypresp_order *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_order_2 from %s:%i",
+          log_msg ("ypproc_order_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -1400,7 +1400,7 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_maplist_2(%s) from %s:%i", *argp,
+          log_msg ("ypproc_maplist_2(%s) from %s port %d", *argp,
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));

@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2005, 2014 Thorsten Kukuk
+/* Copyright (c) 1996-2005, 2014, 2015 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -216,11 +216,6 @@ yppush_xfrrespprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
     exit (1);
   }
 
-#if 0
-  /* XXX */
-  if (!yppush_xfrrespprog_1_freeresult (transp, _xdr_result, (caddr_t) &result))
-    log_msg ("unable to free results");
-#endif
   if (rqstp->rq_proc != YPPUSHPROC_NULL)
     exit (0);
 
@@ -430,7 +425,7 @@ static int
 yppush_foreach (const char *host)
 {
   SVCXPRT *CallbackXprt;
-  CLIENT *PushClient = NULL;
+  CLIENT *PushClient;
   struct ypreq_xfr req;
   struct timeval tv = {10, 0};
   u_int transid;
@@ -456,6 +451,13 @@ yppush_foreach (const char *host)
       exit (1);
     }
 
+  PushClient = clnt_create (server, YPPROG, YPVERS, "datagram_n");
+  if (PushClient == NULL)
+    {
+      clnt_pcreateerror (server);
+      return 1;
+    }
+
   sock = RPC_ANYSOCK;
   CallbackXprt = svcudp_create (sock);
   if (CallbackXprt == NULL)
@@ -474,6 +476,8 @@ yppush_foreach (const char *host)
       log_msg ("can't register yppush_xfrrespprog_1");
       exit (1);
     }
+  else
+    log_msg ("yppush_xfrrespprog_1 registered at %x", CallbackProg);
 
   switch (transid = fork ())
     {
@@ -745,11 +749,7 @@ main (int argc, char **argv)
 
       memset (&f, 0, sizeof f);
       f.foreach = add_slave_server;
-#ifdef OSF_KLUDGE
-      y = yp_all (DomainName, "ypservers", f);
-#else
       y = yp_all (DomainName, "ypservers", &f);
-#endif
       if (y && y != YP_NOMORE)
 	{
 	  log_msg ("Could not read ypservers map: %d %s", y, yperr_string (y));

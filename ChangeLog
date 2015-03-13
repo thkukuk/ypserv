@@ -1,3 +1,10 @@
+2015-03-13  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* ypserv/server.c: Adjust debug output for IP with port to avoid
+	misinterpretions with IPv6.
+
+	* yppush/yppush.c (yppush_foreach): Call clnt_create().
+
 2015-01-15  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* rpc.yppasswdd/yppasswdd.c (main): Fix -v/--version
