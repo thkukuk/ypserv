@@ -1,4 +1,4 @@
-/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2004, 2012, 2014 Thorsten Kukuk
+/* Copyright (c) 1996, 1997, 1998, 1999, 2001, 2004, 2012, 2014, 2015 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <rpc/rpc.h>
-#include <rpc/pmap_clnt.h>
 #include <string.h>
 #include <signal.h>
 #include <sys/ioctl.h>

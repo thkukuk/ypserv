@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011, 2012, 2014 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011, 2012, 2014, 2015 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -33,7 +33,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
-#include <rpc/pmap_clnt.h>
 #include <rpcsvc/yp_prot.h>
 #include <rpcsvc/yppasswd.h>
 #include "yppwd_local.h"

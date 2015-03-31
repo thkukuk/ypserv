@@ -417,7 +417,7 @@ static void
 child_sig_int (int sig UNUSED)
 {
   if (CallbackProg != 0)
-    svc_unregister (CallbackProg, 1);
+    svc_unreg (CallbackProg, 1);
   exit (1);
 }
 
@@ -447,7 +447,7 @@ yppush_foreach (const char *host)
     sprintf (server, "%s", host);
   else
     {
-      log_msg ("YPPUSH ERROR: yppush_foreach: %.*s to long", host);
+      log_msg ("YPPUSH ERROR: yppush_foreach: %s to long", host);
       exit (1);
     }
 
@@ -467,9 +467,12 @@ yppush_foreach (const char *host)
     }
   for (CallbackProg = 0x40000000; CallbackProg < 0x5fffffff; CallbackProg++)
     {
-      if (svc_register (CallbackXprt, CallbackProg, 1,
-			yppush_xfrrespprog_1, IPPROTO_UDP))
+      struct netconfig *nconf = getnetconfigent ("datagram_n");
+
+      if (svc_reg (CallbackXprt, CallbackProg, 1,
+		   yppush_xfrrespprog_1, nconf))
 	break;
+      freenetconfigent (nconf);
     }
   if (CallbackProg == 0x5FFFFFFF)
     {
@@ -523,7 +526,7 @@ yppush_foreach (const char *host)
 	}
 
       waitpid (transid, &sock, 0);
-      svc_unregister (CallbackProg, 1);
+      svc_unreg (CallbackProg, 1);
       CallbackProg = 0;
       if (PushClient != NULL)
 	{
@@ -598,7 +601,7 @@ sig_child (int sig UNUSED)
   while (waitpid (-1, &status, WNOHANG) > 0)
     {
       if (verbose_flag > 1)
-	log_msg ("Child %d exists", WEXITSTATUS (status));
+	log_msg ("Child %d exits", WEXITSTATUS (status));
       children--;
     }
 

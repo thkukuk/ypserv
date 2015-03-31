@@ -4,6 +4,13 @@ Copyright (C) 1998-2015 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
 
+Version 3.5
+* yppush: convert more IPv4 only RPC functions to TI-RPC variants
+* rpc.ypxfrd: Likewise.
+
+Version 3.4
+* yppush: convert IPv4 only RPC functions to TI-RPC variants
+
 Version 3.3
 * Adjust debug output for IPv6 addresses
 * Fix yppush

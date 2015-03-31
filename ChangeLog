@@ -1,4 +1,23 @@
+2015-03-31  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.5
+
+	* rpc.yppasswdd/update.c: Remove pmap_clnt.h header include.
+	* rpc.ypxfrd/ypxfrd_svc.c: Likewise.
+	* rpc.ypxfrd/ypxfrd.c: Replace pmap_* functions with svc_unreg.
+
+	* yppush/yppush.c: Replace svc_unregister with svc_unreg.
+
+2015-03-30  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.4
+
+	* yppush/yppush.c (yppush_foreach): Use svc_reg instead
+	of svc_register.
+
 2015-03-13  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.3
 
 	* ypserv/server.c: Adjust debug output for IP with port to avoid
 	misinterpretions with IPv6.

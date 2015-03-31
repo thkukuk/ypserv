@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-1999, 2001-2003, 2005, 2006, 2010, 2014 Thorsten Kukuk
+/* Copyright (c) 1996-1999, 2001-2003, 2005, 2006, 2010, 2014, 2015 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -36,7 +36,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
-#include <rpc/pmap_clnt.h>
 #include <rpc/nettype.h>
 #include <getopt.h>
 #include "ypxfrd.h"
@@ -108,7 +107,7 @@ sig_child (int sig UNUSED)
 static void
 sig_quit (int sig UNUSED)
 {
-  pmap_unset (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS);
+  svc_unreg (YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS);
   unlink (_YPXFRD_PIDFILE);
   exit (0);
 }
