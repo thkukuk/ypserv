@@ -432,6 +432,8 @@ yppush_foreach (const char *host)
   char server[YPMAXPEER + 2];
   int sock;
   struct sigaction sa;
+  struct netconfig *nconf;
+
 
   if (verbose_flag > 1)
     log_msg ("yppush_foreach: host=%s", host);
@@ -465,21 +467,35 @@ yppush_foreach (const char *host)
       log_msg ("YPPUSH: Cannot create callback transport to host \"%s\".", server);
       return 1;
     }
+
+  nconf = getnetconfigent ("udp");
+  if (nconf == NULL)
+    {
+      log_msg ("YPPUSH: getnetconfigent (\"udp\") failed.");
+      exit (1);
+    }
   for (CallbackProg = 0x40000000; CallbackProg < 0x5fffffff; CallbackProg++)
     {
-      struct netconfig *nconf = getnetconfigent ("datagram_n");
-
       if (svc_reg (CallbackXprt, CallbackProg, 1,
 		   yppush_xfrrespprog_1, nconf))
 	break;
+    }
+  freenetconfigent (nconf);
+
+  /* after we registered the IPv4 part, try IPv6, too. */
+  nconf = getnetconfigent ("udp6");
+  if (nconf != NULL)
+    {
+      svc_reg (CallbackXprt, CallbackProg, 1, yppush_xfrrespprog_1, nconf);
       freenetconfigent (nconf);
     }
+
   if (CallbackProg == 0x5FFFFFFF)
     {
       log_msg ("can't register yppush_xfrrespprog_1");
       exit (1);
     }
-  else
+  else if (verbose_flag > 1)
     log_msg ("yppush_xfrrespprog_1 registered at %x", CallbackProg);
 
   switch (transid = fork ())

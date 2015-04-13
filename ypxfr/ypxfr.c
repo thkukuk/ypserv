@@ -245,7 +245,7 @@ ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
                    IPPROTO_TCP))
     {
       if (debug_flag)
-        log_msg (" not running\n");
+        log_msg (" not running");
       return 1;
     }
 
