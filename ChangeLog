@@ -1,3 +1,12 @@
+2015-04-14  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.7
+
+	* yppush/yppush.c: Register callback function correct for IPv4 and
+	IPv6, enable --port option again.
+
+	* ypxfr/ypxfr.c (main): In debug case log remote parameters.
+
 2015-04-13  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* release version 3.6

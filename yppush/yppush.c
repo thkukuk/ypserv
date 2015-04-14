@@ -144,7 +144,7 @@ yppushproc_xfrresp_1_svc (yppushresp_xfr *req,
 
   if (verbose_flag)
     {
-      log_msg ("Status received from ypxfr on %s:",
+      log_msg ("Status received from ypxfr on %s",
 	       taddr2host (nconf, nbuf, hostbuf, sizeof (hostbuf)));
       log_msg ("\tTransfer %sdone: %s",
 	       req->status == YPPUSH_SUCC ? "" : "not ",
@@ -430,20 +430,22 @@ yppush_foreach (const char *host)
   struct timeval tv = {10, 0};
   u_int transid;
   char server[YPMAXPEER + 2];
-  int sock;
-  struct sigaction sa;
+  int i, sock;
+  struct sigaction sig;
   struct netconfig *nconf;
-
+  struct sockaddr *sa;
+  struct sockaddr_in sin;
+  struct sockaddr_in6 sin6;
 
   if (verbose_flag > 1)
     log_msg ("yppush_foreach: host=%s", host);
 
-  sa.sa_handler = child_sig_int;
-  sigemptyset (&sa.sa_mask);
-  sa.sa_flags = SA_NOMASK;
+  sig.sa_handler = child_sig_int;
+  sigemptyset (&sig.sa_mask);
+  sig.sa_flags = SA_NOMASK;
   /* Do  not  prevent  the  signal   from   being
      received from within its own signal handler. */
-  sigaction (SIGINT, &sa, NULL);
+  sigaction (SIGINT, &sig, NULL);
 
   if (strlen (host) < YPMAXPEER)
     sprintf (server, "%s", host);
@@ -460,11 +462,34 @@ yppush_foreach (const char *host)
       return 1;
     }
 
-  sock = RPC_ANYSOCK;
-  CallbackXprt = svcudp_create (sock);
-  if (CallbackXprt == NULL)
+  /* Register a socket for IPv4 and, if supported, for IPv6, too */
+  if ((sock = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     {
-      log_msg ("YPPUSH: Cannot create callback transport to host \"%s\".", server);
+      log_msg ("Cannot create UDP socket for AF_INET: %s",
+	       strerror (errno));
+      return 1;
+    }
+
+  memset (&sin, 0, sizeof(sin));
+  sin.sin_family = AF_INET;
+  if (my_port > 0)
+    sin.sin_port = htons (my_port);
+  sa = (struct sockaddr *)(void *)&sin;
+
+  if (bindresvport_sa (sock, sa) == -1)
+    {
+      if (my_port > 0)
+	log_msg ("Cannot bind to reserved port %d (%s)",
+		 my_port, strerror (errno));
+      else
+	log_msg ("bindresvport failed: %s",
+		 strerror (errno));
+      return 1;
+    }
+
+  if ((CallbackXprt = svc_dg_create (sock, 0, 0)) == NULL)
+    {
+      log_msg ("terminating: cannot create rpcbind handle");
       return 1;
     }
 
@@ -482,14 +507,6 @@ yppush_foreach (const char *host)
     }
   freenetconfigent (nconf);
 
-  /* after we registered the IPv4 part, try IPv6, too. */
-  nconf = getnetconfigent ("udp6");
-  if (nconf != NULL)
-    {
-      svc_reg (CallbackXprt, CallbackProg, 1, yppush_xfrrespprog_1, nconf);
-      freenetconfigent (nconf);
-    }
-
   if (CallbackProg == 0x5FFFFFFF)
     {
       log_msg ("can't register yppush_xfrrespprog_1");
@@ -497,6 +514,56 @@ yppush_foreach (const char *host)
     }
   else if (verbose_flag > 1)
     log_msg ("yppush_xfrrespprog_1 registered at %x", CallbackProg);
+
+  /* And now do the same for IPv6 */
+  if ((sock = socket (AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+    {
+      log_msg ("Cannot create UDP socket for AF_INET6: %s",
+	       strerror (errno));
+      return 1;
+    }
+
+  /* Disallow v4-in-v6 to allow host-based access checks */
+  if (setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY,
+		  &i, sizeof(i)) == -1)
+    {
+      log_msg ("ERROR: cannot disable v4-in-v6 on %s6 socket",
+	       nconf->nc_proto);
+      return 1;
+    }
+  memset (&sin6, 0, sizeof (sin6));
+  sin6.sin6_family = AF_INET6;
+  if (my_port > 0)
+    sin6.sin6_port = htons (my_port);
+  sa = (struct sockaddr *)(void *)&sin6;
+
+  if (bindresvport_sa (sock, sa) == -1)
+    {
+      if (my_port > 0)
+	log_msg ("Cannot bind to reserved port %d (%s)",
+		 my_port, strerror (errno));
+      else
+	log_msg ("bindresvport failed: %s",
+		 strerror (errno));
+      return 1;
+    }
+
+  if ((CallbackXprt = svc_dg_create (sock, 0, 0)) == NULL)
+    {
+      log_msg ("terminating: cannot create rpcbind handle");
+      return 1;
+    }
+
+  nconf = getnetconfigent ("udp6");
+  if (nconf == NULL)
+    {
+      log_msg ("YPPUSH: getnetconfigent (\"udp6\") failed.");
+      exit (1);
+    }
+  if (!svc_reg (CallbackXprt, CallbackProg, 1,
+		   yppush_xfrrespprog_1, nconf))
+    log_msg ("YPPUSH: couldn't register IPv6");
+  freenetconfigent (nconf);
 
   switch (transid = fork ())
     {
@@ -515,7 +582,8 @@ yppush_foreach (const char *host)
       req.map_parms.ordernum = MapOrderNum;
       req.transid = transid;
       req.proto = CallbackProg;
-      req.port = CallbackXprt->xp_port;
+      // req.port = CallbackXprt->xp_port;
+      req.port = 0;
 
       if (verbose_flag)
 	{
@@ -684,7 +752,7 @@ main (int argc, char **argv)
 	case 'j':
 	case 'p':
 	  maxchildren = atoi (optarg);
-	  if (my_port >= 0) /* XXX option does nothing */
+	  if (my_port >= 0)
 	    {
 	      log_msg ("yppush cannot run in parallel with a fixed port");
 	      return 1;

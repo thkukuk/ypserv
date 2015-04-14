@@ -1,4 +1,4 @@
-/* Copyright (c) 2000-2005, 2011, 2014  Thorsten Kukuk
+/* Copyright (c) 2000-2005, 2011, 2014, 2015  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -907,10 +907,12 @@ main (int argc, char **argv)
           CLIENT *clnt;
           ypresp_xfr resp;
 
-          clnt = clnt_create (remote_addr, program_number, YPPUSHVERS, "udp");
+          clnt = clnt_create (remote_addr, program_number, YPPUSHVERS, "datagram_n");
           if (!clnt)
             {
-              clnt_pcreateerror ("ypxfr_callback");
+              clnt_pcreateerror ("ypxfr_callback create");
+	      if (debug_flag)
+		log_msg ("Remote host: %s, %x", remote_addr, program_number);
               continue;
             }
 	  resp.transid = transid;
@@ -920,10 +922,13 @@ main (int argc, char **argv)
 			 (xdrproc_t) xdr_ypresp_xfr, (caddr_t) &resp,
                          (xdrproc_t) xdr_void, (caddr_t)&res, tv)
 	      != RPC_SUCCESS)
-            clnt_perror (clnt, "ypxfr_callback");
+	    {
+	      clnt_perror (clnt, "ypxfr_callback call");
+	      if (debug_flag)
+		log_msg ("Remote host: %s, %x", remote_addr, program_number);
+	    }
 
           clnt_destroy (clnt);
-
 	}
     }
 
