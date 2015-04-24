@@ -1,0 +1,9 @@
+
+Things to do (in no particular order):
+
+	o Rework README
+
+	o ypmaplist needs to be fixed for Sun's NDBM
+
+	o IP numbers in ypserver file doesn't work
+

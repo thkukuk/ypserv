@@ -1,0 +1,12 @@
+Makefile
+Makefile.in
+create_printcap
+match_printcap
+pwupdate
+pwupdate.8
+ypMakefile
+ypinit
+ypinit.8
+ypxfr_1perday
+ypxfr_1perhour
+ypxfr_2perday

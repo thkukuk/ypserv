@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+
+<refentry id='ypserv.conf'>
+
+  <refmeta>
+    <refentrytitle>ypserv.conf</refentrytitle>
+    <manvolnum>5</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>ypserv.conf</refname>
+    <refpurpose>configuration file for ypserv and rpc.ypxfrd</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+
+  <refsect1 id='description'>
+    <title>DESCRIPTION</title>
+    <para>
+      <emphasis>ypserv.conf</emphasis> is an ASCII file which contains
+      some options for ypserv. It also contains a list of rules for
+      special host and map access for ypserv and rpc.ypxfrd. This file
+      will be read by ypserv and rpc.ypxfrd at startup, or when receiving
+      a SIGHUP signal.
+    </para>
+
+    <para>
+      There is one entry per line. If the line is a option line, the
+      format is:
+    </para>
+
+    <programlisting>
+   option: <emphasis>argument</emphasis></programlisting>
+
+    <para>
+      The line for an access rule has the format:
+    </para>
+
+    <programlisting>
+   host:domain:map:security</programlisting>
+
+    <para>
+      All rules are tried one by one. If no match is found, access to a
+      map is allowed.
+    </para>
+
+    <para>
+      Following options exist:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>files:</option> <emphasis>30</emphasis></term>
+        <listitem>
+          <para>
+            This option specifies, how many database files should be
+            cached by <emphasis>ypserv</emphasis>. If <literal>0</literal>
+            is specified, caching is disabled. Decreasing this number is only
+            possible, if ypserv is restarted.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>trusted_master:</option> <emphasis>server</emphasis></term>
+        <listitem>
+          <para>
+            If this option is set on a slave server, new maps from the
+            host <emphasis>server</emphasis> will be accepted as master. The
+            default is, that no trusted master is set and new maps will not
+            be accepted.
+          </para>
+          <para>
+            Example:
+          </para>
+          <programlisting>
+   trusted_master: ypmaster.example.org
+          </programlisting>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>slp:</option> [<emphasis>yes</emphasis>|<emphasis>&lt;no&gt;</emphasis>|<emphasis>domain</emphasis>]</term>
+        <listitem>
+          <para>
+            If this option is enabled and SLP support compiled in, the NIS
+            server registers itself on a SLP server. If the variable is set
+            to <emphasis>domain</emphasis>, an attribute
+            <emphasis>domain</emphasis> with a comma seperated list of
+            supported domainnames is set. Else this attribute will not be set.
+            The default is "no" (disabled).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>xfr_check_port:</option> [<emphasis>&lt;yes&gt;</emphasis>|<emphasis>no</emphasis>]</term>
+        <listitem>
+          <para>
+            With this option enabled, the NIS master server have to run on a
+            port &lt; 1024. The default is "yes" (enabled).
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>
+      The field descriptions for the access rule lines are:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>host</option></term>
+        <listitem>
+          <para>
+            IP address. Wildcards are allowed.
+          </para>
+          <para>
+            Examples:
+          </para>
+          <programlisting>
+   131.234. = 131.234.0.0/255.255.0.0
+   131.234.214.0/255.255.254.0
+          </programlisting>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>domain</option></term>
+        <listitem>
+          <para>
+            specifies the domain, for which this rule should be applied. An
+            asterix as wildcard is allowed.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>map</option></term>
+        <listitem>
+          <para>
+            name of the map, or asterisk for all maps.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>security</option></term>
+        <listitem>
+          <para>one of <emphasis>none</emphasis>, <emphasis>port</emphasis>, <emphasis>deny</emphasis>:</para>
+          <variablelist>
+            <varlistentry>
+              <term><emphasis>none</emphasis></term>
+              <listitem>
+                <para>always allow access.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis>port</emphasis></term>
+              <listitem>
+                <para>
+                  allow access if from port &lt; 1024.
+                  Otherwise do not allow access.
+                </para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><emphasis>deny</emphasis></term>
+              <listitem>
+                <para>deny access to this map.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id='files'>
+    <title>FILES</title>
+    <para><filename>/etc/ypserv.conf</filename></para>
+  </refsect1>
+
+  <refsect1 id='see_also'>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>rpc.ypxfrd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+    </para>
+  </refsect1>
+
+  <refsect1 id='warnings'>
+    <title>WARNINGS</title>
+    <para>
+      The access rules for special maps are no real improvement in
+      security, but they make the life a little bit harder for a
+      potential hacker.
+    </para>
+    <para>
+      Solaris clients don't use privileged ports. All security options
+      which depend on privileged ports cause big problems on Solaris clients.
+    </para>
+  </refsect1>
+
+  <refsect1 id='author'>
+    <title>AUTHOR</title>
+    <para>Thorsten Kukuk &lt;kukuk@thkukuk.de&gt;</para>
+  </refsect1>
+</refentry>

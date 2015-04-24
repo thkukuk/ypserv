@@ -1,0 +1,1080 @@
+2015-04-14  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.7
+
+	* yppush/yppush.c: Register callback function correct for IPv4 and
+	IPv6, enable --port option again.
+
+	* ypxfr/ypxfr.c (main): In debug case log remote parameters.
+
+2015-04-13  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.6
+
+	* yppush/yppush.c: register callback for IPv6, too.
+
+2015-03-31  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.5
+
+	* rpc.yppasswdd/update.c: Remove pmap_clnt.h header include.
+	* rpc.ypxfrd/ypxfrd_svc.c: Likewise.
+	* rpc.ypxfrd/ypxfrd.c: Replace pmap_* functions with svc_unreg.
+
+	* yppush/yppush.c: Replace svc_unregister with svc_unreg.
+
+2015-03-30  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.4
+
+	* yppush/yppush.c (yppush_foreach): Use svc_reg instead
+	of svc_register.
+
+2015-03-13  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.3
+
+	* ypserv/server.c: Adjust debug output for IP with port to avoid
+	misinterpretions with IPv6.
+
+	* yppush/yppush.c (yppush_foreach): Call clnt_create().
+
+2015-01-15  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* rpc.yppasswdd/yppasswdd.c (main): Fix -v/--version
+	option handling.
+
+2014-12-12  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.2.1
+
+	* ypserv/ypserv.8.xml: Enhance securenet documentation
+	with new IPv6 and network/netmask features.
+
+2014-12-11  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* etc/securenets (host): Fix catch all allow all rule for IPv6.
+
+2014-12-02  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.2
+
+	* lib/access.c (is_valid): Free nconf.
+
+2014-12-01  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.1
+
+	* revnetgroup/Makefile.am (DEFS): Replace hardcoded /var/yp value.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+
+	* ypserv/server.c (ypproc_xfr_2_svc): initialize nconf.
+	* ypserv/ypserv.c (main): Don't set RPC_SVC_CONNMAXREC_SET.
+	* ypserv/ypserv_xdr.c: Remove unused define XDRMAXRECORD.
+
+2014-11-14  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* scripts/Makefile.am (varypdir): Replace hardcoded value with
+	configure option.
+
+2014-11-05  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 3.0
+
+	* rpc.yppasswdd/yppasswdd.c: Port to TI-RPC.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+
+2014-11-04  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* rpc.yppasswdd/yppasswd_xdr.c: Use header file from libnis.
+
+	* rpc.yppasswdd/update.c: Adjust for TI-RPC.
+
+2014-10-31  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* ypxfr/ypxfr_xdr.c: Remove duplicate/unused functions.
+
+	* ypxfr/ypxfr.c: Convert to TI-RPC/IPv6 enablement.
+	* yppush/yppush.c: Likewise.
+	* ypserv/ypserv.c: Likewise.
+	* rpc.ypxfrd/ypxfrd_server.c: Likewise.
+
+2014-10-30  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* lib/securenets.c: Implement IPv6 support.
+
+	* ypserv/server.c: Convert to TI-RPC/IPv6 enablement.
+	* ypserv/ypserv_xdr.c: Adjust for new yp_prot.h.
+
+	* lib/ypserv_conf.c: Remove compat header include.
+
+	* lib/compat.c: Removed.
+	* lib/compat.h: Removed.
+
+2014-03-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.32.1
+
+	* configure.ac: Adjust sd_notify check for systemd >= 209.
+
+2014-01-04  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yphelper/yphelper.c: fix command name.
+	* yphelper/yphelper.8.xml: fix command name.
+
+2013-11-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.32
+
+	* ypserv/ypserv.c: Remove sig_hup, ignore SIG_HUP.
+	* ypserv/ypserv.8.xml: Remove SIG HUP section.
+	* lib/yp_db.c: fix return value for tcbdbopen in error case.
+	Patch by Edgar Hoch, RHBZ#1004110
+
+	* scripts/ypMakefile.in: Read MINUID/MINGID from /etc/login.defs
+	Patch by Honza Horak, RHBZ#1004090
+
+2013-10-07  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.8.xml: Fix typo (reported by
+        Masatake YAMATO <yamato@redhat.com>).
+
+2013-07-22  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Use int instead
+	of c because of fgetc/EOF.
+
+2013-04-11  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.31
+
+	* rpc.yppasswdd/Makefile.am: Fix link order.
+
+2013-04-10  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.30
+
+	* lib/yp_db.c: fixes for Tokyo Cabinet.
+	* makedbm/makedbm.c: Likewise.
+	* yphelper/yphelper.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+	* lib/pidfile.c: Close pidfile file descriptor on exit.
+	* configure.in: Add AC_USE_SYSTEM_EXTENSIONS.
+
+2013-04-09  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: check for systemd header/library.
+	* lib/access.c: implement systemd notification.
+	* lib/access.h: Likewise.
+	* lib/Makefile.am: Likewise.
+	* rpc.yppasswdd/Makefile.am: Likewise.
+	* rpc.yppasswdd/yppasswdd.c: Likewise.
+	* rpc.ypxfrd/Makefile.am: Likewise.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+	* ypserv/Makefile.am: Likewise.
+	* ypserv/ypserv.c: Likewise.
+
+2012-08-30  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.29
+
+	* rpc.yppasswdd/yppasswdd.c: Fix memory leak [bnc#777833].
+	* rpc.ypxfrd/ypxfrd_svc.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	Based on patch from Honza Horak <hhorak@redhat.com>.
+
+2012-05-30  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.28
+
+	* mknetid/mknetid.c (main): Handle empty group lines and broken
+	group entries more graceful.
+	Patch from Stefan Sydow <stsydow@cs.tu-berlin.de>.
+
+	* configure.in: Add support for tokyocabinet.
+	* lib/yp.h: Likewise.
+	* lib/yp_db.c: Likewise.
+	* lib/yp_db.h: Likewise.
+	* lib/ypxfrd.h: Likewise.
+	* lib/ypxfrd.x: Likewise.
+	* makedbm/makedbm.c: Likewise.
+	* rpc.ypxfrd/ypxfrd_server.c: Likewise.
+	* yphelper/yphelper.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+
+	* rpc.yppasswdd/update.c: check crypt() ret value for
+	NULL pointer, add support for passwd.adjunct.
+
+	* rpc.yppasswdd/yppasswdd.c: check port value.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypserv/ypserv.: Likewise.
+
+	* scripts/ypinit.in: check for empty domainname.
+
+	Based on patches from Honza Horak <hhorak@redhat.com>.
+
+2012-01-27  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.27
+
+	* configure.in: Check for qdbm.
+	* conf_post.h: New file.
+	* lib/yp_db.c: Include header for qdbm.
+	* lib/yp_db.h: Likewise.
+	* makedbm/makedbm.c: Likewise.
+	* rpc.ypxfrd/ypxfrd_server.c: Likewise.
+	* yphelper/yphelper.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+
+	* rpc.yppasswdd/update.c: Fix remove_password,
+	check for correct return values.
+
+	* scripts/ypMakefile.in: Add YPPUSH_ARGS variable.
+	* yppush/yppush.8.xml: Document to edit /var/yp/Makefile.
+
+	Based on patches from Honza Horak <hhorak@redhat.com>.
+
+2011-08-31  Thorsten Kukuk  <kukuk@suse.de>
+
+	* Update FSF address.
+	Patch by Honza Horak <hhorak@redhat.com>.
+
+2011-06-22  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.26
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Ignore -4 as error,
+	create better (debug) logs.
+
+2011-06-16  Thorsten Kukuk  <kukuk@suse.de>
+
+	* mknetid/mknetid.c (main): Fix group parsing [bnc#700248].
+	Patch from Anders Johansson.
+
+2011-04-29  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.25
+
+	* yphelper/yphelper.c (is_master): Fix memory leak.
+	* rpc.yppasswdd/yppasswdd.c (main): Check if we could open
+	/dev/null.
+	* ypserv/ypserv.c (main): Likewise.
+	* rpc.yppasswdd/update.c (update_files): Close all files.
+	* revnetgroup/getnetgrent.c: Return if malloc fails.
+	* makedbm/makedbm.c (create_file): Close file if not stdin.
+	* lib/yp_db.c (_db_open): Document not implemented cache size.
+	* lib/pidfile.c (create_pidfile): Exit if we cannot create
+	pid file.
+	Based on patches from Honza Horak <hhorak@redhat.com>.
+
+2010-10-29  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.yppasswdd/update.c (remove_password): Remove password
+	for logging.
+
+2010-09-24  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.24
+
+	* rpc.yppasswdd/update.c (external_update_pipe): Use correct
+	gecos variable. Reported by Mark Riley.
+
+2010-09-20  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.yppasswdd/update.c (external_update_pipe): Make logbuf
+	a new parameter, fix usage of parentmsg.
+	Bugs reported by Mark Riley.
+
+2010-02-23  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.23
+
+	* lib/Makefile.am: Add pidfile.c, pidfile.h
+	* lib/pidfile.c: New.
+	* lib/pidfile.h: New.
+	* rpc.yppasswdd/yppasswdd.c: Use create_pidfile().
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+	* ypserv/ypserv.c: Likewise.
+	Patch from Karel Klic <kklic@redhat.com>.
+
+2010-01-27  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.22
+
+	* ypserv/ypserv.8.xml: Code cleanup, document problems with SIGHUP.
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Remove wrong ypdb_close
+	call. Reported by Karel Klic <kklic@redhat.com>.
+
+2009-06-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.21
+
+2009-05-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c (main): Free transp (fix memory leak)
+
+2009-05-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yphelper/yphelper.8.xml: New.
+	* yphelper/yphelper.8: Regenerated from xml source.
+	* yphelper/Makefile.am: Add rules for xml.
+
+2009-05-07  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/access.c (is_valid): Don't print message for non-existing
+	maps.
+
+	* mknetid/mknetid.c (main): Check for NULL pointers before
+	calling insert_user().
+	Reported by Mark Brown <broonie@sirena.org.uk>
+
+	* mknetid/netid_hash.c: Remove second xstrtok implementation.
+
+	* mknetid/mknetid.h: Add xstrtok prototype.
+
+2009-04-15  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c (ypprog_2): If decoding fails, try
+	to free the already allocated memory.
+
+2009-04-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.20
+
+	* ypserv/ypserv.8.xml: New file.
+	* ypserv/ypserv.8: Regenerated from xml source.
+	* ypserv/Makefile.am: Add rules for xml.
+
+	* ypxfr/ypxfr.8.xml: New file.
+	* ypxfr/ypxfr.8: Regenerated from xml source.
+	* ypxfr/Makefile.am: Add rules for xml.
+
+	* yppush/yppush.8.xml: New file.
+	* yppush/yppush.8: Regenerated from xml source.
+	* yppush/Makefile.am: Add rules for xml.
+
+	* lib/yp_db.c: Add some sanity checks.
+
+	* rpc.ypxfrd/ypxfrd_server.c (ypxfrd_getmap_1_svc): Fix debug message.
+
+	* lib/access.c (is_valid): New return value if map does	not exist.
+	* ypserv/server.c: handle new return value of is_valid().
+
+2008-04-15  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Only warn about
+	missing SLP support if it is enabled in ypserv.conf.
+
+2007-10-01  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.ypxfrd/rpc.ypxfrd.8.xml: New file.
+	* rpc.ypxfrd/rpc.ypxfrd.8: Regenerated from xml source.
+	* rpc.ypxfrd/Makefile.am: Add rules for xml.
+
+2007-09-26  Thorsten Kukuk  <kukuk@suse.de>
+
+	* revnetgroup/revnetgroup.8.xml: New file.
+	* revnetgroup/revnetgroup.8: Regenerated from xml source.
+	* revnetgroup/Makefile.am: Add rules for xml.
+
+2006-08-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* makedbm/makedbm.8.xml: New file.
+	* makedbm/makedbm.8: Regenerated from xml source.
+	* makedbm/Makefile.am: Add rules for xml.
+
+	* mknetid/mknetid.8.xml: New file.
+	* mknetid/mknetid.8: Regenerated from xml source.
+	* mknetid/Makefile.am: Add rules for xml.
+
+	* rpc.yppasswdd/rpc.yppasswdd.8.xml: New file.
+	* rpc.yppasswdd/rpc.yppasswdd.8: Regenerated from xml source.
+	* rpc.yppasswdd/Makefile.am: Add rules for xml.
+
+2006-04-07  Thorsten Kukuk  <kukuk@suse.de>
+
+	* etc/ypserv.conf.5.xml: New file.
+	* etc/ypserv.conf.5: Regenerated from xml source.
+
+2006-04-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* etc/netgroup.5.xml: New file.
+	* etc/netgroup.5: Regenerated from xml source.
+	* etc/Makefile.am: Add rules for xml.
+	* configure.in: Check for xml tools.
+
+2006-01-10  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 2.19
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Don't ignore return value
+	of fgets().
+	* lib/securenets.c (load_securenets): Likewise.
+	* revnetgroup/revnetgroup.c (main): Likewise.
+
+	* ypserv/ypserv.c (main): Don't ignore return value of dup().
+	* ypserv/server.c (ypproc_xfr_2_svc): Likewise.
+	* rpc.ypxfrd/ypxfrd.c (main): Likewise.
+
+	* makedbm/makedbm.c (create_file): Don't ignore return value of
+	getline().
+
+	* rpc.yppasswdd/update.c (update_files): Don't ignore return values
+	of unlink() and chown().
+
+	* rpc.yppasswdd/yppasswdd.c (main): Don't ignore return values of
+	chdir() and dup().
+
+	* ypserv/reg_slp.c (register_slp): Check if hostname is resolveable.
+
+	* configure.in: Make -pie usage configureable.
+	Based on patch by Urs Thuermann <urs@isnogud.escape.de>.
+
+2005-09-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr.c (ypxfr): Clear response structures before usage.
+
+2005-07-20  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.18
+
+        * rpc.yppasswdd/update.c (external_update_env): Remove obsolete code.
+	(external_update_pipe): Don't use buffer of fixed length.
+
+        * lib/log_msg.c (log_msg): Use vsnprintf.
+
+2005-05-31  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release vesion 2.17
+
+	* lib/securenets.c (load_securenets): Fix debug output.
+
+	* ypserv/server.c: Handle return value of 0 correct for is_valid().
+
+2005-05-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.16
+
+	* rpc.yppasswdd/yppasswdd.c (sig_child): Restore errno.
+	* rpc.ypxfrd/ypxfrd.c (sig_child): Likewise.
+	* yppush/yppush.c (sig_child): Likewise.
+	Based on patch from Mark Brown <broonie@sirena.org.uk>
+
+	* lib/compat.c (svc_getcaller): Fix return value.
+	* revnetgroup/revnetgroup.c (insert_netgroup): Make static.
+	* rpc.yppasswdd/yppasswd_xdr.c: Cast uid_t/gid_t to int.
+	* rpc.ypxfrd/ypxfrd.c: Fix includes, use int on HPUX for
+	getpeername.
+	* rpc.ypxfrd/ypxfrd_server.c: Fix includes.
+	* yphelper/yphelper.c: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypserv/ypserv.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+	Patch from Petter Reinholdtsen <petter.reinholdtsen@usit.uio.no>
+
+2005-04-07  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.15
+
+	* configure.in: Check for -fpie/-pie support.
+	* lib/Makefile: Compile with -fpie if supported.
+	* rpc.yppasswdd/Makefile.am: Likewise.
+	* rpc.ypxfrd/Makefile.am: Likewise.
+	* yppush/Makefile.am: Likewise.
+	* ypserv/Makefile.am: Likewise.
+
+	* yphelper/yphelper.c: Fix gcc4 warning.
+
+2005-03-23  Thorsten Kukuk  <kukuk@suse.de>
+
+	* makedbm/makedbm.c (dump_file): Use a TAB as seperator
+	between key and data.
+
+2004-09-03  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.14
+
+	* lib/compat.c (svc_getcaller): Use log_msg instead of
+	fprintf. Patch from Petter Reinholdtsen <pere@hungry.com>.
+
+	* ypserv/reg_slp.c: Support systems without asprintf.
+	Based on patch from Petter Reinholdtsen <pere@hungry.com>.
+
+	* ypserv/ypserv.c (create_pidfile): Don't continue in
+	function if we cannot create pid file.
+
+	* ypserv/reg_slp.c (register_slp): Use signal() instead
+	of sigaction().
+
+	* configure.in: Check for asprintf
+
+2004-08-10  Mark Brown  <broonie@sirena.org.uk>
+
+	* ypxfr/ypxfr_clnt.c (ypproc_master_2): memset() the response
+	structure before calling clnt_call().
+	(ypproc_order_2): Likewise.
+	* ypxfr/ypxfr_xdr.c (ypproc_all_2): Likewise.
+
+2004-07-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr.c (ypxfr): Don't free xdr_ypresp_val,
+	if no data was send.
+	Reported by Artur Niederstebruch <artur@sgi.com>.
+
+2004-04-14  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.13
+
+	* etc/ypserv.conf.5 (slp): Document slp: domain option.
+
+	* ypserv/slp_reg.c: If slp: domain option is set, create attr
+	with all supported domain names.
+
+	* lib/yp_db.c (ypdb_open): Fix memory leak if the cache is too small
+	and the map does not exist. Reported by Feng Qin <fengqin@uiuc.edu>.
+
+	* rpc.ypxfrd/ypxfrd_svc.c: Reformat.
+
+	* scripts/ypMakefile.in (services.byservicename): Add aliases
+	as key with /proto, too. Patch from Jakub Jelinek <jakub@redhat.com>.
+
+2004-04-01  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.12.2
+
+	* lib/ypserv.conf: Add slp_timeout.
+	* lib/ypserv_conf.h: Add slp_timeout prototype.
+	* lib/ypserv_conf.c: Add slp_timeout support.
+	* ypserv/reg_slp.c: Set alarm handler to re-register service.
+
+2004-04-01  Jakub Jelinek  <jakub@redhat.com>
+
+	* scripts/ypMakefile.in (services.byservicename): Add main
+	key with /proto and fix but which would trim any digits from
+	protocol name.
+
+2004-02-14  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.12.1
+
+	* ypserv/reg_slp.c (register_slp): Change SLP URL to ypserv.
+
+2004-02-13  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.12
+
+	* yppush/yppush.c (yppushproc_xfrresp_1_svc): Fix compiler
+	warnings.
+
+	* ypserv/reg_slp.c: Don't set dummy domain attributes.
+
+2004-02-07  Michael Gernoth  <simigern@stud.uni-erlangen.de>
+
+	* ypserv/server.c: Return NOMAP error if access forbidden.
+
+2004-01-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.11
+
+	* ypxfr/ypxfr.c (main): Abort if no domainname is set.
+	(Reported by Jens Laas <jens.laas@data.slu.se>)
+
+	* yppush/yppush.c: Add support for fixed port
+	(Patch from Tony Kew <tonykew@ccr.buffalo.edu>)
+
+2004-01-09  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.c (yppushproc_xfrresp_1_svc): Remove wrong
+	memcpy.
+
+	* ypxfr/Makefile.am (DEFS): Define YPMAPDIR
+	(Reported by Damien Touraine <webmyster@addoc.u-psud.fr>)
+
+2003-11-24  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Check for SLP presence.
+
+	* ypserv/ypserv.c (main): Register/deregister at SLP server
+	only if we have SLP support and if it is enabled in ypserv.conf.
+
+	* lib/ypserv_conf.h: Add prototype for slp_flag.
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Use strcasecmp for option
+	parsing, add slp option.
+
+2003-11-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/reg_slp.c: New, register ypserv at SLP server.
+	* ypserv/reg_slp.h: New.
+
+	* ypserv/ypserv.c (main): Call register_slp().
+
+2003-10-22  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.10
+
+	* makedbm/makedbm.c (create_file): If there are spaces before
+	a tab, remove this spaces, too.
+
+	* ypserv/ypserv.c: Save/restore errno in signal handler.
+
+2003-08-15  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c (main): Use signal instead of sigaction.
+
+	* ypserv/server.c (ypproc_all_2_svc): Use _exit instead of exit.
+
+2003-08-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c: Add own svc_run implentation based on select,
+	but prefer glibc one.
+
+2003-07-30  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/server.c: Kill counting of running childs.
+
+2003-06-27  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.8.in: Fix typo.
+	* yppush/yppush.c: Fix error message.
+
+2003-06-26  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.9
+
+	* configure.in: Bump version number to 2.9, remove -Werror.
+	Remove duplicate getrpcport check.
+
+	* scripts/ypxfr_1perday.in: Add variable which contains maps
+	to update.
+	* scripts/ypxfr_1perhour.in: Likewise.
+	* scripts/ypxfr_2perday.in: Likewise.
+
+	* scripts/ypMakefile.in: Apply fix for multiline mail aliases
+	from Jonathan Gowland <jgowland@genaware.com>.
+
+2003-06-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* Add more portability changes from
+	Petter Reinholdtsen <pere@hungry.com>
+
+2003-06-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr_clnt.c (ypproc_master_2): New function.
+
+	* ypxfr/ypxfr.c (ypxfr): Get official name of master host from
+	master itself.
+
+2003-06-05  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Check for availability of more functions.
+	* rpc.ypxfrd/ypxfrd.h: Removed.
+	* acinclude.m4: Add portability changes from
+	Petter Reinholdtsen <pere@hungry.com>
+	* lib/Makefile.am: Likewise.
+	* lib/yp.h: Likewise.
+	* lib/yp_db.c: Likewise.
+	* lib/ypserv_conf.c: Likewise.
+	* lib/ypxfrd.h: Likewise.
+	* makedbm/Makefile.am: Likewise.
+	* makedbm/makedbm.c: Likewise.
+	* mknetid/Makefile.am: Likewise.
+	* mknetid/mknetid.c: Likewise.
+	* revnetgroup/Makefile.am: Likewise.
+	* revnetgroup/hash.c: Likewise.
+	* revnetgroup/revnetgroup.c: Likewise.
+	* rpc.yppasswdd/Makefile.am: Likewise.
+	* rpc.yppasswdd/update.c: Likewise.
+	* rpc.yppasswdd/yppasswdd.c: Likewise.
+	* rpc.ypxfrd/Makefile.am: Likewise.
+	* rpc.ypxfrd/ypxfrd.c: Likewise.
+	* rpc.ypxfrd/ypxfrd.h: Likewise.
+	* rpc.ypxfrd/ypxfrd_svc.c: Likewise.
+	* yphelper/Makefile.am: Likewise.
+	* yphelper/yphelper.c: Likewise.
+	* yppush/Makefile.am: Likewise.
+	* yppush/yppush.c: Likewise.
+	* ypserv/Makefile.am: Likewise.
+	* ypserv/server.c: Likewise.
+	* ypserv/ypserv.c: Likewise.
+	* ypxfr/Makefile.am: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+	* ypxfr/ypxfr_xdr.c: Likewise.
+
+2003-06-05  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Define max. number of children ypserv is allowed
+	to have.
+
+	* ypserv/ypserv.c: Remove ypserv_svc_run function, always use
+	system svc_run().
+	* ypserv/server.c: Remove usage of forked variable, make usage
+	of child counting a compile time option.
+
+2003-05-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.c: Only include getopt.h if exists.
+	* ypserv/ypserv.c: Likewise.
+	* ypxfr/ypxfr.c: Likewise.
+
+	* lib/ypserv_conf.c: Include alloca.h.
+
+	* ypserv/ypserv.c (ypserv_svc_run): Add version which does not use
+	poll for old SunRPC implementations.
+
+	* configure.in: Check for svc_max_pollfd.
+
+2003-05-15  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/server.c (ypproc_all_2_svc): Set at first result->more to
+	TRUE or the client will not read the error code.
+
+2003-03-03  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/access.c (is_valid): Don't deny access if map does not
+	exist (else the error code is wrong).
+
+2003-02-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/log_msg.c (log_msg): Use new file handle debug_output.
+
+2003-02-05  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.8
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Fix debug output.
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Increase children before we
+	fork, to make sure the variable will not become negative in
+	sig_child.
+
+	* lib/access.c (is_valid): If connection is refused, print status
+	for debugging purpose.
+
+	* lib/securenets.c (load_securenets): Fix debug output.
+
+2003-02-04  Peter Breitenlohner  <peb@mppmu.mpg.de>
+
+	* yphelper/yphelper.c: Fix compiler warning.
+
+	* ypxfr/ypxfr_xdr.c: Fix compiler warning.
+
+2003-02-04  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.7
+
+	* ypserv/Makefile.am (DEFS): Add MAX_CHILDREN define.
+
+	* ypserv/ypserv.c (sig_child): Readd old sig handler for checking
+	number of running children.
+
+	* configure.in: Check only for gdbm library.
+
+	* ypserv/server.c (ypproc_all_2_svc): fork for sending data to
+	client.
+
+	* etc/Makefile.am: Require automake 1.7
+	* scripts/Makefile.am: Likewise.
+
+	* lib/Makefile.am: Require automake 1.7, rename CFLAGS to AM_CFLAGS
+	* makedbm/Makefile.am: Likewise
+	* mknetid/Makefile.am: Likewise
+	* revnetgroup/Makefile.am: Likewise
+	* rpc.yppasswdd/Makefile.am: Likewise
+	* rpc.ypxfrd/Makefile.am: Likewise
+	* yphelper/Makefile.am: Likewise
+	* yppush/Makefile.am: Likewise
+	* ypserv/Makefile.am: Likewise
+	* ypxfr/Makefile.am: Likewise
+
+2003-01-17  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.8.in: Remove -b/--dns option
+
+2002-10-28  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.6
+
+	* lib/yp_db.c: Make number of max. open file handles configureable.
+	* lib/ypserv_conf.c: max. number of cached_filehandles is 255.
+	* rpc.ypxfrd/ypxfrd.c: set cached_filehandles to 0 after loading
+	config file, rpc.ypxfrd should not cache file handles.
+	* ypserv/ypserv.c (sig_hup): Don't allow to decrease the max. number
+	of cached file handles with SIGHUP.
+	* etc/ypserv.conf.5: Add documentation about new files option.
+
+	* makedbm/makedbm.c (create_file): If we find a <TAB> in a key,
+	assume that <TAB> is the seperator between key and data.
+
+2002-10-26  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.ypxfrd/ypxfrd_server.c (ypxfrd_getmap_1_svc): Close file
+	handle of database (we don't need it).
+	Reported by Tsutomu Hoshino <hoshino@sic.shibaura-it.ac.jp>
+
+2002-08-08  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.5
+
+	* configure.in: Check for in_addr_t
+
+2002-08-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.8.in: Fix syntax error.
+
+2002-08-06  Thorsten Kukuk  <kukuk@suse.de>
+
+        * lib/yp_db.c (ypdb_open): Check if map exist before allocating
+        memory for extra data.
+
+        * lib/access.c (is_valid): If map does not exist, return -2,
+        not success.
+
+2002-07-23  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Print also name of the
+	expected master if we refuse to transfer a map.
+
+2002-07-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* rpc.ypxfrd/Makefile.in (rpc_ypxfrd_LDADD): link against libyp.a
+	before linking against libgdbm.
+
+	* ypserv/Makefile.in (rpc_ypxfrd_LDADD): Likewise.
+	(Reported by Todd R. Eigenschink <todd@tekinteractive.com>)
+
+002-05-27  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.4
+
+	* scripts/ypMakefile.in (MINUID/MINGID): increase both variables
+	to 500 as defined by LSB and to be compatible with most Linux
+	distributions.
+
+	* lib/ypserv.conf.5: move from here ...
+	* etc/ypserv.conf.5: ... to here. Remove mangle field description.
+	* lib/Makefile.am: Remove ypserv.conf.5
+	* etc/Makefile.am: Add ypserv.conf.5
+
+2002-05-23  Martin Vidner  <mvidner@suse.cz>
+
+	* yphelper/yphelper.c: Add -i option to getopt_long
+
+2002-05-14  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.3
+
+	* yppush/yppush.c (hostcmp): Get ride of this function, since it
+	could remove correct slaves which have the same hostname but are
+	in other domains.
+
+	* yphelper/yphelper.c (is_master): New function, check if we are
+	the master for a given map.
+
+	* yphelper/Makefile.am (yphelper_LDADD): Link against dbm library.
+
+2002-05-13  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Prefer libxcrypt over libcrypt.
+
+2002-04-26  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Adjust for new autoconf.
+
+	* config.guess: Deleted.
+	* config.sub: Deleted.
+	* acconfig.h: Deleted.
+
+	* lib/ypserv.conf.5: Document trusted_master option.
+
+	* yphelper/yphelper.c: Fix compiler warnings.
+
+	* mknetid/mknetid.c: Use getline/getdelim instead of fgets
+	to avoid static buffer.
+
+	* scripts/create_printcap.in: Fix syntax error to get it to
+	work with all awk implementations.
+
+2002-04-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* yppush/yppush.c (yppush_xfrrespprog_1): Exit from thread
+	if not YPPUSHPROC_NULL was called.
+
+2001-12-16  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* ypserv/server.c: Add missing break in switch statement.
+	* ypserv/ypserv.c (main): getopt returns -1, not EOF.
+
+2001-12-03  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr.c (ypxfr): Don't replace name of master with
+	FQDN, else ypserv cannot compare it later.
+
+2001-11-26  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.2
+
+	* scripts/ypinit.in (ypinit_master): Add missing else case
+	(don't print error message in success case). Reported by
+	Michael Sterrett <msterret@coat.com>.
+
+	* lib/access.c (is_valid): Fix return value if host is not
+	allowed to connect.
+	* scripts/ypxfr_1perday.in: Add variable for maps.
+	* scripts/ypxfr_1perhour.in: Likewise.
+	* scripts/ypxfr_2perday.in: Likewise.
+
+2001-10-29  Thorsten Kukuk  <kukuk@suse.de>
+
+	* acinclude.m4: New, contains macro for ElectricFence option
+	* configure.in: Add option for dmalloc and ElectricFence
+
+	* ypserv/server.c (ypproc_all_2_svc): Reset callback data
+	  at beginning to avoid bogus data if we abort with an error.
+	  (ypall_close): Abort if data is NULL.
+
+	* yphelper/yphelper.c: Allow IP numbers as hostname, also
+	  lookup hostname from NIS map for compare.
+
+2001-09-02  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.1
+
+	* rpc.yppasswdd/yppasswdd.c: Implement --port parameter to
+	  bind to a special port.
+	* rpc.yppasswdd/rpc.yppasswdd.8.in: Document new parameter.
+
+2001-09-02  Martin Vidner <mvidner@suse.cz>
+
+	* Fix various errors in manual pages
+
+2001-08-30  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/Makefile.am: Remove ypproc_all_2.c
+	* ypxfr/ypxfr_xdr.c: Add special ypproc_all_2 function
+	* ypxfr/ypxfr.8: Renamed from this ...
+	* ypxfr/ypxfr.8.in: ... to this
+	* yppush/yppush.8: Renamed from this ...
+	* yppush/yppush.8.in: ... to this
+	* configure.in: create ypxfr/ypxfr.8 and yppush/yppush.8
+	* revnetgroup/revnetgroup.8.in: New
+
+2001-08-26  Thorsten Kukuk  <kukuk@suse.de>
+
+	* scripts/Makefile.am: Don't strip scripts
+	* ypserv/server.c: Fix null byte termination of order number
+	(reported by Juergen Holm <holm@Theorie.Physik.UNI-Goettingen.DE>)
+
+2001-08-20  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Create ypserv/ypserv.8
+	* ypserv/ypserv.8: renamed from this ..
+	* ypserv/ypserv.8.in: .. to this.
+
+2001-08-12  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Rename variable MAIL_ALIASES to ALIASES.
+	* lib/Makefile.am: Install ypxfrd.h into include/rpcsvc.
+	* scripts/ypMakefile.in: Fix makedbm path.
+
+2001-08-11  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c (main): Fix missing format string, only
+	  change database directory if we are in debug mode.
+
+2001-08-07  Thorsten Kukuk  <kukuk@suse.de>
+
+	* release version 2.0
+
+2001-08-06  Thorsten Kukuk  <kukuk@suse.de>
+
+	* scripts/Makefile.am (varyp_SCRIPTS): Add ypMakefile
+	* configure.in: Create scripts/ypMakefile
+
+2001-08-05  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/ypserv_conf.c (load_ypserv_conf):
+
+	* etc/netgroup.5: Add comment about non existing getnetgrent manual
+	  page.
+
+	* scripts/ypMakefile.in: Implement 'MINUID' for shadow map.
+
+	* rpc.ypxfrd/ypxfrd.c (closedown): Removed external svs_fdset
+	  declaration.
+	Patches from Miquel van Smoorenburg <miquels@cistron.nl>)
+
+	* yphelper/yphelper.c (print_maps): Make a copy of gethostbyname
+	  result (we call gethostbyname later again) and fix a minor memory
+	  leak. Based on patch by Richard Gooch <rgooch@atnf.csiro.au>
+
+2001-04-08  Thorsten Kukuk  <kukuk@suse.de>
+
+	* scripts/Makefile.am: Add ypinit script and manual page
+	* scripts/ypinit.in: New.
+	* scripts/ypinit.8.in: New.
+	* scripts/create_printcap.in: New.
+	* scripts/match_printcap.in: New.
+	* scripts/pwupdate.8.in: New.
+	* scripts/pwupdate.in: New.
+	* mknetid/mknetid.c: New.
+	* mknetid/mknetid.h: New.
+	* mknetid/netid_hash.c: New.
+	* rpc.ypxfrd: New.
+	* rpc.yppasswdd: New.
+
+2001-03-25  Thorsten Kukuk  <kukuk@suse.de>
+
+	* configure.in: Create revnetgroup/yphelper Makefile
+	* Makefile.am (SUBDIRS): Add revnetgroup and yphelper directory.
+	* revnetgroup/Makefile.am: New.
+	* revnetgroup/revnetgroup.c: New.
+	* revnetgroup/revnetgroup.8: New.
+	* revnetgroup/getnetgrent.c: New.
+	* revnetgroup/hash.c: New.
+	* yphelper/yphelper.c: New.
+	* yphelper/yphelper.8: New.
+
+	* ypxfr/ypxfr.c (ypxfr): Check return value from NIS server for
+	  yp_order call.
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Don't free buffer
+	  allocated with alloca, use stpcpy instead of sprintf.
+
+2001-03-11  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/yp_db.c: Enable caching of gdbm file handles.
+
+2000-11-19  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypxfr/ypxfr.c: Major rewrite.
+	* ypxfr/ypxfr.c(ypxfr): properly terminate a string before
+	  run "atoi" on it (reported by Andy Stevens <stevens@2agent.com>)
+
+	* ypserv/ypserv.c (main): Fix typo (install SIGCHLD handler)
+
+2000-10-28  Thorsten Kukuk  <kukuk@suse.de>
+
+	* ypserv/ypserv.c: Add SIGCHLD handler for forked processes.
+
+	* ypserv/yp_db.c (_db_open): Add hook to set gdbm cache size.
+
+2000-10-24  Thorsten Kukuk  <kukuk@suse.de>
+
+	* lib/ypserv_conf.c (load_ypserv_conf): Parse for trusted_master
+
+	* lib/ypserv_conf.h: Add prototype for trusted_master.
+
+	* ypserv/server.c (ypproc_xfr_2_svc): Check if new map is from
+	  trusted master
+
+	* ypserv/Makefile.am (noinst_HEADERS): Add access.h
+
+	* start major rewrite of ypserv for version 2

@@ -1,0 +1,5 @@
+Makefile
+Makefile.in
+yppush
+yppush.8
+.deps

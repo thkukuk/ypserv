@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='rpc.yppasswdd'>
+
+  <refmeta>
+    <refentrytitle>rpc.yppasswdd</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='manual'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>rpc.yppasswdd</refname>
+    <refpurpose>NIS password update daemon</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+
+  <refsynopsisdiv id='synopsis'>
+    <cmdsynopsis>
+      <command>rpc.yppasswdd</command>
+      <arg choice='opt'>-D <replaceable>directory</replaceable></arg>
+      <arg choice='plain'>-e <replaceable>chsh</replaceable>|<replaceable>chfn</replaceable></arg>
+      <arg choice='opt'>--port <replaceable>number</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>rpc.yppasswdd</command>
+      <arg choice='opt'>-s <replaceable>shadow</replaceable></arg>
+      <arg choice='opt'>-p <replaceable>passwd</replaceable></arg>
+      <arg choice='plain'>-e <replaceable>chsh</replaceable>|<replaceable>chfn</replaceable></arg>
+      <arg choice='opt'>--port <replaceable>number</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>rpc.yppasswdd</command>
+      <group choice='plain'>
+        <arg choice='plain'>-x <replaceable>program</replaceable></arg>
+        <arg choice='plain'>-E <replaceable>program</replaceable></arg>
+      </group>
+      <arg choice='plain'>-e <replaceable>chsh</replaceable>|<replaceable>chfn</replaceable></arg>
+      <arg choice='opt'>--port <replaceable>number</replaceable></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+
+  <refsect1 id='description'>
+    <title>DESCRIPTION</title>
+    <para>
+      <command>rpc.yppasswdd</command> is the RPC server that lets users
+      change their passwords in the presence of NIS (a.k.a. YP). It must
+      be run on the NIS master server for that NIS domain.
+    </para>
+
+<para>When a
+<citerefentry><refentrytitle>yppasswd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+client contacts the server, it sends the old user
+password along with the new one. <command>rpc.yppasswdd</command> will search the system's
+<emphasis remap='B'>passwd</emphasis>
+file for the specified user name, verify that the
+given (old) password matches, and update the entry. If the user
+specified does not exist, or if the password, UID or GID doesn't match
+the information in the password file, the update request is rejected,
+and an error returned to the client.</para>
+
+<para>If this version of the server is compiled with the CHECKROOT=1 option, the
+password given is also checked against the systems root password.</para>
+
+<para>After updating the
+<emphasis remap='B'>passwd</emphasis>
+file and returning a success notification
+to the client, <command>rpc.yppasswdd</command> executes the <emphasis remap='B'>pwupdate</emphasis> script that
+updates the NIS server's <emphasis remap='B'>passwd.*</emphasis> and <emphasis remap='B'>shadow.byname</emphasis> maps.
+This script assumes all NIS maps are kept in directories named
+<filename>/var/yp/</filename><emphasis remap='I'>nisdomain</emphasis>
+that each contain a <emphasis remap='B'>Makefile</emphasis> customized for that NIS domain. If no
+such <emphasis remap='B'>Makefile</emphasis> is found, the scripts uses the generic one in
+<filename>/var/yp</filename>.</para>
+</refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+<para>The following options are available:</para>
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><option>-D</option><replaceable> directory</replaceable></term>
+  <listitem>
+<para>The
+<emphasis remap='B'>passwd</emphasis>
+and
+<emphasis remap='B'>shadow</emphasis>
+files are located under the specified directory path.
+<command>rpc.yppasswdd</command>
+will use this files, not
+<filename>/etc/passwd</filename>
+and
+<filename>/etc/shadow.</filename>
+This is useful if you do not want to give all users in the NIS database
+automatic access to your NIS server.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-E</option><replaceable> program</replaceable></term>
+  <listitem>
+<para>Instead of rpc.yppasswdd editing the passwd &amp; shadow files, the
+specified program will be run to do the editing. The following
+environment variables will be set for the program: YP_PASSWD_OLD,
+YP_PASSWD_NEW, YP_USER, YP_GECOS, YP_SHELL. The program should return
+an exit status of 0 if the change completes successfully, 1 if the
+change completes successfully but pwupdate should not be run, and
+otherwise if the change fails.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-p</option><replaceable> passwdfile</replaceable></term>
+  <listitem>
+<para>This options tells <command>rpc.yppasswdd</command> to use a different source file instead
+of <filename>/etc/passwd</filename> This is useful if you do not want to give all users
+in the NIS database automatic access to your NIS server.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-s</option><replaceable> shadowfile</replaceable></term>
+  <listitem>
+<para>This options tells <command>rpc.yppasswdd</command> to use a different source file instead
+of <filename>/etc/passwd</filename>. See below for a brief discussion of shadow support.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-e [chsh|chfn]</option></term>
+  <listitem>
+<para>By default, <command>rpc.yppasswdd</command> will not allow users to change the shell or
+GECOS field of their <emphasis remap='B'>passwd</emphasis> entry. Using the <option>-e</option> option,
+you can enable either of these. Note that when enabling support for
+<citerefentry><refentrytitle>ypchsh</refentrytitle><manvolnum>1</manvolnum></citerefentry>, you have to list all shells users are allowed to
+select in <filename>/etc/shells</filename>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-x program</option></term>
+  <listitem>
+<para>When the -x option is used, rpc.yppasswdd will not attempt to modify
+any files itself, but will instead run the specified program, passing
+to its stdin information about the requested operation(s).  There is
+a defined protocol used to communicate with this external program, which
+has total freedom in how it propagates the change request. See
+below for more details on this.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-m</option></term>
+  <listitem>
+<para>Will be ignored, for compatibility with Solaris only.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>--port number</option></term>
+  <listitem>
+<para>rpc.yppasswdd will try to register itself to this port. This makes
+it  possible to have a router filter packets to the NIS ports.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-v --version</option></term>
+  <listitem>
+<para>Prints the version number and if this package is compiled with the
+CHECKROOT option.</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='miscellaneous'><title>MISCELLANEOUS</title>
+
+<refsect2 id='shadow_passwords'><title>Shadow Passwords</title>
+<para>Using Shadow passwords alongside NIS does not make too much sense, because
+the supposedly inaccesible passwords now become readable through a simple
+invocation of
+<citerefentry><refentrytitle>ypcat</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+
+<para>Shadow support in <command>rpc.yppasswdd</command> does not mean that it offers a very
+clever solution to this problem, it simply means that it can read and write
+password entries in the system's
+<emphasis remap='B'>shadow</emphasis>
+file.  You have to produce a
+<emphasis remap='B'>shadow.byname</emphasis> NIS map to distribute password information to your NIS
+clients. <command>rpc.yppasswdd</command> will search at first in the <filename>/etc/passwd</filename> file
+for the user and password. If it find's the user, but the password is "x"
+and a <filename>/etc/shadow</filename> file exists, it will update the password in the
+shadow map.</para>
+</refsect2>
+
+<refsect2 id='use_of_the_x_option'><title>Use of the -x option</title>
+<para>The program should expect to read a single line from stdin, which is
+formatted as follows:</para>
+
+<para>&lt;username&gt; o:&lt;oldpass&gt; p:&lt;password&gt; s:&lt;shell&gt; g:&lt;gcos&gt;\n</para>
+
+<para>where any of the three fields [p, s, g] may or may not be present.</para>
+
+<para>This program should write "OK\n" to stdout if the operation succeeded.  On
+any other result, rpc.yppasswdd will report failure to the client.</para>
+
+<para>Note that the program specified by the -x option is responsible for doing
+any NIS make and build, and for doing any necessary validation on the
+shell and gcos field information supplied.  The password passed to the client
+will be in UNIX crypt() format.</para>
+</refsect2>
+
+<refsect2 id='logging'><title>Logging</title>
+<para><command>rpc.yppasswdd</command> logs all password update requests to <emphasis remap='B'>syslogd(8)</emphasis>'s
+auth facility. The logging information includes the originating host's
+IP address and the user name and UID contained in the request. The
+user-supplied password itself is not logged.</para>
+</refsect2>
+
+    <refsect2 id='security'>
+      <title>Security</title>
+      <para>
+        <command>rpc.yppasswdd</command> should be as secure or insecure
+        as any program relying on simple password authentication. If you
+        feel that this is not enough, you may want to protect
+        <command>rpc.yppasswdd</command> from outside access by using the
+        `securenets' feature of the new <citerefentry>
+        <refentrytitle>portmap</refentrytitle><manvolnum>8</manvolnum>
+        </citerefentry> version&nbsp;3. Better still, look at <citerefentry>
+        <refentrytitle>rpasswdd</refentrytitle><manvolnum>8</manvolnum>
+        </citerefentry>.
+      </para>
+    </refsect2>
+  </refsect1>
+
+  <refsect1 id='files'>
+    <title>FILES</title>
+    <para>
+      <filename>/usr/sbin/rpc.yppasswdd</filename>
+<!-- .br -->
+      <filename>/usr/lib/yp/pwupdate</filename>
+<!-- .br -->
+      <filename>/etc/passwd</filename>
+<!-- .br -->
+      <filename>/etc/shadow</filename>
+    </para>
+  </refsect1>
+
+  <refsect1 id='see_also'>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry><refentrytitle>passwd</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>shadow</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>passwd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>rpasswdd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>yppasswd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>ypchsh</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>ypchfn</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>ypcat</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+  </refsect1>
+
+  <refsect1 id='author'>
+    <title>AUTHOR</title>
+    <para>
+      Olaf Kirch &lt;okir@monad.swb.de&gt; and
+      Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;
+    </para>
+  </refsect1>
+</refentry>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='mknetid'>
+
+  <refmeta>
+    <refentrytitle>mknetid</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>mknetid</refname>
+    <refpurpose>generate data for netid map</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+
+  <refsynopsisdiv id='synopsis'>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/mknetid</command>
+      <arg choice='opt'>-q </arg>
+      <arg choice='opt'>-h <replaceable>hosts</replaceable></arg>
+      <arg choice='opt'>-p <replaceable>passwd</replaceable></arg>
+      <arg choice='opt'>-g <replaceable>group</replaceable></arg>
+      <arg choice='opt'>-d <replaceable>domain</replaceable></arg>
+      <arg choice='opt'>-n <replaceable>netid</replaceable></arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>/usr/lib/yp/mknetid</command>
+      <arg choice='plain'>--version </arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+
+<refsect1 id='description'><title>DESCRIPTION</title>
+<para><emphasis remap='B'>mknetid</emphasis>
+generates the <emphasis remap='I'>netid.byname</emphasis> NIS map from the contents of the
+group(5), passwd(5), hosts(5) and netid files. It checks for multiple
+entrys of netids and warn for them or filters them out. It is only
+called by
+<filename>/var/yp/Makefile</filename>
+when rebuilding the NIS map.</para>
+</refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><option>-q</option></term>
+  <listitem>
+<para>This flag turns on 'quiet' mode, don't print a warning message when
+finding an duplicate netid entry.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-h</option><replaceable> hosts</replaceable></term>
+  <listitem>
+<para>The
+<option>-h</option>
+flag can be used to specify the use of another hosts file
+than the default <filename>/etc/hosts</filename>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-p</option><replaceable> passwd</replaceable></term>
+  <listitem>
+<para>The
+<option>-p</option>
+flag can be used to specify the use of another passwd file
+than the default <filename>/etc/passwd</filename>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-g</option><replaceable> group</replaceable></term>
+  <listitem>
+<para>The
+<option>-g</option>
+flag can be used to specify the use of another group file
+than the default <filename>/etc/group</filename>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-n</option><replaceable> netid</replaceable></term>
+  <listitem>
+<para>The
+<option>-n</option>
+flag can be used to specify the use of another netid file
+than the default <filename>/etc/netid</filename>.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>-d</option><replaceable> domain</replaceable></term>
+  <listitem>
+<para>The
+<emphasis remap='B'>mknetid</emphasis>
+command uses the system domainname by default. If it is not set
+or you whish to override it, you must use the
+<option>-d</option>
+parameter.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><option>--version</option></term>
+  <listitem>
+<para>Prints the version number</para>
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='files'><title>FILES</title>
+<!-- .PD 0 -->
+<variablelist remap='TP'>
+  <varlistentry>
+  <term><filename>/etc/group</filename></term>
+  <listitem>
+<para>groups file</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><filename>/etc/hosts</filename></term>
+  <listitem>
+<para>hosts database</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><filename>/etc/netid</filename></term>
+  <listitem>
+<para>netname database</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+  <term><filename>/etc/passwd</filename></term>
+  <listitem>
+<para>password file</para>
+<!-- .PD -->
+  </listitem>
+  </varlistentry>
+</variablelist>
+</refsect1>
+
+<refsect1 id='see_also'><title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>passwd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>group</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>hosts</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>passwd</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+
+</refsect1>
+
+  <refsect1 id='author'>
+    <title>AUTHOR</title>
+    <para>
+      <command>mknetid</command> was written by Thorsten Kukuk
+      &lt;kukuk@linux-nis.org&gt;.
+    </para>
+  </refsect1>
+</refentry>

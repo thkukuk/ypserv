@@ -1,0 +1,122 @@
+.\"     Title: ypserv.conf
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.70.1 <http://docbook.sf.net/>
+.\"      Date: 08/02/2006
+.\"    Manual: NIS Reference Manual
+.\"    Source: NIS Reference Manual
+.\"
+.TH "YPSERV.CONF" "5" "08/02/2006" "NIS Reference Manual" "NIS Reference Manual"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+ypserv.conf \- configuration file for ypserv and rpc.ypxfrd
+.SH "DESCRIPTION"
+.PP
+
+\fIypserv.conf\fR
+is an ASCII file which contains some options for ypserv. It also contains a list of rules for special host and map access for ypserv and rpc.ypxfrd. This file will be read by ypserv and rpc.ypxfrd at startup, or when receiving a SIGHUP signal.
+.PP
+There is one entry per line. If the line is a option line, the format is:
+.sp
+.RS 3n
+.nf
+   option: \fIargument\fR
+.fi
+.RE
+.PP
+The line for an access rule has the format:
+.sp
+.RS 3n
+.nf
+   host:domain:map:security
+.fi
+.RE
+.PP
+All rules are tried one by one. If no match is found, access to a map is allowed.
+.PP
+Following options exist:
+.TP 3n
+\fBfiles:\fR \fI30\fR
+This option specifies, how many database files should be cached by
+\fIypserv\fR. If
+0
+is specified, caching is disabled. Decreasing this number is only possible, if ypserv is restarted.
+.TP 3n
+\fBtrusted_master:\fR \fIserver\fR
+If this option is set on a slave server, new maps from the host
+\fIserver\fR
+will be accepted as master. The default is, that no trusted master is set and new maps will not be accepted.
+.sp
+Example:
+.sp
+.RS 3n
+.nf
+   trusted_master: ypmaster.example.org
+          
+.fi
+.RE
+.TP 3n
+\fBslp:\fR [\fIyes\fR|\fI<no>\fR|\fIdomain\fR]
+If this option is enabled and SLP support compiled in, the NIS server registers itself on a SLP server. If the variable is set to
+\fIdomain\fR, an attribute
+\fIdomain\fR
+with a comma seperated list of supported domainnames is set. Else this attribute will not be set. The default is "no" (disabled).
+.TP 3n
+\fBxfr_check_port:\fR [\fI<yes>\fR|\fIno\fR]
+With this option enabled, the NIS master server have to run on a port < 1024. The default is "yes" (enabled).
+.PP
+The field descriptions for the access rule lines are:
+.TP 3n
+\fBhost\fR
+IP address. Wildcards are allowed.
+.sp
+Examples:
+.sp
+.RS 3n
+.nf
+   131.234. = 131.234.0.0/255.255.0.0
+   131.234.214.0/255.255.254.0
+          
+.fi
+.RE
+.TP 3n
+\fBdomain\fR
+specifies the domain, for which this rule should be applied. An asterix as wildcard is allowed.
+.TP 3n
+\fBmap\fR
+name of the map, or asterisk for all maps.
+.TP 3n
+\fBsecurity\fR
+one of
+\fInone\fR,
+\fIport\fR,
+\fIdeny\fR:
+.RS 3n
+.TP 3n
+\fInone\fR
+always allow access.
+.TP 3n
+\fIport\fR
+allow access if from port < 1024. Otherwise do not allow access.
+.TP 3n
+\fIdeny\fR
+deny access to this map.
+.RE
+.SH "FILES"
+.PP
+\fI/etc/ypserv.conf\fR
+.SH "SEE ALSO"
+.PP
+
+\fBypserv\fR(8),
+\fBrpc.ypxfrd\fR(8)
+.SH "WARNINGS"
+.PP
+The access rules for special maps are no real improvement in security, but they make the life a little bit harder for a potential hacker.
+.PP
+Solaris clients don't use privileged ports. All security options which depend on privileged ports cause big problems on Solaris clients.
+.SH "AUTHOR"
+.PP
+Thorsten Kukuk <kukuk@thkukuk.de>

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="iso8859-15"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+
+<refentry id='rpc.ypxfrd'>
+  <refmeta>
+    <refentrytitle>rpc.ypxfrd</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='setdesc'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>rpc.ypxfrd</refname>
+    <refpurpose>NIS map transfer server</refpurpose>
+  </refnamediv>
+
+<!-- body begins here -->
+
+  <refsynopsisdiv id='synopsis'>
+    <cmdsynopsis>
+      <command>/usr/sbin/rpc.ypxfrd</command>
+      <arg choice='opt'>-d <replaceable>path</replaceable></arg>
+      <arg choice='opt'>-p <replaceable>port</replaceable></arg>
+      <arg choice='opt'>--debug </arg>
+    </cmdsynopsis>
+    <cmdsynopsis>
+      <command>/usr/sbin/rpc.ypxfrd</command>
+      <arg choice='plain'>--version </arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+
+  <refsect1 id='description'>
+    <title>DESCRIPTION</title>
+      <para>
+        <command>rpc.ypxfrd</command> is used for speed up the transfer
+        of very large NIS maps from a NIS master to the NIS slave server.
+        If a  NIS slave server receives a message that there is a new map,
+        it will start <command>ypxfr</command> for transfering the new map.
+        <command>ypxfr</command> will read the contents of a map from the
+        master server using the <function>yp_all</function>() function.
+      </para>
+      <para>
+        The <command>rpc.ypxfrd</command> server speeds up the transfer
+        process by allowing NIS slave servers to simply copy the master
+        servers map files rather than building their own from scratch.
+        <command>rpc.ypxfrd</command> uses an RPC-based file transfer
+        protocol.
+      </para>
+      <para>
+        If the on-disk format of the database on both machines is not
+        the same, <command>rpc.ypxfrd</command> will refuse to send the
+        data and <command>ypxfr</command> will fallback to
+        <function>yp_all</function>() and fetch every single entry alone.
+      </para>
+      <para>
+        <command>rpc.ypxfrd</command> could be started by inetd. But
+        since it starts very slowly, it should be started after
+        <command>ypserv</command> from <command>/etc/init.d/ypxfrd</command>.
+      </para>
+    </refsect1>
+
+  <refsect1 id='options'>
+    <title>OPTIONS</title>
+    <variablelist remap='TP'>
+      <varlistentry>
+        <term><option>--debug</option></term>
+        <listitem>
+          <para>
+            Causes the server to run in debugging mode.
+            In debug mode, the server does not background itself and
+            prints extra status messages to stderr for each request
+            that it revceives.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-d</option> <replaceable>path</replaceable></term>
+        <listitem>
+          <para>
+            <command>rpc.ypxfrd</command> is using this directory
+            instead of <filename>/var/yp</filename>.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-p</option> <replaceable>port</replaceable></term>
+        <listitem>
+          <para>
+            <command>rpc.ypxfrd</command> will bind itself to this port,
+            which makes it possible to have a router filter packets
+            to the NIS ports. This can restricted the access to the NIS
+            server from hosts on the Internet.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--version</option></term>
+        <listitem>
+          <para>Prints the version number</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id='security'>
+    <title>SECURITY</title>
+    <para>
+      <command>rpc.ypxfrd</command> uses the same functions for
+      checking a host as <command>ypserv</command>. At first,
+      <command>rpc.ypxfrd</command> will check a request from an address
+      with <filename>/var/yp/securenets</filename> or the tcp wrapper.
+      If the host is allowed to connect to the server,
+      <command>rpc.ypxfrd</command> will uses the rules from
+      <filename>/etc/ypserv.conf</filename> to check the requested map.
+      If a mapname doesn't match a rule, <command>rpc.ypxfrd</command>
+      will look for the YP_SECURE key in the map. If it exists,
+      <command>rpc.ypxfrd</command> will only allow requests on a
+      reserved port.
+    </para>
+  </refsect1>
+
+  <refsect1 id='notes'>
+    <title>NOTES</title>
+    <para>
+      The FreeBSD <command>ypxfrd</command> protocol is not compatible
+      with that used by SunOS. This is unfortunate but unavoidable: SUNs
+      protocol is not freely available, and even if it were it would
+      probably not be useful since the SunOS NIS v2 implementation
+      uses the original ndbm package for its map databases whereas the
+      other implementation uses GNU DBM or Berkeley DB. These packages
+      uses vastly different file formats. Furthermore, ndbm and gdbm are
+      byte-order and word width sensitive and not very smart about it,
+      meaning that a gdbm or ndbm database created on a big endian or
+      64bit system cannot be read on a little endian or 32bit system.
+      The FreeBSD <command>ypxfrd</command> protocol checks, if both,
+      master and slave, uses the same database packages and, if necessary,
+      the byte order of the system.
+    </para>
+  </refsect1>
+
+
+  <refsect1 id='files'>
+    <title>FILES</title>
+    <variablelist>
+      <varlistentry>
+        <term><filename>/etc/ypserv.conf</filename></term>
+        <listitem>
+          <para>Configuration file for options and access rights</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><filename>/var/yp/securenets</filename></term>
+        <listitem>
+          <para>Configuration file for access rights</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id='see_also'>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry><refentrytitle>ypserv</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>makedbm</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+      <citerefentry><refentrytitle>yppush</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+     <citerefentry><refentrytitle>ypxfr</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+    </para>
+  </refsect1>
+
+  <refsect1 id='author'>
+  <title>AUTHOR</title>
+    <para>
+      ypxfrd protocol and FreeBSD Implementation:
+      Bill Paul &lt;wpaul@ctr.columbia.edu&gt;
+    </para>
+    <para>
+       Linux Implementation: Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;
+    </para>
+  </refsect1>
+</refentry>

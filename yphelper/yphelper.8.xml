@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id='yphelper8'>
+  <refmeta>
+    <refentrytitle>yphelper</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class='manual'>NIS Reference Manual</refmiscinfo>
+  </refmeta>
+
+  <refnamediv id='name'>
+    <refname>yphelper</refname>
+    <refpurpose>helper application for internal use</refpurpose>
+  </refnamediv>
+
+
+<!-- body begins here -->
+<refsect1 id='description'><title>DESCRIPTION</title>
+  <para><emphasis remap='B'>yphelper</emphasis>
+    is a internal helper application for ypserv and should not be
+    used by the normal user or system administrator.</para>
+</refsect1>
+
+<refsect1 id='options'><title>OPTIONS</title>
+  <variablelist remap='TP'>
+    <varlistentry>
+      <term><option>-d </option><emphasis remap='I'>domainname</emphasis></term>
+      <listitem>
+	<para>
+	  Use <emphasis remap='I'>domainname</emphasis> as default domain.
+	</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term><option>-h</option></term>
+      <listitem>
+	<para>Print the canonical hostname.</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term><option>-i </option><emphasis remap='I'>map</emphasis></term>
+      <listitem>
+	<para>Return '0' if we are the NIS master of
+	  <emphasis remap='I'>map</emphasis> or '1' if not.
+	</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term><option>-m </option><emphasis remap='I'>master</emphasis></term>
+      <listitem>
+	<para>Print the name of all NIS maps where
+	  <emphasis remap='I'>master</emphasis> is the NIS master server.
+	</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term><option>-p </option><emphasis remap='I'>passwd</emphasis><emphasis remap='I'>shadow</emphasis></term>
+      <listitem>
+	<para>
+	  Merge the <emphasis remap='I'>passwd</emphasis> and
+	  <emphasis remap='I'>shadow</emphasis> files.
+	</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term><option>-g </option><emphasis remap='I'>group</emphasis><emphasis remap='I'>gshadow</emphasis></term>
+      <listitem>
+	<para>
+	  Merge the <emphasis remap='I'>group</emphasis> and
+	  <emphasis remap='I'>gshadow</emphasis> files.
+	</para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+</refsect1>
+
+<refsect1 id='author'>
+  <title>AUTHOR</title>
+  <para>
+    <command>yphelper</command> was written by
+    Thorsten Kukuk &lt;kukuk@linux-nis.org&gt;.
+  </para>
+</refsect1>
+</refentry>

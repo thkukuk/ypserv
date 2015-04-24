@@ -1,0 +1,14 @@
+#! /bin/sh
+#
+# ypxfr_1perhour - Do hourly NIS map check/updates, to see, if we
+#                 have missed one update.
+#
+
+YPBINDIR=@YPBINDIR@
+
+MAPS_TO_GET="passwd.byname passwd.byuid shadow.byname publickey.byname"
+
+for map in $MAPS_TO_GET
+do
+  $YPBINDIR/ypxfr $map
+done

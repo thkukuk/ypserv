@@ -1,0 +1,20 @@
+ypserv was originally written by Peter Eriksson <pen@lysator.liu.se>.
+Maintainer since version 0.18 and author of ypserv v2 is Thorsten Kukuk.
+
+It would not be what it is today without the invaluable help of these
+people:
+
+Honza Horak		<hhorak@redhat.com
+Martin Vidner		<mvidner@suse.cz>
+Miquel van Smoorenburg	<miquels@cistron.nl>
+Peter Breitenlohner	<peb@mppmu.mpg.de>
+Todd R. Eigenschink	<todd@tekinteractive.com>
+Petter Reinholdtsen	<pere@hungry.com>
+Jonathan Gowland	<jgowland@genaware.com>
+Damien Touraine		<webmyster@addoc.u-psud.fr>
+Jens Laas		<jens.laas@data.slu.se>
+Tony Kew		<tonykew@ccr.buffalo.edu>
+Michael Gernoth		<simigern@stud.uni-erlangen.de>
+Feng Qin		<fengqin@uiuc.edu>
+Jakub Jelinek		<jakub@redhat.com>
+Mark Brown		<broonie@sirena.org.uk>

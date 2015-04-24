@@ -1,0 +1,15 @@
+#! /bin/sh
+#
+# ypxfr_2perday - Do twice-daily NIS map check/updates, to see, if we
+#                 have missed one update.
+#
+
+YPBINDIR=@YPBINDIR@
+
+MAPS_TO_GET="hosts.byname hosts.byaddr netgroup netgroup.byuser netgroup.byhost"
+
+for map in $MAPS_TO_GET
+do
+  $YPBINDIR/ypxfr $map
+done
+

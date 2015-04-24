@@ -1,0 +1,111 @@
+.\"     Title: mknetid
+.\"    Author: 
+.\" Generator: DocBook XSL Stylesheets v1.73.1 <http://docbook.sf.net/>
+.\"      Date: 09/26/2007
+.\"    Manual: NIS Reference Manual
+.\"    Source: NIS Reference Manual
+.\"
+.TH "MKNETID" "8" "09/26/2007" "NIS Reference Manual" "NIS Reference Manual"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+mknetid - generate data for netid map
+.SH "SYNOPSIS"
+.HP 20
+\fB/usr/lib/yp/mknetid\fR [\-q] [\-h\ \fIhosts\fR] [\-p\ \fIpasswd\fR] [\-g\ \fIgroup\fR] [\-d\ \fIdomain\fR] [\-n\ \fInetid\fR]
+.HP 20
+\fB/usr/lib/yp/mknetid\fR \-\-version
+.SH "DESCRIPTION"
+.PP
+\fBmknetid\fR
+generates the
+\fInetid\.byname\fR
+NIS map from the contents of the group(5), passwd(5), hosts(5) and netid files\. It checks for multiple entrys of netids and warn for them or filters them out\. It is only called by
+\fI/var/yp/Makefile\fR
+when rebuilding the NIS map\.
+.SH "OPTIONS"
+.PP
+\fB\-q\fR
+.RS 4
+This flag turns on \'quiet\' mode, don\'t print a warning message when finding an duplicate netid entry\.
+.RE
+.PP
+\fB\-h\fR\fI hosts\fR
+.RS 4
+The
+\fB\-h\fR
+flag can be used to specify the use of another hosts file than the default
+\fI/etc/hosts\fR\.
+.RE
+.PP
+\fB\-p\fR\fI passwd\fR
+.RS 4
+The
+\fB\-p\fR
+flag can be used to specify the use of another passwd file than the default
+\fI/etc/passwd\fR\.
+.RE
+.PP
+\fB\-g\fR\fI group\fR
+.RS 4
+The
+\fB\-g\fR
+flag can be used to specify the use of another group file than the default
+\fI/etc/group\fR\.
+.RE
+.PP
+\fB\-n\fR\fI netid\fR
+.RS 4
+The
+\fB\-n\fR
+flag can be used to specify the use of another netid file than the default
+\fI/etc/netid\fR\.
+.RE
+.PP
+\fB\-d\fR\fI domain\fR
+.RS 4
+The
+\fBmknetid\fR
+command uses the system domainname by default\. If it is not set or you whish to override it, you must use the
+\fB\-d\fR
+parameter\.
+.RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Prints the version number
+.RE
+.SH "FILES"
+.PP
+\fI/etc/group\fR
+.RS 4
+groups file
+.RE
+.PP
+\fI/etc/hosts\fR
+.RS 4
+hosts database
+.RE
+.PP
+\fI/etc/netid\fR
+.RS 4
+netname database
+.RE
+.PP
+\fI/etc/passwd\fR
+.RS 4
+password file
+.RE
+.SH "SEE ALSO"
+.PP
+\fBpasswd\fR(8),
+\fBgroup\fR(5),
+\fBhosts\fR(5),
+\fBpasswd\fR(5)
+.SH "AUTHOR"
+.PP
+
+\fBmknetid\fR
+was written by Thorsten Kukuk <kukuk@linux\-nis\.org>\.
