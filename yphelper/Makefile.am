@@ -22,8 +22,8 @@ libexec_PROGRAMS = yphelper
 
 yphelper_SOURCES = yphelper.c
 
-yphelper_LDADD = $(top_builddir)/lib/libyp.a @LIBDBM@ @NIS_LIBS@ @TIRPC_LIBS@
-yphelper_CFLAGS = @NIS_CFLAGS@ @TIRPC_CFLAGS@
+yphelper_LDADD = $(top_builddir)/lib/libyp.a @LIBDBM@ @NSL_LIBS@ @TIRPC_LIBS@
+yphelper_CFLAGS = @NSL_CFLAGS@ @TIRPC_CFLAGS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml

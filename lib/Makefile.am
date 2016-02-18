@@ -16,7 +16,7 @@ rpcsvc_HEADERS = ypxfrd.x
 DEFS = @DEFS@ -D_REENTRANT=1 -DCONFDIR=\"$(sysconfdir)\" \
 	-DYPMAPDIR=\"@YPMAPDIR@\" -DUSE_SD_NOTIFY=@USE_SD_NOTIFY@
 AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir) -I$(srcdir)
-AM_CFLAGS = @PIE_CFLAGS@ @NIS_CFLAGS@ @TIRPC_CFLAGS@ -Werror
+AM_CFLAGS = @PIE_CFLAGS@ @NSL_CFLAGS@ @TIRPC_CFLAGS@ -Werror
 
 libyp_a_SOURCES = log_msg.c ypserv_conf.c ypxfrd_xdr.c \
 		ypproc_match_2.c securenets.c access.c yp_db.c \
