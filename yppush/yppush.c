@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2005, 2014, 2015 Thorsten Kukuk
+/* Copyright (c) 1996-2005, 2014, 2015, 2016 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -426,7 +426,7 @@ yppush_foreach (const char *host)
 {
   SVCXPRT *CallbackXprt;
   CLIENT *PushClient;
-  struct ypreq_xfr req;
+  struct ypreq_newxfr newreq;
   struct timeval tv = {10, 0};
   u_int transid;
   char server[YPMAXPEER + 2];
@@ -436,6 +436,7 @@ yppush_foreach (const char *host)
   struct sockaddr *sa;
   struct sockaddr_in sin;
   struct sockaddr_in6 sin6;
+  enum clnt_stat res;
 
   if (verbose_flag > 1)
     log_msg ("yppush_foreach: host=%s", host);
@@ -574,16 +575,16 @@ yppush_foreach (const char *host)
       yppush_svc_run (server);
       exit (0);
     default:
-      req.map_parms.domain = (char *) DomainName;
-      req.map_parms.map = (char *) current_map;
+      newreq.map_parms.domain = (char *) DomainName;
+      newreq.map_parms.map = (char *) current_map;
       /* local_hostname is correct since we have compared it
 	 with YP_MASTER_NAME.  */
-      req.map_parms.owner = local_hostname;
-      req.map_parms.ordernum = MapOrderNum;
-      req.transid = transid;
-      req.proto = CallbackProg;
+      newreq.map_parms.owner = local_hostname;
+      newreq.map_parms.ordernum = MapOrderNum;
+      newreq.transid = transid;
+      newreq.proto = CallbackProg;
       // req.port = CallbackXprt->xp_port;
-      req.port = 0;
+      newreq.name = server;
 
       if (verbose_flag)
 	{
@@ -591,18 +592,37 @@ yppush_foreach (const char *host)
 	  if (verbose_flag > 1)
 	    {
 	      log_msg ("\t->target: %s", server);
-	      log_msg ("\t->domain: %s", req.map_parms.domain);
-	      log_msg ("\t->map: %s", req.map_parms.map);
-	      log_msg ("\t->tarnsid: %d", req.transid);
-	      log_msg ("\t->proto: %d", req.proto);
-	      log_msg ("\t->master: %s", req.map_parms.owner);
-	      log_msg ("\t->ordernum: %d", req.map_parms.ordernum);
+	      log_msg ("\t->domain: %s", newreq.map_parms.domain);
+	      log_msg ("\t->map: %s", newreq.map_parms.map);
+	      log_msg ("\t->tarnsid: %d", newreq.transid);
+	      log_msg ("\t->proto: %d", newreq.proto);
+	      log_msg ("\t->master: %s", newreq.map_parms.owner);
+	      log_msg ("\t->ordernum: %d", newreq.map_parms.ordernum);
+	      log_msg ("\t->name: %s", newreq.name);
 	    }
 	}
 
-      if (clnt_call (PushClient, YPPROC_XFR, (xdrproc_t) xdr_ypreq_xfr,
-		     (caddr_t) &req, (xdrproc_t) xdr_void, NULL,
-		     tv) != RPC_SUCCESS)
+
+      res = clnt_call (PushClient, YPPROC_NEWXFR, (xdrproc_t) xdr_ypreq_newxfr,
+		       (caddr_t) &newreq, (xdrproc_t) xdr_void, NULL, tv);
+
+      if (res == RPC_PROCUNAVAIL)
+	{
+	  struct ypreq_xfr oldreq;
+
+	  oldreq.map_parms.domain = (char *) DomainName;
+	  oldreq.map_parms.map = (char *) current_map;
+	  oldreq.map_parms.owner = local_hostname;
+	  oldreq.map_parms.ordernum = MapOrderNum;
+	  oldreq.transid = transid;
+	  oldreq.proto = CallbackProg;
+	  oldreq.port = 0; /* we don't really need that */
+
+	  res = clnt_call (PushClient, YPPROC_XFR, (xdrproc_t) xdr_ypreq_xfr,
+			   (caddr_t) &oldreq, (xdrproc_t) xdr_void, NULL, tv);
+	}
+
+      if (res != RPC_SUCCESS)
 	{
 	  log_msg ("YPPUSH: Cannot call YPPROC_XFR on host \"%s\"%s", server,
 		   clnt_sperror (PushClient, ""));

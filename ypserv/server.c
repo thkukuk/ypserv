@@ -1,4 +1,4 @@
-/* Copyright (c) 2000-2015  Thorsten Kukuk
+/* Copyright (c) 2000-2016  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -514,38 +514,12 @@ ypproc_next_2_svc (ypreq_key *argp, ypresp_key_val *result,
   return TRUE;
 }
 
-/* XXX ypproc_xfrnew is missing */
-bool_t
-ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
-		  struct svc_req *rqstp)
+static bool_t
+ypproc_xfr_all_svc (ypreq_xfr *argp, ypresp_xfr *result,
+		    struct svc_req *rqstp)
 {
   DB_FILE dbp;
   int valid;
-
-  if (debug_flag)
-    {
-      struct netconfig *nconf;
-      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
-
-      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
-        svcerr_systemerr (rqstp->rq_xprt);
-      else
-        {
-          char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_xfr_2 from %s port %d",
-                   taddr2ipstr (nconf, rqhost,
-                                namebuf6, sizeof (namebuf6)),
-                   taddr2port (nconf, rqhost));
-          freenetconfigent (nconf);
-	  log_msg ("\t\tdomain   = \"%s\"", argp->map_parms.domain);
-	  log_msg ("\t\tmap      = \"%s\"", argp->map_parms.map);
-	  log_msg ("\t\tordernum = %u", argp->map_parms.ordernum);
-	  log_msg ("\t\towner    = \"%s\"", argp->map_parms.owner);
-	  log_msg ("\t\ttransid  = %u", argp->transid);
-	  log_msg ("\t\tproto    = %u", argp->proto);
-	  log_msg ("\t\tport     = %u", argp->port);
-	}
-    }
 
   memset (result, 0, sizeof (ypresp_xfr));
   result->transid = argp->transid;
@@ -792,7 +766,7 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
 	char hostbuf[NI_MAXHOST];
 	const char *host;
         char *ypxfr_command = alloca (sizeof (YPBINDIR) + 8);
-        char proto[30], transid[30], port[30];
+        char proto[30], transid[30];
         int i;
 	struct netconfig *nconf;
 	struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
@@ -822,14 +796,14 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
         sprintf (ypxfr_command, "%s/ypxfr", YPBINDIR);
         snprintf (transid, sizeof (transid), "%u", argp->transid);
         snprintf (proto, sizeof (proto), "%u", argp->proto);
-        snprintf (port, sizeof (port), "%u", argp->port);
+
         if (debug_flag)
           execl (ypxfr_command, "ypxfr", "--debug", "-d",
                  argp->map_parms.domain, "-h", argp->map_parms.owner,
-		 "-C", transid, proto, host, port, argp->map_parms.map, NULL);
+		 "-C", transid, proto, host, "0", argp->map_parms.map, NULL);
         else
           execl (ypxfr_command, "ypxfr", "-d", argp->map_parms.domain, "-h",
-                 argp->map_parms.owner, "-C", transid, proto, host, port,
+                 argp->map_parms.owner, "-C", transid, proto, host, "0",
 		 argp->map_parms.map, NULL);
 
         log_msg ("ypxfr execl(): %s", strerror (errno));
@@ -845,6 +819,72 @@ ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
     }
 
   return TRUE;
+}
+
+bool_t ypproc_newxfr_2_svc (ypreq_newxfr *argp, ypresp_xfr *result,
+			    struct svc_req *rqstp)
+{
+  ypreq_xfr *oldxfr;
+
+  if (debug_flag)
+    {
+      struct netconfig *nconf;
+      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
+
+      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+        svcerr_systemerr (rqstp->rq_xprt);
+      else
+        {
+          char namebuf6[INET6_ADDRSTRLEN];
+          log_msg ("ypproc_xfr_2 from %s port %d",
+                   taddr2ipstr (nconf, rqhost,
+                                namebuf6, sizeof (namebuf6)),
+                   taddr2port (nconf, rqhost));
+          freenetconfigent (nconf);
+	  log_msg ("\t\tdomain   = \"%s\"", argp->map_parms.domain);
+	  log_msg ("\t\tmap      = \"%s\"", argp->map_parms.map);
+	  log_msg ("\t\tordernum = %u", argp->map_parms.ordernum);
+	  log_msg ("\t\towner    = \"%s\"", argp->map_parms.owner);
+	  log_msg ("\t\ttransid  = %u", argp->transid);
+	  log_msg ("\t\tproto    = %u", argp->proto);
+	  log_msg ("\t\tname     = %u", argp->name);
+	}
+    }
+
+  oldxfr = (ypreq_xfr *) argp;
+  return ypproc_xfr_all_svc (oldxfr, result, rqstp);
+}
+
+bool_t
+ypproc_xfr_2_svc (ypreq_xfr *argp, ypresp_xfr *result,
+		  struct svc_req *rqstp)
+{
+  if (debug_flag)
+    {
+      struct netconfig *nconf;
+      struct netbuf *rqhost = svc_getrpccaller(rqstp->rq_xprt);
+
+      if ((nconf = getnetconfigent (rqstp->rq_xprt->xp_netid)) == NULL)
+        svcerr_systemerr (rqstp->rq_xprt);
+      else
+        {
+          char namebuf6[INET6_ADDRSTRLEN];
+          log_msg ("ypproc_xfr_2 from %s port %d",
+                   taddr2ipstr (nconf, rqhost,
+                                namebuf6, sizeof (namebuf6)),
+                   taddr2port (nconf, rqhost));
+          freenetconfigent (nconf);
+	  log_msg ("\t\tdomain   = \"%s\"", argp->map_parms.domain);
+	  log_msg ("\t\tmap      = \"%s\"", argp->map_parms.map);
+	  log_msg ("\t\tordernum = %u", argp->map_parms.ordernum);
+	  log_msg ("\t\towner    = \"%s\"", argp->map_parms.owner);
+	  log_msg ("\t\ttransid  = %u", argp->transid);
+	  log_msg ("\t\tproto    = %u", argp->proto);
+	  log_msg ("\t\tport     = %u", argp->port);
+	}
+    }
+
+  return ypproc_xfr_all_svc (argp, result, rqstp);
 }
 
 bool_t ypproc_clear_2_svc (void *argp UNUSED, void *result UNUSED,

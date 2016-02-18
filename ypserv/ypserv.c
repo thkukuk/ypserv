@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2011, 2014 Thorsten Kukuk
+/* Copyright (c) 1996-2011, 2014, 2016 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@thkukuk.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -133,6 +133,12 @@ ypprog_2 (struct svc_req *rqstp, register SVCXPRT * transp)
       _xdr_argument = (xdrproc_t) xdr_ypreq_xfr;
       _xdr_result = (xdrproc_t) xdr_ypresp_xfr;
       local = (bool_t (*)(char *, void *, struct svc_req *)) ypproc_xfr_2_svc;
+      break;
+
+    case YPPROC_NEWXFR:
+      _xdr_argument = (xdrproc_t) xdr_ypreq_newxfr;
+      _xdr_result = (xdrproc_t) xdr_ypresp_xfr;
+      local = (bool_t (*)(char *, void *, struct svc_req *)) ypproc_newxfr_2_svc;
       break;
 
     case YPPROC_CLEAR:

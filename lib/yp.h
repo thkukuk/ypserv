@@ -82,6 +82,10 @@ extern  bool_t ypproc_order_2_svc(ypreq_nokey *, ypresp_order *, struct svc_req 
 #define YPPROC_MAPLIST 11
 extern  enum clnt_stat ypproc_maplist_2(domainname *, ypresp_maplist *, CLIENT *);
 extern  bool_t ypproc_maplist_2_svc(domainname *, ypresp_maplist *, struct svc_req *);
+#define YPPROC_NEWXFR 12
+extern  enum clnt_stat ypproc_newxfr_2(ypreq_newxfr *, ypresp_xfr *, CLIENT *);
+extern  bool_t ypproc_newxfr_2_svc(ypreq_newxfr *, ypresp_xfr *, struct svc_req *);
+
 extern int ypprog_2_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
