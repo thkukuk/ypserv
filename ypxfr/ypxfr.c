@@ -482,8 +482,9 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
   if (ypproc_order_2 (&req_nokey, &resp_order, clnt_udp) != RPC_SUCCESS)
     {
       log_msg (clnt_sperror (clnt_udp, "ypproc_order_2"));
-      masterOrderNum = time (NULL); /* We set it to the current time.
-                                       So a new map will be always newer. */
+      clnt_destroy (clnt_udp);
+	  return YPXFR_YPERR; /* return error when not possible to
+                            get masterOrder */
     }
   else if (resp_order.status != YP_TRUE)
     {
