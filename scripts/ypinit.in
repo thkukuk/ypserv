@@ -97,7 +97,7 @@ ypinit_master()
 
   echo "We need a few minutes to build the databases..."
   echo "Building $YPMAPDIR/$DOMAIN/ypservers..."
-  cat $YPMAPDIR/ypservers | awk '{print $$0, $$0}' | $YPBINDIR/makedbm - $YPMAPDIR/$DOMAIN/ypservers
+  cat $YPMAPDIR/ypservers | awk '{print $0, $0}' | $YPBINDIR/makedbm - $YPMAPDIR/$DOMAIN/ypservers
 
   if [ $?  -ne 0 ]
   then
