@@ -1,3 +1,27 @@
+2016-02-26  Matt Dainty  <matt@bodgit-n-scarper.com>
+
+	* scripts/ypinit.in: Don't double-prefix awk variables.
+
+2016-02-17  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 4.0
+
+	* lib/Makefile.am: Replace libnis with libnsl.
+	* makedbm/Makefile.am: Likewise.
+	* mknetid/Makefile.am: Likewise.
+	* revnetgroup/Makefile.am: Likewise.
+	* rpc.yppasswdd/Makefile.am: Likewise.
+	* rpc.ypxfrd/Makefile.am: Likewise.
+	* yphelper/Makefile.am: Likewise.
+	* yppush/Makefile.am: Likewise.
+	* ypserv/Makefile.am: Likewise.
+	* ypxfr/Makefile.am: Likewise.
+
+	* ypserv/ypserv.c (ypprog_2): Add YPPROC_NEWXFR.
+	* lib/yp.h: Likewise.
+	* yppush/yppush.c: Try YPPROC_NEWXFR first.
+	* ypserv/server.c: Implement ypproc_newxfr support.
+
 2015-04-14  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* release version 3.7
