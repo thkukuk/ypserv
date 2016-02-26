@@ -1,5 +1,8 @@
 2016-02-26  Thorsten Kukuk  <kukuk@thkukuk.de>
 
+	* ypserv/ypserv.c (main): Check if we could register at least
+	one protocol, else abort.
+
 	* scripts/ypMakefile.in (netid.byname): Don't rebuild map
 	on every make call if /etc/netid is missing.
 

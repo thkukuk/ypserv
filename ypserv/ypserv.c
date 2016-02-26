@@ -288,6 +288,7 @@ main (int argc, char **argv)
   struct netconfig *nconf;
   void *nc_handle;
   int my_port = -1;
+  int could_register = 0;
 
   openlog ("ypserv", LOG_PID, LOG_DAEMON);
 
@@ -440,14 +441,6 @@ main (int argc, char **argv)
    */
   signal (SIGCHLD, sig_child);
 
-#if 0 /* XXX */
-  if (!__rpcbind_is_up())
-    {
-      log_msg ("terminating: rpcbind is not running");
-      return 1;
-    }
-#endif
-
   rpcb_unset (YPPROG, YPVERS, NULL);
   rpcb_unset (YPPROG, YPOLDVERS, NULL);
 
@@ -568,6 +561,8 @@ main (int argc, char **argv)
 		   nconf->nc_protofmly, nconf->nc_proto);
 	  continue;
 	}
+      else
+	could_register = 1;
 
       if (family == AF_INET)
 	{
@@ -579,9 +574,17 @@ main (int argc, char **argv)
 		       nconf->nc_netid);
 	      continue;
 	    }
+	  else
+	    could_register = 1;
 	}
     }
   __rpc_endconf (nc_handle);
+
+  if (!could_register)
+    {
+      log_msg ("terminating: rpcbind not running?");
+      return 1;
+    }
 
   /* If we use systemd as an init system, we may want to give it
      a message, that this daemon is ready to accept connections.
