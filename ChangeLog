@@ -1,10 +1,13 @@
+2016-02-26  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* scripts/ypMakefile.in (netid.byname): Don't rebuild map
+	on every make call if /etc/netid is missing.
+
 2016-02-26  Matt Dainty  <matt@bodgit-n-scarper.com>
 
 	* scripts/ypinit.in: Don't double-prefix awk variables.
 
 2016-02-17  Thorsten Kukuk  <kukuk@thkukuk.de>
-
-	* release version 4.0
 
 	* lib/Makefile.am: Replace libnis with libnsl.
 	* makedbm/Makefile.am: Likewise.

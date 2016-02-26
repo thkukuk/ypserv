@@ -22,13 +22,13 @@ B=
 # /var/yp/ypservers.
 NOPUSH=true
 
-# yppush copies updated NIS databases (or maps) from the master NIS server 
-# to the slave servers within a NIS domain and listens for their answer. 
-# yppush will ask portmap to assign it a random port number to listen on 
-# by default. To specify a fixed port number or any aditional options, 
+# yppush copies updated NIS databases (or maps) from the master NIS server
+# to the slave servers within a NIS domain and listens for their answer.
+# yppush will ask portmap to assign it a random port number to listen on
+# by default. To specify a fixed port number or any aditional options,
 # edit variable YPPUSH_ARGS.
 # e.g. YPPUSH_ARGS = --port 836
-YPPUSH_ARGS = 
+YPPUSH_ARGS =
 
 # We do not put password entries with lower UIDs (the root and system
 # entries) in the NIS password database, for security. MINUID is the
@@ -98,7 +98,7 @@ TIMEZONE    = $(YPSRCDIR)/timezone
 LOCALE      = $(YPSRCDIR)/locale
 NETMASKS    = $(YPSRCDIR)/netmasks
 
-YPSERVERS = $(YPDIR)/ypservers	# List of all NIS servers for a domain
+YPSERVERS = $(YPDIR)/ypservers	# List of all NIS slave servers
 
 target: Makefile
 	@test ! -d $(LOCALDOMAIN) && mkdir $(LOCALDOMAIN) ; \
@@ -384,8 +384,7 @@ group.bygid: $(GROUP) $(YPDIR)/Makefile
 	-@$(NOPUSH) || $(YPPUSH) -d $(DOMAIN) $@
 endif
 
-$(NETID):
-netid.byname: $(GROUP) $(PASSWD) $(HOSTS) $(NETID) $(YPDIR)/Makefile
+netid.byname: $(GROUP) $(PASSWD) $(HOSTS) $(wildcard $(NETID)) $(YPDIR)/Makefile
 	@echo "Updating $@..."
 	@$(MKNETID) -q -p $(PASSWD) -g $(GROUP) -h $(HOSTS) -d $(DOMAIN) \
 		-n $(NETID) | $(DBLOAD) -o $(YPMAPDIR)/$@ - $@
