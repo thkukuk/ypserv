@@ -286,8 +286,7 @@ merge_passwd (char *passwd, char *shadow)
 	 then as the passwd file is. If not, try the whole shadow
 	 file. */
 
-      /* XXXXX Some systems and old programs uses '*' as marker
-	 for shadow !!! */
+      /* Some systems and old programs uses '*' as marker for shadow! */
       if (pwd->pw_passwd[1] == '\0' &&
 	  (pwd->pw_passwd[0] == 'x' || pwd->pw_passwd[0] == '*'))
 	{
@@ -395,8 +394,7 @@ merge_group (char *group, char *gshadow)
 	 have luck, the gshadow file is sorted in the same order
 	 then as the group file is. If not, try the whole gshadow
 	 file. */
-      /* XXXXX Some systems and old programs uses '*' as marker
-	 for shadow !!! */
+      /* Some systems and old programs uses '*' as marker for shadow! */
       if (grp->gr_passwd[1] == '\0' &&
 	  (grp->gr_passwd[0] == 'x' || grp->gr_passwd[0] == '*'))
 	{

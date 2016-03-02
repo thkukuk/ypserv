@@ -64,7 +64,7 @@
  * seconds.
  */
 
-/* XXX cribbed from yp.x */
+/* cribbed from yp.x */
 const _YPMAXRECORD = 1024;
 const _YPMAXDOMAIN = 64;
 const _YPMAXMAP = 64;

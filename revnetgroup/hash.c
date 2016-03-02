@@ -140,7 +140,7 @@ hash_insert (hash_t **table, const char *key, const char *val)
 int
 hash_free (hash_t **table UNUSED)
 {
-  /* XXX Not implementet yet! */
+  /* Not implementet yet! */
 
   return 0;
 }

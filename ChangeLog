@@ -1,5 +1,10 @@
 2016-03-02  Thorsten Kukuk  <kukuk@thkukuk.de>
 
+	* lib/yp_db.c (_db_open): Remove dead code.
+
+	* lib/securenets.c (dump_securenets): Print error messge,
+	if there is an unknown family.
+
 	* rpc.yppasswdd/yppasswdd.c (main): Check if we could
 	register at least one protocol, else abort.
 

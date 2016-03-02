@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2014 Thorsten Kukuk
+/* Copyright (c) 1996-2014, 2016 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -94,7 +94,7 @@ dump_securenets (void)
 	  }
 	  break;
 	default:
-	  /* XXX do something here, error! */
+	  log_msg ("ERROR: Unknown family: %i", sn->family);
 	  break;
 	}
       sn = sn->next;

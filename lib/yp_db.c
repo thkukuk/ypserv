@@ -50,17 +50,12 @@ _db_open (const char *domain, const char *map)
 {
   GDBM_FILE dbp;
   char buf[MAXPATHLEN + 2];
-  int gdbm_cache_value = -1;
 
   if (strlen (domain) + strlen (map) < MAXPATHLEN)
     {
       sprintf (buf, "%s/%s", domain, map);
 
       dbp = gdbm_open (buf, 0, GDBM_READER, 0, NULL);
-
-      /* XXX dead code, gdbm_cache_value isn't implemented yet */
-      if (dbp && gdbm_cache_value >= 0)
-	gdbm_setopt(dbp, GDBM_CACHESIZE, &gdbm_cache_value, sizeof(int));
 
       if (debug_flag && dbp == NULL)
 	log_msg ("gdbm_open: GDBM Error Code #%d", gdbm_errno);
