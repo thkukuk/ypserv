@@ -1,3 +1,8 @@
+2016-03-02  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* rpc.yppasswdd/yppasswdd.c (main): Check if we could
+	register at least one protocol, else abort.
+
 2016-02-26  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* ypserv/ypserv.c (main): Check if we could register at least

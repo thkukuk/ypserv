@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1996-2006, 2010, 2011, 2012, 2014, 2015 Thorsten Kukuk, <kukuk@thkukuk.de>
+   Copyright (c) 1996-2006, 2010, 2011, 2012, 2014, 2015, 2016 Thorsten Kukuk, <kukuk@thkukuk.de>
    Copyright (c) 1994, 1995, 1996 Olaf Kirch, <okir@monad.swb.de>
 
    This file is part of the NYS YP Server.
@@ -199,6 +199,7 @@ main (int argc, char **argv)
   int my_port = -1;
   void *nc_handle;
   int c;
+  int could_register = 0;
 
   /* Initialize logging. */
   openlog ("rpc.yppasswdd", LOG_PID, LOG_AUTH);
@@ -418,14 +419,6 @@ main (int argc, char **argv)
   /* Register a signal handler to reap children after they terminated */
   install_sighandler ();
 
-#if 0 /* XXX */
-  if (!__rpcbind_is_up())
-    {
-      log_msg ("terminating: rpcbind is not running");
-      return 1;
-    }
-#endif
-
   /* Create the RPC server */
   rpcb_unset (YPPASSWDPROG, YPPASSWDVERS, NULL);
 
@@ -548,8 +541,16 @@ main (int argc, char **argv)
                    nconf->nc_protofmly, nconf->nc_proto);
           continue;
         }
+      else
+	could_register = 1;
     }
   __rpc_endconf (nc_handle);
+
+  if (!could_register)
+    {
+      log_msg ("terminating: rpcbind not running?");
+      return 1;
+    }
 
   /* If we use systemd as an init system, we may want to give it
      a message, that this daemon is ready to accept connections.
