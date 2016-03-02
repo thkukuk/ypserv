@@ -836,7 +836,7 @@ bool_t ypproc_newxfr_2_svc (ypreq_newxfr *argp, ypresp_xfr *result,
       else
         {
           char namebuf6[INET6_ADDRSTRLEN];
-          log_msg ("ypproc_xfr_2 from %s port %d",
+          log_msg ("ypproc_newxfr_2 from %s port %d",
                    taddr2ipstr (nconf, rqhost,
                                 namebuf6, sizeof (namebuf6)),
                    taddr2port (nconf, rqhost));
@@ -847,7 +847,7 @@ bool_t ypproc_newxfr_2_svc (ypreq_newxfr *argp, ypresp_xfr *result,
 	  log_msg ("\t\towner    = \"%s\"", argp->map_parms.owner);
 	  log_msg ("\t\ttransid  = %u", argp->transid);
 	  log_msg ("\t\tproto    = %u", argp->proto);
-	  log_msg ("\t\tname     = %u", argp->name);
+	  log_msg ("\t\tname     = %s", argp->name);
 	}
     }
 
