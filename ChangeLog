@@ -1,5 +1,7 @@
 2016-03-14  Thorsten Kukuk  <kukuk@thkukuk.de>
 
+	* makedbm/Makefile.am: Link makedbm against libtirpc
+
 	* lib/Makefile.am: run test-securenets and test-ypserv_conf
 	as test case
 	* lib/access.c: Finish port for IPv6, make useable for test suite.
