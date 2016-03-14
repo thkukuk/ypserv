@@ -111,7 +111,8 @@
         <term><option>host</option></term>
         <listitem>
           <para>
-            IP address. Wildcards are allowed.
+            IPv4 only address. Wildcards are allowed. This rules are ignored
+	    for IPv6, which means it is better to not use this option at all anymore.
           </para>
           <para>
             Examples:
