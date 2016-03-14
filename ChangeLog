@@ -1,3 +1,11 @@
+2016-03-14  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* lib/Makefile.am: run test-securenets and test-ypserv_conf
+	as test case
+	* lib/access.c: Finish port for IPv6, make useable for test suite.
+	* lib/access.h: Adjust prototype
+	* lib/securenets.c: Make useable for testsuite
+
 2016-03-04  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* etc/ypserv.conf.5.xml: Document that the rules are ignored for
