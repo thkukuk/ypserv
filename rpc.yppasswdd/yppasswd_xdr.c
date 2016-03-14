@@ -10,7 +10,6 @@
  * editied manually.
  */
 
-#include <pwd.h>
 #include <rpc/rpc.h>
 #include <rpcsvc/yp_prot.h>
 #include <rpcsvc/ypclnt.h>

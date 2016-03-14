@@ -1,4 +1,4 @@
-/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011, 2012, 2014, 2015 Thorsten Kukuk
+/* Copyright (c) 1999, 2000, 2001, 2005, 2006, 2010, 2011, 2012, 2014, 2015, 2016 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -19,7 +19,6 @@
 #include "config.h"
 #endif
 
-#include <pwd.h>
 #include <time.h>
 #include <errno.h>
 #include <unistd.h>
@@ -34,7 +33,10 @@
 #include <arpa/inet.h>
 #include <rpc/rpc.h>
 #include <rpcsvc/yp_prot.h>
+#define passwd xpasswd
 #include <rpcsvc/yppasswd.h>
+#undef passwd
+#include <pwd.h>
 #include "yppwd_local.h"
 #include "log_msg.h"
 
@@ -94,7 +96,7 @@ validate_string (char *what, char *str)
 /* Check that nobody tries to change special NIS entries beginning
    with +/- and that all chracters are allowed. */
 static inline int
-validate_args (struct passwd *pw)
+validate_args (struct xpasswd *pw)
 {
   if (pw->pw_name[0] == '-' || pw->pw_name[0] == '+')
     {
@@ -884,7 +886,7 @@ external_update_pipe (yppasswd *yppw)
 
   /* - */
 
-  newpw = &yppw->newpw;
+  newpw = (struct passwd *)&yppw->newpw;
   res = 1;
 
   /*
