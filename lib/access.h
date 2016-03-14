@@ -32,7 +32,7 @@ extern int is_valid (struct svc_req *rqstp, const char *map,
 		     const char *domain);
 
 /* securenets.c */
-extern void load_securenets (void);
+extern int load_securenets (void);
 extern int securenet_host (struct netconfig *nconf, struct netbuf *nbuf);
 extern void dump_securenets (void);
 

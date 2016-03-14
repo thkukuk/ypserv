@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2015 Thorsten Kukuk
+/* Copyright (C) 1997-2016 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -39,6 +39,7 @@
 #include "yp.h"
 
 static conffile_t *conf = NULL;
+const char *confdir = CONFDIR;
 
 void
 load_config (void)
@@ -47,7 +48,7 @@ load_config (void)
 
   if (conf != NULL)
     {
-      log_msg ("Reloading %s/ypserv.conf", CONFDIR);
+      log_msg ("Reloading %s/ypserv.conf", confdir);
       while (conf)
 	{
 	  tmp = conf;
@@ -58,7 +59,7 @@ load_config (void)
 	}
     }
 
-  conf = load_ypserv_conf (CONFDIR);
+  conf = load_ypserv_conf (confdir);
 }
 
 /* Give a string with the DEFINE description back */
@@ -175,6 +176,7 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
   static int oldstatus = -1;
   struct netconfig *nconf;
   struct netbuf *rqhost;
+  struct __rpc_sockinfo si;
   int status;
 
   if (domain && is_valid_domain (domain) == 0)
@@ -188,16 +190,18 @@ is_valid (struct svc_req *rqstp, const char *map, const char *domain)
 
   status = securenet_host (nconf, rqhost);
 
-  if ((map != NULL) && status)
+  if (!__rpc_nconf2sockinfo(nconf, &si))
+    return -1;
+
+  if ((map != NULL) && status && si.si_af == AF_INET)
     {
+      struct sockaddr_in *sin = rqhost->buf;
       conffile_t *work;
 
       work = conf;
       while (work)
 	{
-#if 0 /* XXX */
 	  if ((sin->sin_addr.s_addr & work->netmask.s_addr) == work->network.s_addr)
-#endif
 	    if (strcmp (work->domain, domain) == 0 ||
 		strcmp (work->domain, "*") == 0)
 	      if (strcmp (work->map, map) == 0 || strcmp (work->map, "*") == 0)

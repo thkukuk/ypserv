@@ -36,6 +36,8 @@
 #define SECURENETS YPMAPDIR "/securenets"
 #endif
 
+const char *securenetsfile = SECURENETS;
+
 typedef struct securenet
 {
   sa_family_t family;
@@ -102,7 +104,7 @@ dump_securenets (void)
   log_msg ("--- securenets end ---");
 }
 
-void
+int
 load_securenets (void)
 {
   char buf[2 * NI_MAXHOST + 2];
@@ -128,10 +130,10 @@ load_securenets (void)
   work = NULL;
   tmp = NULL;
 
-  if ((in = fopen (SECURENETS, "r")) == NULL)
+  if ((in = fopen (securenetsfile, "r")) == NULL)
     {
-      log_msg ("WARNING: no %s file found!\n", SECURENETS);
-      return;
+      log_msg ("WARNING: no %s file found!\n", securenetsfile);
+      return 1;
     }
 
   while (!feof (in))
@@ -294,6 +296,8 @@ load_securenets (void)
 
   if (debug_flag)
     dump_securenets ();
+
+  return 0;
 }
 
 int
