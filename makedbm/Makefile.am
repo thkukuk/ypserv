@@ -22,7 +22,7 @@ libexec_PROGRAMS = makedbm
 
 makedbm_SOURCES = makedbm.c
 
-makedbm_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a @TIRPC_CFLAGS@
+makedbm_LDADD =  @LIBDBM@  $(top_builddir)/lib/libyp.a @TIRPC_LIBS@
 
 if ENABLE_REGENERATE_MAN
 %.8: %.8.xml
