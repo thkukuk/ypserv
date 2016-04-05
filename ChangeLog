@@ -1,3 +1,11 @@
+2016-04-05  Thorsten Kukuk  <kukuk@thkukuk.de>
+
+	* release version 4.0
+
+	* ypxfr/ypxfr.c (ypxfrd_transfer): Replace getrpcport with
+	code using TIRPC
+	* configure.ac: check for rpc_getaddr
+
 2016-03-14  Thorsten Kukuk  <kukuk@thkukuk.de>
 
 	* makedbm/Makefile.am: Link makedbm against libtirpc

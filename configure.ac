@@ -2,7 +2,7 @@
 # Copyright (C) 1999-2015 Thorsten Kukuk <kukuk@linux-nis.org>
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([ypserv],[3.7],[kukuk@linux-nis.org])
+AC_INIT([ypserv],[4.0],[kukuk@linux-nis.org])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([ypserv/ypserv.c])
 AC_CONFIG_HEADERS([config.h])
@@ -244,8 +244,27 @@ AC_CHECK_LIB(crypt,crypt,LIBCRYPT="-lcrypt",LIBCRYPT="")
 AC_CHECK_HEADERS(crypt.h)
 AC_SUBST(LIBCRYPT)
 
-PKG_CHECK_MODULES([NIS], [libnis])
-PKG_CHECK_MODULES([TIRPC], [libtirpc])
+dnl save old CFLAGS/CPPFLAGS/LIBS variable, we need to modify them
+dnl to find out which functions they provide
+old_CFLAGS=$CFLAGS
+old_CPPFLAGS=$CPPFLAGS
+old_LIBS=$LIBS
+PKG_CHECK_MODULES([NSL], [libnsl], [], [AC_CHECK_LIB([nsl],[yp_match],[NSL_LIBS="-lnsl"],[NSL_LIBS=""])])
+CFLAGS="$CFLAGS $NSL_CFLAGS"
+CPPFLAGS="$CPPFLAGS $NSL_CFLAGS"
+LIBS="$LIBS $NSL_LIBS"
+PKG_CHECK_MODULES([TIRPC], [libtirpc], [], [TIRPC_LIBS=""])
+if test -n "$TIRPC_LIBS"; then
+  AC_DEFINE(HAVE_TIRPC, 1, [Define to 1 if TIRPC is available])
+fi
+CFLAGS="$CFLAGS $TIRPC_CFLAGS"
+CPPFLAGS="$CPPFLAGS $TIRPC_CFLAGS"
+LIBS="$LIBS $TIRPC_LIBS"
+AC_CHECK_FUNCS([getrpcport rpcb_getaddr])
+CFLAGS="$old_CFLAGS"
+CPPFLAGS="$old_CPPFLAGS"
+LIBS="$old_LIBS"
+
 PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 209], [USE_SD_NOTIFY=1], [USE_SD_NOTIFY=0])
 AC_SUBST(USE_SD_NOTIFY)
 
@@ -292,7 +311,7 @@ Configuration:
   Compiler flags:         ${CFLAGS}
   Preprocessor:		  ${CPP}
   Preprocessor flags:     ${CPPFLAGS}
-  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT} ${SYSTEMD_LIBS} ${TIRPC_LIBS} ${NIS_LIBS}
+  Libraries:		  ${LIBS} ${LIBDBM} ${LIBCRYPT} ${SYSTEMD_LIBS} ${TIRPC_LIBS} ${NSL_LIBS}
   Awk:                    ${AWK}
   Shell:		  ${BASH}
   NIS map dir:            ${YPMAPDIR}

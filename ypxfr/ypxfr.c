@@ -1,4 +1,4 @@
-/* Copyright (c) 2000-2005, 2011, 2014, 2015  Thorsten Kukuk
+/* Copyright (c) 2000-2005, 2011, 2014, 2015, 2016  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -230,6 +230,35 @@ xdr_ypxfr_xfr (XDR *xdrs, xfr *objp)
     }
 }
 
+#ifdef HAVE_RPCB_GETADDR
+static unsigned short
+__taddr2port (const struct netconfig *nconf, const struct netbuf *nbuf)
+{
+  unsigned short port = 0;
+  struct __rpc_sockinfo si;
+  struct sockaddr_in *sin;
+  struct sockaddr_in6 *sin6;
+  if (!__rpc_nconf2sockinfo(nconf, &si))
+    return 0;
+
+  switch (si.si_af)
+    {
+    case AF_INET:
+      sin = nbuf->buf;
+      port = sin->sin_port;
+      break;
+    case AF_INET6:
+      sin6 = nbuf->buf;
+      port = sin6->sin6_port;
+      break;
+    default:
+      break;
+    }
+
+  return htons (port);
+}
+#endif
+
 static int
 ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
 {
@@ -237,17 +266,62 @@ ypxfrd_transfer (char *host, char *map, char *domain, char *tmpname)
   struct ypxfr_mapname req;
   struct xfr resp;
   struct timeval timeout = {25, 0};
+  int port = 0;
+#if defined(HAVE_RPCB_GETADDR)
+  struct netconfig *nconf;
+  struct netbuf svcaddr;
+  char addrbuf[INET6_ADDRSTRLEN];
+  void *handle;
+  int found;
+#endif
 
   if (debug_flag)
     fprintf (stderr, "Trying ypxfrd ...");
 
-  if (!getrpcport (host, YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
-                   IPPROTO_TCP))
+#ifdef HAVE_RPCB_GETADDR
+  svcaddr.len = 0;
+  svcaddr.maxlen = sizeof (addrbuf);
+  svcaddr.buf = addrbuf;
+  found = 0;
+
+  handle = setnetconfig();
+  while ((nconf = getnetconfig(handle)) != NULL)
     {
-      if (debug_flag)
-        log_msg (" not running");
+      if (!strcmp(nconf->nc_proto, "udp"))
+	{
+	  if (rpcb_getaddr(YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
+			   nconf, &svcaddr, host))
+	    {
+	      port = __taddr2port (nconf, &svcaddr);
+	      endnetconfig (handle);
+	      found=1;
+	      break;
+	    }
+
+	  if (rpc_createerr.cf_stat != RPC_UNKNOWNHOST)
+	    {
+	      clnt_pcreateerror (host);
+	      log_msg ("rpcb_getaddr (%s) failed!", host);
+	      return 1;
+	    }
+	}
+    }
+
+  if (!found)
+    {
+      log_msg ("Cannot find suitable transport for protocol 'udp'");
       return 1;
     }
+#else
+	port = getrpcport (host, YPXFRD_FREEBSD_PROG, YPXFRD_FREEBSD_VERS,
+                   IPPROTO_TCP))
+#endif
+    if (port == 0)
+      {
+	if (debug_flag)
+	  log_msg (" not running");
+	return 1;
+      }
 
   req.xfrmap = map;
   req.xfrdomain = domain;

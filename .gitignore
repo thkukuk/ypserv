@@ -60,3 +60,10 @@ yphelper/yphelper
 yppush/yppush
 ypserv/ypserv
 ypxfr/ypxfr
+lib/test-securenets.log
+lib/test-securenets.trs
+lib/test-suite.log
+lib/test-ypserv_conf
+lib/test-ypserv_conf.log
+lib/test-ypserv_conf.trs
+test-driver
