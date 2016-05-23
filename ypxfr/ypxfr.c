@@ -667,7 +667,7 @@ ypxfr (char *map, char *source_host, char *source_domain, char *target_domain,
       dbm = dbm_open (dbName_temp, O_CREAT|O_RDWR, 0600);
 #elif defined(HAVE_LIBTC)
       dbm = tcbdbnew ();
-      if (!tcbdbopen (dbm, dbName_orig, BDBOWRITER | BDBOCREAT | BDBOTRUNC))
+      if (!tcbdbopen (dbm, dbName_temp, BDBOWRITER | BDBOCREAT | BDBOTRUNC))
         {
           tcbdbdel (dbm);
           dbm = NULL;
