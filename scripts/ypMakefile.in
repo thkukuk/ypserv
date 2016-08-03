@@ -91,12 +91,10 @@ SERVICES    = $(YPSRCDIR)/services
 NETGROUP    = $(YPSRCDIR)/netgroup
 NETID	    = $(YPSRCDIR)/netid
 AMD_HOME    = $(YPSRCDIR)/amd.home
-AUTO_MASTER = $(YPSRCDIR)/auto.master
-AUTO_HOME   = $(YPSRCDIR)/auto.home
-AUTO_LOCAL  = $(YPSRCDIR)/auto.local
 TIMEZONE    = $(YPSRCDIR)/timezone
 LOCALE      = $(YPSRCDIR)/locale
 NETMASKS    = $(YPSRCDIR)/netmasks
+AUTO_MAPS   = auto.master auto.home auto.local
 
 YPSERVERS = $(YPDIR)/ypservers	# List of all NIS slave servers
 
@@ -111,7 +109,7 @@ target: Makefile
 
 all:  passwd group hosts rpc services netid protocols netgrp mail \
 	shadow publickey # networks ethers bootparams printcap \
-	# amd.home auto.master auto.home auto.local passwd.adjunct \
+	# amd.home autofs passwd.adjunct \
 	# timezone locale netmasks
 
 
@@ -147,6 +145,7 @@ mail:	   	mail.aliases
 timezone:      timezone.byname
 locale:                locale.byname
 netmasks:      netmasks.byaddr
+autofs:     	$(AUTO_MAPS)
 
 ypservers: $(YPSERVERS) $(YPDIR)/Makefile
 	@echo "Updating $@..."
@@ -429,26 +428,11 @@ printcap: $(PRINTCAP) $(YPDIR)/Makefile
 		$(DBLOAD) -i $(PRINTCAP) -o $(YPMAPDIR)/$@ - $@
 	@$(NOPUSH) || $(YPPUSH) -d $(DOMAIN) $@
 
-
-auto.master: $(AUTO_MASTER) $(YPDIR)/Makefile
+$(AUTO_MAPS): %: $(YPSRCDIR)/%
 	@echo "Updating $@..."
-	-@sed -e "/^#/d" -e s/#.*$$// $(AUTO_MASTER) | $(DBLOAD) \
-		-i $(AUTO_MASTER) -o $(YPMAPDIR)/$@ - $@
+	-@sed -e "/^#/d" -e s/#.*$$// "$<" | $(DBLOAD) \
+		-i "$<" -o $(YPMAPDIR)/$@ - $@
 	-@$(NOPUSH) || $(YPPUSH) -d $(DOMAIN) $@
-
-auto.home: $(AUTO_HOME) $(YPDIR)/Makefile
-	@echo "Updating $@..."
-	-@sed -e "/^#/d" -e s/#.*$$// $(AUTO_HOME) | $(DBLOAD) \
-		-i $(AUTO_HOME) -o $(YPMAPDIR)/$@ - $@
-	-@$(NOPUSH) || $(YPPUSH) -d $(DOMAIN) $@
-
-
-auto.local: $(AUTO_LOCAL) $(YPDIR)/Makefile
-	@echo "Updating $@..."
-	-@sed -e "/^#/d" -e s/#.*$$// $(AUTO_LOCAL) | $(DBLOAD) \
-		-i $(AUTO_LOCAL) -o $(YPMAPDIR)/$@ - $@
-	-@$(NOPUSH) || $(YPPUSH) -d $(DOMAIN) $@
-
 
 amd.home: $(AMD_HOME) $(YPDIR)/Makefile
 	@echo "Updating $@..."
