@@ -36,6 +36,7 @@
 #define passwd xpasswd
 #include <rpcsvc/yppasswd.h>
 #undef passwd
+#include <paths.h>
 #include <pwd.h>
 #include "yppwd_local.h"
 #include "log_msg.h"
