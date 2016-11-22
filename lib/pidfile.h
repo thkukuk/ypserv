@@ -23,9 +23,8 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_PATHS_H
 #include <paths.h>
-#endif
+
 #ifndef _PATH_VARRUN
 #define _PATH_VARRUN "/etc/"
 #endif
