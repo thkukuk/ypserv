@@ -151,6 +151,9 @@ copy_netbuf (struct netbuf *src)
 static int
 cmp_netbuf (struct netbuf *nbuf1, struct netbuf *nbuf2)
 {
+  if (nbuf1 == NULL || nbuf2 == NULL)
+    return 1;
+
   if (nbuf1->len != nbuf2->len)
     return 1;
 
