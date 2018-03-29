@@ -92,7 +92,10 @@ ypproc_name (int proc)
       return "ypproc_order";
     case YPPROC_MAPLIST:
       return "ypproc_maplist";
+    case YPPROC_NEWXFR:
+      return "ypproc_newxfr";
     default:
+      log_msg ("Unknown procedure '%i'", proc);
       return "unknown ?";
     }
 }
