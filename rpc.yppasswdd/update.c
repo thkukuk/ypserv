@@ -618,7 +618,9 @@ update_files (yppasswd *yppw, int *shadow_changed,
 	      !((yppw->newpw.pw_passwd[0] == 'x' ||
 		 yppw->newpw.pw_passwd[0] == '*') &&
 		yppw->newpw.pw_passwd[1] == '\0') &&
-	      yppw->newpw.pw_passwd[0] != '\0')
+	      yppw->newpw.pw_passwd[0] != '\0' &&
+          !(yppw->newpw.pw_passwd[0] == '#' &&
+            yppw->newpw.pw_passwd[1] == '#'))
 	    {
 	      if (spw)
 		{
