@@ -517,54 +517,56 @@ yppush_foreach (const char *host)
     log_msg ("yppush_xfrrespprog_1 registered at %x", CallbackProg);
 
   /* And now do the same for IPv6 */
-  if ((sock = socket (AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+  if ((sock = socket (AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) >= 0)
+    {
+      /* Disallow v4-in-v6 to allow host-based access checks */
+      if (setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY,
+		  &i, sizeof(i)) == -1)
+	{
+	  log_msg ("ERROR: cannot disable v4-in-v6 on %s6 socket",
+	       nconf->nc_proto);
+	  return 1;
+	}
+      memset (&sin6, 0, sizeof (sin6));
+      sin6.sin6_family = AF_INET6;
+      if (my_port > 0)
+	sin6.sin6_port = htons (my_port);
+      sa = (struct sockaddr *)(void *)&sin6;
+
+      if (bindresvport_sa (sock, sa) == -1)
+	{
+	  if (my_port > 0)
+	    log_msg ("Cannot bind to reserved port %d (%s)",
+		     my_port, strerror (errno));
+	  else
+	    log_msg ("bindresvport failed: %s",
+		     strerror (errno));
+	  return 1;
+	}
+
+      if ((CallbackXprt = svc_dg_create (sock, 0, 0)) == NULL)
+	{
+	  log_msg ("terminating: cannot create rpcbind handle");
+	  return 1;
+	}
+
+      nconf = getnetconfigent ("udp6");
+      if (nconf == NULL)
+	{
+	  log_msg ("YPPUSH: getnetconfigent (\"udp6\") failed.");
+	  exit (1);
+	}
+      if (!svc_reg (CallbackXprt, CallbackProg, 1,
+		   yppush_xfrrespprog_1, nconf))
+	log_msg ("YPPUSH: couldn't register IPv6");
+      freenetconfigent (nconf);
+    }
+  else if (errno != EAFNOSUPPORT)
     {
       log_msg ("Cannot create UDP socket for AF_INET6: %s",
 	       strerror (errno));
       return 1;
     }
-
-  /* Disallow v4-in-v6 to allow host-based access checks */
-  if (setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY,
-		  &i, sizeof(i)) == -1)
-    {
-      log_msg ("ERROR: cannot disable v4-in-v6 on %s6 socket",
-	       nconf->nc_proto);
-      return 1;
-    }
-  memset (&sin6, 0, sizeof (sin6));
-  sin6.sin6_family = AF_INET6;
-  if (my_port > 0)
-    sin6.sin6_port = htons (my_port);
-  sa = (struct sockaddr *)(void *)&sin6;
-
-  if (bindresvport_sa (sock, sa) == -1)
-    {
-      if (my_port > 0)
-	log_msg ("Cannot bind to reserved port %d (%s)",
-		 my_port, strerror (errno));
-      else
-	log_msg ("bindresvport failed: %s",
-		 strerror (errno));
-      return 1;
-    }
-
-  if ((CallbackXprt = svc_dg_create (sock, 0, 0)) == NULL)
-    {
-      log_msg ("terminating: cannot create rpcbind handle");
-      return 1;
-    }
-
-  nconf = getnetconfigent ("udp6");
-  if (nconf == NULL)
-    {
-      log_msg ("YPPUSH: getnetconfigent (\"udp6\") failed.");
-      exit (1);
-    }
-  if (!svc_reg (CallbackXprt, CallbackProg, 1,
-		   yppush_xfrrespprog_1, nconf))
-    log_msg ("YPPUSH: couldn't register IPv6");
-  freenetconfigent (nconf);
 
   switch (transid = fork ())
     {
