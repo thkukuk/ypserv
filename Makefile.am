@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2000, 2001, 2006 Thorsten Kukuk <kukuk@thkukuk.de>
 #
-AUTOMAKE_OPTIONS = 1.5 gnits dist-bzip2
+AUTOMAKE_OPTIONS = 1.5 gnits dist-xz
 #
 SUBDIRS = etc lib ypserv ypxfr yppush makedbm revnetgroup rpc.ypxfrd \
 	rpc.yppasswdd yphelper mknetid scripts

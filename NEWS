@@ -1,8 +1,11 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2016 Thorsten Kukuk
+Copyright (C) 1998-2019 Thorsten Kukuk
 
-Please send bug reports, questions and suggestions to <kukuk@linux-nis.org>.
+Please send bug reports, questions and suggestions to <kukuk@thkukuk.de>.
+
+Version 4.1
+* Bug fix release
 
 Version 4.0
 * Use libnsl instead of libnis

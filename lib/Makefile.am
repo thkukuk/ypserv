@@ -7,7 +7,7 @@ AUTOMAKE_OPTIONS = 1.7 gnits
 
 rpcsvcdir = ${prefix}/include/rpcsvc
 
-EXTRA_DIST = test/ypserv.conf
+EXTRA_DIST = test/ypserv.conf securenets.test
 
 noinst_LIBRARIES = libyp.a
 noinst_HEADERS = log_msg.h yp.h ypserv_conf.h ypxfrd.h access.h yp_db.h \
