@@ -38,6 +38,7 @@ int callrpc (char *host, u_long prognum, u_long versnum, u_long procnum,
 #endif
 #include <sys/param.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 
 #if defined(HAVE_COMPAT_LIBGDBM)
 
