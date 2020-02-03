@@ -11,9 +11,9 @@ the GNU General Public License.
 The primary development site for ypserv is:
 https://github.com/thkukuk/ypserv
 
-1024 Byte limit in NIS protocoll:
+1024 Byte limit in NIS protocol:
 ---------------------------------
-The NIS protocoll has one important limit: keys and data are limited
+The NIS protocol has one important limit: keys and data are limited
 to 1024 bytes. Today most implementations (especially glibc and this
 ypserv implementation) can handle longer keys and data. But this must
 not be the case for every implementation, so be careful if you use
