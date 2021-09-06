@@ -1,4 +1,4 @@
-/* Copyright (c) 2000-2016  Thorsten Kukuk
+/* Copyright (c) 2000-2016, 2021  Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -1495,6 +1495,10 @@ ypproc_maplist_2_svc (domainname *argp, ypresp_maplist *result,
 	{
 	  /* ignore files starting with . */
 	  if (dep->d_name[0] == '.')
+	    continue;
+	  /* ignore temporary files ending with ~, created
+	     by makedbm and ypxfr if updating maps */
+	  if (dep->d_name[strlen(dep->d_name) - 1] == '~')
 	    continue;
 	  if (add_maplist (&result->list, dep->d_name) < 0)
 	    {
