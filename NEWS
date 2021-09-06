@@ -1,8 +1,11 @@
 ypserv NEWS -- history of user-visible changes.
 
-Copyright (C) 1998-2019 Thorsten Kukuk
+Copyright (C) 1998-2021 Thorsten Kukuk
 
 Please send bug reports, questions and suggestions to <kukuk@thkukuk.de>.
+
+Version 4.2
+* Remove temporary files from yp_maplist
 
 Version 4.1
 * Bug fix release
