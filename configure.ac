@@ -99,7 +99,7 @@ AC_ARG_ENABLE(pie,AS_HELP_STRING([--disable-pie],
 AC_CACHE_CHECK(for -fpie, libc_cv_fpie, [dnl
   cat > conftest.c <<EOF
 int foo;
-main () { return 0;}
+int main () { return 0;}
 EOF
   if test "$USE_PIE" = "yes" &&
 	AC_TRY_COMMAND([${CC-cc} $CFLAGS $CPPFLAGS $LDFLAGS -pie -fpie
