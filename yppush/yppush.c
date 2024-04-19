@@ -1,4 +1,4 @@
-/* Copyright (c) 1996-2005, 2014, 2015, 2016 Thorsten Kukuk
+/* Copyright (c) 1996-2005, 2014-2016, 2024 Thorsten Kukuk
    Author: Thorsten Kukuk <kukuk@suse.de>
 
    The YP Server is free software; you can redistribute it and/or
@@ -688,7 +688,15 @@ get_canonical_hostname (const char *hostname)
     }
 
   if (host == NULL)
-    host = strdup (res0->ai_canonname);
+    {
+      if (res0->ai_canonname == NULL)
+	{
+	  fprintf (stderr, "yppush: '%s' is not resolvable\n",
+		   hostname);
+	  exit (1);
+	}
+      host = strdup (res0->ai_canonname);
+    }
 
   freeaddrinfo (res0);
 
