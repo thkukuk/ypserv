@@ -49,24 +49,20 @@ static GDBM_FILE
 _db_open (const char *domain, const char *map)
 {
   GDBM_FILE dbp;
-  char buf[MAXPATHLEN + 2];
+  char *buf = NULL;
 
-  if (strlen (domain) + strlen (map) < MAXPATHLEN)
+  if (asprintf (&buf, "%s/%s", domain, map) < 0)
     {
-      sprintf (buf, "%s/%s", domain, map);
-
-      dbp = gdbm_open (buf, 0, GDBM_READER, 0, NULL);
-
-      if (debug_flag && dbp == NULL)
-	log_msg ("gdbm_open: GDBM Error Code #%d", gdbm_errno);
-      else if (debug_flag)
-	log_msg ("\t\t->Returning OK!");
+      log_msg ("GDBM _db_open: Out of memory");
+      return NULL;
     }
-  else
-    {
-      dbp = NULL;
-      log_msg ("Path to long: %s/%s", domain, map);
-    }
+  dbp = gdbm_open (buf, 0, GDBM_READER, 0, NULL);
+  free (buf);
+
+  if (debug_flag && dbp == NULL)
+    log_msg ("gdbm_open: GDBM Error Code #%d", gdbm_errno);
+  else if (debug_flag)
+    log_msg ("\t\t->Returning OK!");
 
   return dbp;
 }
@@ -170,7 +166,7 @@ _db_open (const char *domain, const char *map)
 
       if (debug_flag && !isok)
         {
-      	  log_msg ("tcbdbopen: Tokyo Cabinet Error: %s", 
+      	  log_msg ("tcbdbopen: Tokyo Cabinet Error: %s",
                    tcbdberrmsg (tcbdbecode (dbp)));
       	  log_msg ("tcbdbopen: consider rebuilding maps using ypinit");
       	}
@@ -206,7 +202,7 @@ ypdb_firstkey (DB_FILE dbp)
 {
   datum tkey;
   BDBCUR *cur;
-  
+
   /* In case of error, we return original key */
   if (!(cur = tcbdbcurnew (dbp)) || !tcbdbcurfirst (cur)
       || (tkey.dptr = tcbdbcurkey (cur, &tkey.dsize)) == NULL)
@@ -232,10 +228,10 @@ ypdb_nextkey (DB_FILE dbp, datum key)
 {
   datum tkey;
   BDBCUR *cur;
-  
+
   tkey.dptr = NULL;
   tkey.dsize = 0;
-  
+
   /* In case of error, we return empty key */
   if (!(cur = tcbdbcurnew (dbp)))
     return tkey;
@@ -246,7 +242,7 @@ ypdb_nextkey (DB_FILE dbp, datum key)
       if ((tkey.dptr = tcbdbcurkey (cur, &tkey.dsize)) == NULL)
         tkey.dsize = 0;
     }
-    
+
   tcbdbcurdel (cur);
   return tkey;
 }
@@ -255,10 +251,10 @@ datum
 ypdb_fetch (DB_FILE bdb, datum key)
 {
   datum res;
-  
+
   if ((res.dptr = tcbdbget (bdb, key.dptr, key.dsize, &res.dsize)) == NULL)
       res.dsize = 0;
-  
+
   return res;
 }
 
