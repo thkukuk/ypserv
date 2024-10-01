@@ -385,7 +385,7 @@ main (int argc, char **argv)
         {
           /* Disallow v4-in-v6 to allow host-based access checks */
 
-          int i;
+          int i = 1;
 
           if (setsockopt (sock, IPPROTO_IPV6, IPV6_V6ONLY,
                           &i, sizeof(i)) == -1)
