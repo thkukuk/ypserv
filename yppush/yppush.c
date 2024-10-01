@@ -430,7 +430,8 @@ yppush_foreach (const char *host)
   struct timeval tv = {10, 0};
   u_int transid;
   char server[YPMAXPEER + 2];
-  int i, sock;
+  int i = 1;
+  int sock;
   struct sigaction sig;
   struct netconfig *nconf;
   struct sockaddr *sa;
