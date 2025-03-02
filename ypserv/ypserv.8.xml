@@ -191,6 +191,7 @@ for a map.</para>
 <para><citerefentry><refentrytitle>domainname</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>ypcat</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>ypmatch</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>ypwhich</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>ypserv.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>netgroup</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>makedbm</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
@@ -199,7 +200,6 @@ for a map.</para>
 <citerefentry><refentrytitle>yppoll</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>yppush</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>ypset</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>ypwhich</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>ypxfr</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>rpc.ypxfrd</refentrytitle><manvolnum>8</manvolnum></citerefentry></para>
 
