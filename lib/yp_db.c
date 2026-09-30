@@ -85,24 +85,20 @@ static DB_FILE
 _db_open (const char *domain, const char *map)
 {
   DB_FILE dbp;
-  char buf[MAXPATHLEN + 2];
+  char *buf = NULL;
 
-  if (strlen (domain) + strlen (map) < MAXPATHLEN)
+  if (asprintf (&buf, "%s/%s", domain, map) < 0)
     {
-      sprintf (buf, "%s/%s", domain, map);
-
-      dbp = dbm_open (buf, O_RDONLY, 0600);
-
-      if (debug_flag && dbp == NULL)
-	log_msg ("dbm_open: NDBM Error Code #%d", errno);
-      else if (debug_flag)
-	log_msg ("\t\t->Returning OK!");
+      log_msg ("NDBM _db_open: Out of memory");
+      return NULL;
     }
-  else
-    {
-      dbp = NULL;
-      log_msg ("Path to long: %s/%s", domain, map);
-    }
+  dbp = dbm_open (buf, O_RDONLY, 0600);
+  free (buf);
+
+  if (debug_flag && dbp == NULL)
+    log_msg ("dbm_open: NDBM Error Code #%d", errno);
+  else if (debug_flag)
+    log_msg ("		->Returning OK!");
 
   return dbp;
 }
@@ -154,35 +150,31 @@ static DB_FILE
 _db_open (const char *domain, const char *map)
 {
   DB_FILE dbp;
-  char buf[MAXPATHLEN + 2];
+  char *buf = NULL;
   int isok;
 
-  if (strlen (domain) + strlen (map) < MAXPATHLEN)
+  if (asprintf (&buf, "%s/%s", domain, map) < 0)
     {
-      sprintf (buf, "%s/%s", domain, map);
-
-      dbp = tcbdbnew ();
-      isok = tcbdbopen (dbp, buf, BDBOREADER | BDBONOLCK);
-
-      if (debug_flag && !isok)
-        {
-      	  log_msg ("tcbdbopen: Tokyo Cabinet Error: %s",
-                   tcbdberrmsg (tcbdbecode (dbp)));
-      	  log_msg ("tcbdbopen: consider rebuilding maps using ypinit");
-      	}
-      else if (debug_flag)
-	log_msg ("\t\t->Returning OK!");
-      if ( !isok )
-	{
-	  /* DB not successful opened. Close database object and set return value to NULL. */
-	  tcbdbdel (dbp);
-	  dbp = NULL;
-	}
+      log_msg ("TC _db_open: Out of memory");
+      return NULL;
     }
-  else
+  dbp = tcbdbnew ();
+  isok = tcbdbopen (dbp, buf, BDBOREADER | BDBONOLCK);
+  free (buf);
+
+  if (debug_flag && !isok)
     {
+      log_msg ("tcbdbopen: Tokyo Cabinet Error: %s",
+               tcbdberrmsg (tcbdbecode (dbp)));
+      log_msg ("tcbdbopen: consider rebuilding maps using ypinit");
+    }
+  else if (debug_flag)
+    log_msg ("		->Returning OK!");
+  if ( !isok )
+    {
+      /* DB not successful opened. Close database object and set return value to NULL. */
+      tcbdbdel (dbp);
       dbp = NULL;
-      log_msg ("Path too long: %s/%s", domain, map);
     }
 
   return dbp;
